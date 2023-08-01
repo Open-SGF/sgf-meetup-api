@@ -92,9 +92,10 @@ async function fetchAllFutureEvents(urlname, cursor = null) {
     }
 
     return events;
+    
   } catch (error) {
-    console.error('Error fetching future events:', error);
-    return [];
+      console.error('Error fetching future events:', error);
+      return [];
   }
 }
 
