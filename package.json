@@ -1,0 +1,14 @@
+{
+  "name": "project-spicy-tom-cats",
+  "version": "1.0.0",
+  "description": "A program that grabs local tech event data from MeetUp and posts it on a website calendar",
+  "main": "part-3.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "graphql": "^16.7.1"
+  }
+}
