@@ -1,4 +1,4 @@
-const meetupAccessToken = 'YOUR_MEETUP_ACCESS_TOKEN';
+const meetupAccessToken = 'b017608bc6697a1ede777c2fb44d78a8';
 const meetupGraphQlEndpoint = 'https://api.meetup.com/gql';
 const batchSize = 10; // Number of events to fetch in each batch
 
@@ -138,6 +138,7 @@ async function fetchAllFutureEvents(cursor = null) {
   try {
     const response = await fetch(meetupGraphQlEndpoint, requestOptions);
     const data = await response.json();
+    console.log(data.data.group1Events.unifiedEvents.edges);
     const events = data.data.groupByUrlname.unifiedEvents.edges;
 
     if (data.data.groupByUrlname.unifiedEvents.pageInfo.hasNextPage) {
