@@ -117,11 +117,10 @@ query ($itemsNum: Int!, $cursor: String) {
   }
 `;
 
-async function fetchAllFutureEvents(urlname, cursor = null) {
+async function fetchAllFutureEvents(cursor = null) {
   const requestBody = JSON.stringify({
     query: GET_FUTURE_EVENTS,
     variables: {
-      urlname,
       itemsNum: batchSize,
       cursor,
     },
@@ -139,11 +138,11 @@ async function fetchAllFutureEvents(urlname, cursor = null) {
   try {
     const response = await fetch(meetupGraphQlEndpoint, requestOptions);
     const data = await response.json();
-    const events = data.data.proNetworkByUrlname.eventsSearch.edges;
+    const events = data.data.groupByUrlname.unifiedEvents.edges;
 
-    if (data.data.proNetworkByUrlname.eventsSearch.pageInfo.hasNextPage) {
-      const nextCursor = data.data.proNetworkByUrlname.eventsSearch.pageInfo.endCursor;
-      const nextEvents = await fetchAllFutureEvents(urlname, nextCursor);
+    if (data.data.groupByUrlname.unifiedEvents.pageInfo.hasNextPage) {
+      const nextCursor = data.data.groupByUrlname.unifiedEvents.pageInfo.endCursor;
+      const nextEvents = await fetchAllFutureEvents(nextCursor);
       events.push(...nextEvents);
     }
 
@@ -155,8 +154,8 @@ async function fetchAllFutureEvents(urlname, cursor = null) {
   }
 }
 
-async function fetchAndPrintAllFutureEvents(urlname) {
-  const futureEvents = await fetchAllFutureEvents(urlname);
+async function fetchAndPrintAllFutureEvents() {
+  const futureEvents = await fetchAllFutureEvents();
 
   futureEvents.forEach(event => {
     console.log('--------------');
@@ -165,12 +164,15 @@ async function fetchAndPrintAllFutureEvents(urlname) {
     console.log('Description:', event.node.description);
     console.log('Time:', new Date(event.node.dateTime));
     console.log('Duration:', event.node.duration);
-    console.log('Location:', event.node.venue.name + '\n' + event.node.venue.address + '\n' + event.node.venue.city + ', ' + event.node.venue.state + '\n' + event.node.venue.postalCode);
+    console.log('Location:', event.node.venue.name + '\n' 
+                           + event.node.venue.address + '\n' 
+                           + event.node.venue.city + ', ' 
+                           + event.node.venue.state + '\n' 
+                           + event.node.venue.postalCode);
     console.log('Group:', event.node.group.name);
     console.log('--------------');
   });
 }
 
-const proNetworkUrlname = 'YOUR_PRO_NETWORK_URLNAME';
-fetchAndPrintAllFutureEvents(proNetworkUrlname);
+fetchAndPrintAllFutureEvents();
   
