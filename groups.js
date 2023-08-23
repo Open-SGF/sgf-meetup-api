@@ -1,6 +1,9 @@
+const fetch = require('node-fetch');
 const meetupAccessToken = 'ACCESS_TOKEN';
 const meetupGraphQlEndpoint = 'https://api.meetup.com/gql';
 const batchSize = 10; // Number of events to fetch in each batch
+
+const IFTTT_WEBHOOK_URL = 'YOUR_IFTTT_WEBHOOK_URL'; 
 
 const GROUP_URLNAMES = ['open-sgf', 'springfield-women-in-tech', 'sgfdevs'];
 
@@ -55,32 +58,16 @@ async function fetchAllFutureEvents(urlname, cursor = null) {
     },
   });
 
-  const requestOptions = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${meetupAccessToken}`,
-    },
-    body: requestBody,
-  };
-
+async function sendToIFTTT(events) {
   try {
-    const response = await fetch(meetupGraphQlEndpoint, requestOptions);
-    const data = await response.json();
-    console.log(data.data.events.unifiedEvents.edges);
-    const events = data.data.events.unifiedEvents.edges;
-
-    if (data.data.events.unifiedEvents.pageInfo.hasNextPage) {
-      const nextCursor = data.data.events.unifiedEvents.pageInfo.endCursor;
-      const nextEvents = await fetchAllFutureEvents(urlname, nextCursor);
-      events.push(...nextEvents);
-    }
-
-    return events;
-    
+    const response = await fetch(IFTTT_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value1: events }), 
+    });
+    console.log('IFTTT response:', await response.text());
   } catch (error) {
-      console.error('Error fetching future events:', error);
-      return [];
+    console.error('Error sending to IFTTT:', error);
   }
 }
 
@@ -107,4 +94,5 @@ async function fetchAndPrintAllFutureEvents() {
 }
 
 fetchAndPrintAllFutureEvents();
-  
+}  
+
