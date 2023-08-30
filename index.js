@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
 import fetch from 'node-fetch';
+import { promises as fs } from 'fs';
 
 async function getMeetupAccessToken() {
-    const privateKey = Buffer.from(process.env.MEETUP_PRIVATE_KEY, 'base64')
+    const privateKey = await fs.readFile('./meetup-private-key');
     const url = 'https://secure.meetup.com/oauth2/access';
 
     const signedJWT = jwt.sign(
