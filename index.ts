@@ -3,6 +3,8 @@ import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { App, Stack, RemovalPolicy } from 'aws-cdk-lib';
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
+import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { join } from 'path'
 
 export class ApiLambdaCrudDynamoDBStack extends Stack {
@@ -35,45 +37,31 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
         PRIMARY_KEY: 'itemId',
         TABLE_NAME: dynamoTable.tableName,
       },
-      runtime: Runtime.NODEJS_14_X,
+      runtime: Runtime.NODEJS_18_X,
     }
 
-    // Create a Lambda function for each of the CRUD operations
-    const getOneLambda = new NodejsFunction(this, 'getOneItemFunction', {
-      entry: join(__dirname, 'lambdas', 'get-one.ts'),
-      ...nodeJsFunctionProps,
-    });
     const getAllLambda = new NodejsFunction(this, 'getAllItemsFunction', {
       entry: join(__dirname, 'lambdas', 'get-all.ts'),
       ...nodeJsFunctionProps,
     });
-    const createOneLambda = new NodejsFunction(this, 'createItemFunction', {
-      entry: join(__dirname, 'lambdas', 'create.ts'),
+
+    const importerLambda = new NodejsFunction(this, 'importerFunction', {
+      entry: join(__dirname, 'lambdas', 'importer.js'),
       ...nodeJsFunctionProps,
-    });
-    const updateOneLambda = new NodejsFunction(this, 'updateItemFunction', {
-      entry: join(__dirname, 'lambdas', 'update-one.ts'),
-      ...nodeJsFunctionProps,
-    });
-    const deleteOneLambda = new NodejsFunction(this, 'deleteItemFunction', {
-      entry: join(__dirname, 'lambdas', 'delete-one.ts'),
-      ...nodeJsFunctionProps,
-    });
+    })
 
     // Grant the Lambda function read access to the DynamoDB table
     dynamoTable.grantReadWriteData(getAllLambda);
-    dynamoTable.grantReadWriteData(getOneLambda);
-    dynamoTable.grantReadWriteData(createOneLambda);
-    dynamoTable.grantReadWriteData(updateOneLambda);
-    dynamoTable.grantReadWriteData(deleteOneLambda);
+    dynamoTable.grantReadWriteData(importerLambda);
+
+    const importScheduleRule = new Rule(this, 'importerEventBridgeRule', {
+      schedule: Schedule.expression('cron(0 2 * * ? *)'),
+    })
+
+    importScheduleRule.addTarget(new LambdaFunction(importerLambda));
 
     // Integrate the Lambda functions with the API Gateway resource
     const getAllIntegration = new LambdaIntegration(getAllLambda);
-    const createOneIntegration = new LambdaIntegration(createOneLambda);
-    const getOneIntegration = new LambdaIntegration(getOneLambda);
-    const updateOneIntegration = new LambdaIntegration(updateOneLambda);
-    const deleteOneIntegration = new LambdaIntegration(deleteOneLambda);
-
 
     // Create an API Gateway resource for each of the CRUD operations
     const api = new RestApi(this, 'itemsApi', {
@@ -84,14 +72,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
     const items = api.root.addResource('items');
     items.addMethod('GET', getAllIntegration);
-    items.addMethod('POST', createOneIntegration);
     addCorsOptions(items);
-
-    const singleItem = items.addResource('{id}');
-    singleItem.addMethod('GET', getOneIntegration);
-    singleItem.addMethod('PATCH', updateOneIntegration);
-    singleItem.addMethod('DELETE', deleteOneIntegration);
-    addCorsOptions(singleItem);
   }
 }
 
