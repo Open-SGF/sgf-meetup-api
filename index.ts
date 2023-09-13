@@ -46,7 +46,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
     });
 
     const importerLambda = new NodejsFunction(this, 'importerFunction', {
-      entry: join(__dirname, 'lambdas', 'importer.js'),
+      entry: join(__dirname, 'lambdas', 'importer.ts'),
       ...nodeJsFunctionProps,
     })
 
@@ -108,5 +108,5 @@ export function addCorsOptions(apiResource: IResource) {
 }
 
 const app = new App();
-new ApiLambdaCrudDynamoDBStack(app, 'ApiLambdaCrudDynamoDBExample');
+new ApiLambdaCrudDynamoDBStack(app, 'springfieldMeetupApi');
 app.synth();
