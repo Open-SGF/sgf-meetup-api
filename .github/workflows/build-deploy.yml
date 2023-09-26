@@ -1,0 +1,25 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [ feat/aws-cdk ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18.18.0'
+      - name: Install dependencies
+        run: npm ci
+      - name: Create environment files
+        env:
+          MEETUP_PRIVATE_KEY_BASE64: ${{ secrets.MEETUP_PRIVATE_KEY_BASE64 }}
+        run: echo -n $MEETUP_PRIVATE_KEY_BASE64 | base64 --decode -o "./meetup-private-key"
+      - name: Deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        run: npm run cdk deploy

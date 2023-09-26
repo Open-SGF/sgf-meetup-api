@@ -1,17 +1,30 @@
 {
-  "name": "project-spicy-tom-cats",
+  "name": "api-lambda-crud-dynamodb",
   "version": "1.0.0",
-  "description": "A program that grabs local tech event data from MeetUp and posts it on a website calendar",
-  "main": "src/index.js",
-  "type": "module",
+  "description": "Running an API Gateway with four Lambdas to do CRUD operations on DynamoDB",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall": "(cd lambdas && npm install);",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "dev": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json",
+    "ts-node": "ts-node"
   },
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "name": "Aleksandar Simovic <alexander.simovic@gmail.com>",
+    "url": "https://serverless.pub"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "*",
+    "aws-cdk": "*",
+    "esbuild": "*",
+    "ts-node": "^10.9.1",
+    "typescript": "~5.1.6"
+  },
   "dependencies": {
-    "dotenv": "^16.3.1",
-    "jsonwebtoken": "^9.0.1",
-    "node-fetch": "^3.3.2"
+    "aws-cdk-lib": "^2.0.0",
+    "constructs": "^10.0.0"
   }
 }
