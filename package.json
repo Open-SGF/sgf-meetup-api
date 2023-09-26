@@ -8,6 +8,7 @@
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "cdk",
+    "dev": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json",
     "ts-node": "ts-node"
   },
   "author": {
