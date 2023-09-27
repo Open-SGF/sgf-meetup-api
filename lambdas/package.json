@@ -4,12 +4,16 @@
   "description": "Lambdas to do CRUD operations on DynamoDB",
   "private": true,
   "license": "Apache-2.0",
+  "type": "module",
   "devDependencies": {
     "@types/node": "*",
     "@types/uuid": "*"
   },
   "dependencies": {
     "aws-sdk": "*",
+    "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2",
     "uuid": "*"
   }
 }
