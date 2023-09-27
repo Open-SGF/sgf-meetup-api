@@ -9,7 +9,7 @@
     "watch": "tsc -w",
     "cdk": "cdk",
     "deploy": "cross-env BUILD_ENV=production npm run cdk synth",
-    "dev": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json",
+    "dev:api": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json",
     "dev:importer": "npm run cdk synth && sam local invoke -t ./cdk.out/springfieldMeetupApi.template.json importerFunction",
     "ts-node": "ts-node"
   },
