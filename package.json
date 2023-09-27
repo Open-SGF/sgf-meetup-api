@@ -9,6 +9,7 @@
     "watch": "tsc -w",
     "cdk": "cdk",
     "dev": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json",
+    "dev:importer": "sam local invoke -t ./cdk.out/springfieldMeetupApi.template.json importerFunction",
     "ts-node": "ts-node"
   },
   "author": {
