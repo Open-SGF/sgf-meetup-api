@@ -8,8 +8,9 @@
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "cdk",
+    "deploy": "cross-env BUILD_ENV=production npm run cdk synth",
     "dev": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json",
-    "dev:importer": "sam local invoke -t ./cdk.out/springfieldMeetupApi.template.json importerFunction",
+    "dev:importer": "npm run cdk synth && sam local invoke -t ./cdk.out/springfieldMeetupApi.template.json importerFunction",
     "ts-node": "ts-node"
   },
   "author": {
@@ -26,6 +27,8 @@
   },
   "dependencies": {
     "aws-cdk-lib": "^2.0.0",
-    "constructs": "^10.0.0"
+    "constructs": "^10.0.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.3.1"
   }
 }

@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 export const handler = async (): Promise<any> => {
   return { statusCode: 200, body: JSON.stringify({hello: 'world2'}) };
 };

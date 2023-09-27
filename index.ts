@@ -5,7 +5,7 @@ import { App, Stack, RemovalPolicy } from 'aws-cdk-lib';
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
-import { join } from 'path'
+import { join } from 'path';
 
 export class ApiLambdaCrudDynamoDBStack extends Stack {
   constructor(app: App, id: string) {
@@ -45,9 +45,15 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
       bundling: {
         commandHooks: {
           beforeBundling(inputDir: string, outputDir: string): string[] {
-            return [
+            const commands = [
               `cp ${inputDir}/meetup-private-key ${outputDir}`,
-            ];
+            ]
+
+            if (process.env.BUILD_ENV !== 'production') {
+              commands.push(`cp ${inputDir}/.env ${outputDir}`,)
+            }
+
+            return commands;
           },
           beforeInstall(): string[] {
             return [];

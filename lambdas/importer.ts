@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 import fetch from 'node-fetch';
 import { promises as fs } from 'fs';

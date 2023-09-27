@@ -1,6 +1,6 @@
 .idea/
 node_modules/
-.env
+lambdas/.env
 lambdas/meetup-private-key
 cdk.out/
 .DS_Store
