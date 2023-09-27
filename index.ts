@@ -27,11 +27,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
     });
 
     const nodeJsFunctionProps: NodejsFunctionProps = {
-      bundling: {
-        externalModules: [
-          'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime
-        ],
-      },
       depsLockFilePath: join(__dirname, 'lambdas', 'package-lock.json'),
       environment: {
         PRIMARY_KEY: 'itemId',
@@ -47,6 +42,21 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
     const importerLambda = new NodejsFunction(this, 'importerFunction', {
       entry: join(__dirname, 'lambdas', 'importer.ts'),
+      bundling: {
+        commandHooks: {
+          beforeBundling(inputDir: string, outputDir: string): string[] {
+            return [
+              `cp ${inputDir}/meetup-private-key ${outputDir}`,
+            ];
+          },
+          beforeInstall(): string[] {
+            return [];
+          },
+          afterBundling(): string[] {
+            return [];
+          }
+        },
+      },
       ...nodeJsFunctionProps,
     })
 
