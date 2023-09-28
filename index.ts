@@ -26,11 +26,16 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY, // NOT recommended for production code
     });
 
+    const NODE_ENV = process.env.BUILD_ENV ?? "development";
+
     const nodeJsFunctionProps: NodejsFunctionProps = {
       depsLockFilePath: join(__dirname, 'lambdas', 'package-lock.json'),
       environment: {
         PRIMARY_KEY: 'itemId',
         TABLE_NAME: dynamoTable.tableName,
+        LAMBDA_AWS_ACCESS_KEY_ID: "anything",
+        LAMBDA_AWS_SECRET_ACCESS_KEY: "at-all",
+        NODE_ENV
       },
       runtime: Runtime.NODEJS_18_X,
     }

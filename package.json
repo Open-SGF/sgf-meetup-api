@@ -9,8 +9,12 @@
     "watch": "tsc -w",
     "cdk": "cdk",
     "deploy": "cross-env BUILD_ENV=production npm run cdk synth",
-    "dev:api": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json",
+    "dev:api": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json --docker-network sparkling-tom-cats_default",
+    "dev:api-logging": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json --log-file api-logs.txt",
     "dev:importer": "npm run cdk synth && sam local invoke -t ./cdk.out/springfieldMeetupApi.template.json importerFunction",
+    "dev:dynamodb": "docker compose -f ./docker-compose.dynamodb-local.yml up",
+    "dev:print-dynamodb": "npm run cdk synth && cat ./cdk.out/springfieldMeetupApi.template.json | jq --raw-output \".Resources.items07D08F4B.Properties\"",
+    "dev:sync-dynamodb": "node scripts/sync-dynamodb.js",
     "ts-node": "ts-node"
   },
   "author": {
@@ -26,6 +30,7 @@
     "typescript": "~5.1.6"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.421.0",
     "aws-cdk-lib": "^2.0.0",
     "constructs": "^10.0.0",
     "cross-env": "^7.0.3",
