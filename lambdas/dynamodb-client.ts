@@ -12,15 +12,17 @@ function makeDynamoDBClient() {
 
   if (isDev) {
     // App is running in development mode; return a client that expects DynamoDB to be running locally 
-    const endpoint = "http://172.18.0.2:8000"; // TODO: make local endpoint configurable
+    const endpoint = "http://dynamodb-local:8000"; // TODO: make local endpoint configurable
     const credentials = { accessKeyId, secretAccessKey };
-    console.info({ endpoint, credentials });
 
+    console.info("Connecting to local DynamoDB...");
+
+    console.info({ endpoint, credentials });
     client = new DynamoDBClient({ endpoint, credentials });
   } else {
-    throw new Error("not implemented");
+    throw new Error("not implemented"); // Doesn't support production DynamoDB yet
 
-    // // TODO...
+    // // TODO: set up access to real AWS
     // client = new DynamoDBClient();
   }
 
