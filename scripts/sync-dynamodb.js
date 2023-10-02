@@ -1,7 +1,7 @@
 const fs = require("fs");
 const dynamodb = require("@aws-sdk/client-dynamodb");
 
-const DYNAMODB_ENDPOINT = "http://localhost:8000";
+const DYNAMODB_ENDPOINT = "http://localhost:8000"; // TODO: make configurable
 const ACCESS_KEY_ID = "anything";
 const SECRET_ACCESS_KEY = "anything";
 
@@ -29,21 +29,24 @@ async function syncDb() {
 async function syncTables(template) {
   let tableResource;
 
+  // Look at each resource in the template
   for (const [resourceKey, resourceValue] of Object.entries(template.Resources)) {
-    // Look at each resource in the template
-    if (resourceValue.Type === "AWS::DynamoDB::Table") {
-      // If resource is a Table, send a CreateTableCommand to local dynamodb
-      const createTableParams = resourceValue.Properties;
-      const createTableCommand = new dynamodb.CreateTableCommand(createTableParams);
-      console.log({ resourceKey, createTableParams });
+    if (resourceValue.Type !== "AWS::DynamoDB::Table") {
+      continue; // If resource is not a Table, skip it
+    }
 
-      try {
-        const createTableResult = await client.send(createTableCommand);
-        console.log({ createTableResult });
-      } catch (err) {
-        console.error(`Error when creating table ${resourceKey}:`);
-        console.error(err);
-      }
+    // Make a CreateTableCommand
+    const createTableParams = resourceValue.Properties;
+    const createTableCommand = new dynamodb.CreateTableCommand(createTableParams);
+    console.log({ resourceKey, createTableParams });
+
+    try {
+      // Send the CreateTableCommand
+      const createTableResult = await client.send(createTableCommand);
+      console.log({ createTableResult });
+    } catch (err) {
+      console.error(`Error when creating table resource ${resourceKey}:`);
+      console.error(err);
     }
   }
 }
