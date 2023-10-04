@@ -9,6 +9,7 @@ async function getAll() {
   const command = new ScanCommand({ TableName: tableName });
 
   const response = await dynamoDBClient.send(command);
+  console.log({ response });
   return response.Items;
 }
 
