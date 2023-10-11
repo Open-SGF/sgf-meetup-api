@@ -22,6 +22,7 @@
     "strictPropertyInitialization": false
   },
   "include": [
-    "*.ts"
+    "*.ts",
+    "scripts/*.ts"
   ]
 }
