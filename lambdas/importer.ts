@@ -2,7 +2,7 @@ import 'dotenv/config';
 import * as jwt from 'jsonwebtoken';
 import fetch from 'node-fetch';
 import { promises as fs } from 'fs';
-import { dynamoDBClient } from './dynamodb-client';
+import { PutItemCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
 async function getMeetupAccessToken() {
     const privateKey = await fs.readFile('./meetup-private-key');
@@ -37,6 +37,8 @@ async function getMeetupAccessToken() {
 
     return res.access_token
 }
+
+// await Promise.all([fetchEvents, fetchGroups]);
 
 async function fetchEvents(meetupAccessToken) {
     const meetupGraphQlEndpoint = 'https://api.meetup.com/gql';
@@ -124,23 +126,33 @@ async function fetchEvents(meetupAccessToken) {
 
     async function fetchAndPrintAllFutureEvents() {
         for (const urlname of GROUP_URLNAMES) {
+
+            const client = new DynamoDBClient();
             const futureEvents = await fetchAllFutureEvents(urlname);
 
-            futureEvents.forEach(event => {
-                console.log('--------------');
-                console.log('Event:', event.node.title);
-                console.log('Event Link:', event.node.eventUrl);
-                console.log('Description:', event.node.description);
-                console.log('Time:', new Date(event.node.dateTime));
-                console.log('Duration:', event.node.duration);
-                console.log('Location:', event.node.venue.name + '\n'
-                    + event.node.venue.address + '\n'
-                    + event.node.venue.city + ', '
-                    + event.node.venue.state + '\n'
-                    + event.node.venue.postalCode);
-                console.log('Group:', event.node.group.name);
-                console.log('--------------');
-            });
+            const promises = futureEvents.map(async (event) => {
+              const input = {
+                title: event.node.title,
+                eventUrl: event.node.eventUrl,
+                description: event.node.description,
+                time: new Date(event.node.dateTime),
+                duration: event.node.duration,
+                venue: {
+                  name: event.node.venue.name,
+                  address: event.node.venue.address,
+                  city: event.node.venue.city,
+                  state: event.node.venue.state,
+                  postalCode: event.node.venue.postalCode
+                },
+                group: {
+                  name: event.node.group.name
+                }
+              };
+              const command = new PutItemCommand(input);
+              await client.send(command);
+            })
+            
+            await Promise.all(promises);
         }
     }
 
