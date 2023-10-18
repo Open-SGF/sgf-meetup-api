@@ -2,6 +2,7 @@ import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 import fetch from 'node-fetch';
 import { promises as fs } from 'fs';
+import { dynamoDBClient } from './lib/dynamodb-client'
 
 async function getMeetupAccessToken() {
     const privateKey = await fs.readFile('./meetup-private-key');
