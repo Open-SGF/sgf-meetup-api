@@ -13,13 +13,16 @@ const client = new dynamodb.DynamoDBClient({
   },
 });
 
-async function syncDb() {
+async function syncDb(_populateTestData = false) {
   // Load and parse the template from cdk.out
   const templateFileContents = fs.readFileSync("cdk.out/springfieldMeetupApi.template.json").toString();
   const template = JSON.parse(templateFileContents);
 
   await syncTables(template);
-  await populateTestData();
+
+  if (_populateTestData) {
+    await populateTestEvents();
+  }
 }
 
 /**
@@ -51,20 +54,37 @@ async function syncTables(template) {
   }
 }
 
-/**
- * Add a simple item with a randomly generated ID to the items table
- */
-async function populateTestData() {
-  const putParams = {
-    TableName: "items",
-    Item: {
-      itemId: { S: Math.floor(Math.random() * 100000000) },
-    },
-  };
+async function populateTestEvents() {
+  const groupNumber = Math.floor(Math.random() * 1000);
 
-  const putCommand = new dynamodb.PutItemCommand(putParams);
-  const putResult = await client.send(putCommand);
-  console.log({ putResult });
+  for (let i = 0; i < 5; i += 1) {
+    const itemIndex = groupNumber + i;
+    const randomOffset = Math.floor(Math.random() * 100 - 50); 
+
+    const startTime = new Date();
+
+    // Add `randomOffset` days to today
+    startTime.setDate(startTime.getDate() + randomOffset);
+
+    const putParams = {
+      TableName: "Events",
+      Item: {
+        Id: { S: itemIndex },
+        MeetupGroup: { S: "group" + groupNumber },
+        Title: { S: "title" + itemIndex },
+        EventUrl: { S: "eventUrl" + itemIndex },
+        Description: { S: `random offset was ${randomOffset} days` },
+        StartTime: { S: startTime.toISOString() },
+        Duration: { S: "duration" + itemIndex },
+      },
+    };
+
+    const putCommand = new dynamodb.PutItemCommand(putParams);
+    const putResult = await client.send(putCommand);
+    console.log({ putResult });
+  }
 }
 
-syncDb();
+
+
+syncDb(true);
