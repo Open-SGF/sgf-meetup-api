@@ -2,6 +2,7 @@ import 'dotenv/config';
 import * as fs from "fs";
 import { ScanCommand } from "@aws-sdk/client-dynamodb";
 import { dynamoDBClient } from "./dynamodb-client";
+import { dynamoDBClient } from './lib/dynamodb-client';
 
 async function getAll() {
   const tableName = "items";
