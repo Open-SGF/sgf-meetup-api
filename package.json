@@ -22,6 +22,7 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.124",
     "@types/node": "*",
     "aws-cdk": "*",
     "esbuild": "*",
