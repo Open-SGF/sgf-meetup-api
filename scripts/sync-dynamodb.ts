@@ -43,7 +43,9 @@ async function syncTables(): Promise<void> {
 			// Send the CreateTableCommand
 			await client.send(createTableCommand);
 		} catch (err) {
+			// eslint-disable-next-line no-console
 			console.error(`Error when creating table resource ${resourceKey}:`);
+			// eslint-disable-next-line no-console
 			console.error(err);
 		}
 	}

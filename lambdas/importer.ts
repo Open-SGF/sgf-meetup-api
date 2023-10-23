@@ -85,6 +85,7 @@ async function fetchEvents(meetupAccessToken: string) {
 
 			return events;
 		} catch (error) {
+			// eslint-disable-next-line no-console
 			console.error('Error fetching future events:', error);
 			return [];
 		}
@@ -95,12 +96,19 @@ async function fetchEvents(meetupAccessToken: string) {
 			const futureEvents = await fetchAllFutureEvents(urlname);
 
 			futureEvents.forEach((event) => {
+				// eslint-disable-next-line no-console
 				console.log('--------------');
+				// eslint-disable-next-line no-console
 				console.log('Event:', event.node.title);
+				// eslint-disable-next-line no-console
 				console.log('Event Link:', event.node.eventUrl);
+				// eslint-disable-next-line no-console
 				console.log('Description:', event.node.description);
+				// eslint-disable-next-line no-console
 				console.log('Time:', new Date(event.node.dateTime));
+				// eslint-disable-next-line no-console
 				console.log('Duration:', event.node.duration);
+				// eslint-disable-next-line no-console
 				console.log(
 					'Location:',
 					event.node.venue.name +
@@ -113,7 +121,9 @@ async function fetchEvents(meetupAccessToken: string) {
 						'\n' +
 						event.node.venue.postalCode,
 				);
+				// eslint-disable-next-line no-console
 				console.log('Group:', event.node.group.name);
+				// eslint-disable-next-line no-console
 				console.log('--------------');
 			});
 		}

@@ -15,9 +15,6 @@ function makeDynamoDBClient() {
 		const endpoint = 'http://dynamodb-local:8000'; // TODO: make local endpoint configurable
 		const credentials = { accessKeyId, secretAccessKey };
 
-		console.info('Connecting to local DynamoDB...');
-
-		console.info({ endpoint, credentials });
 		client = new DynamoDBClient({ endpoint, credentials });
 	} else {
 		throw new Error('not implemented'); // Doesn't support production DynamoDB yet

@@ -4,7 +4,6 @@ import { dynamoDBClient } from './dynamodb-client';
 
 async function getAll() {
 	const tableName = 'items';
-	console.log({ tableName });
 	const command = new ScanCommand({ TableName: tableName });
 
 	const response = await dynamoDBClient.send(command);
