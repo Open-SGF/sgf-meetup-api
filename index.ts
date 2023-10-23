@@ -128,5 +128,5 @@ export function addCorsOptions(apiResource: IResource) {
 }
 
 const app = new App();
-new ApiLambdaCrudDynamoDBStack(app, 'springfieldMeetupApi');
+new ApiLambdaCrudDynamoDBStack(app, 'sgf-meetup-api');
 app.synth();
