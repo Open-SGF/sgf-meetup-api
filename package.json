@@ -1,5 +1,5 @@
 {
-	"name": "api-lambda-crud-dynamodb",
+	"name": "sgf-meetup-api",
 	"version": "1.0.0",
 	"description": "Running an API Gateway with four Lambdas to do CRUD operations on DynamoDB",
 	"private": true,

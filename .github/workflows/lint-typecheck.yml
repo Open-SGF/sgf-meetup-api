@@ -13,6 +13,8 @@ jobs:
               with:
                   node-version: 18.18.0
             - run: npm ci
+            - name: 'CDK Synth'
+              run: npm run synth
             - name: 'Lint'
               run: npm run lint
             - name: 'Typecheck'

@@ -63,13 +63,9 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 						inputDir: string,
 						outputDir: string,
 					): string[] {
-						const commands = [];
-
-						if (process.env.BUILD_ENV !== 'production') {
-							commands.push(`cp ${inputDir}/.env ${outputDir}`);
-						}
-
-						return commands;
+						return [
+							`cp ${inputDir}/.env ${outputDir} 2>/dev/null || :`,
+						];
 					},
 					beforeInstall(): string[] {
 						return [];

@@ -1,9 +1,8 @@
 {
-	"name": "lambda-crud-dynamodb",
+	"name": "sgf-meetup-api-lambdas",
 	"version": "1.0.0",
 	"description": "Lambdas to do CRUD operations on DynamoDB",
 	"private": true,
-	"license": "Apache-2.0",
 	"type": "module",
 	"devDependencies": {
 		"@types/jsonwebtoken": "^9.0.4",
