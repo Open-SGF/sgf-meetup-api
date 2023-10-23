@@ -5,6 +5,7 @@
 	"private": true,
 	"scripts": {
 		"postinstall": "(cd lambdas && npm install);",
+		"build": "tsc --noEmit && (cd lambdas && tsc --noEmit)",
 		"cdk": "cdk",
 		"synth": "npm run clean && npm run cdk synth",
 		"clean": "rimraf ./cdk.out",
