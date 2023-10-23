@@ -3,7 +3,7 @@ import {
     GetSecretValueCommand,
 } from "@aws-sdk/client-secrets-manager";
 import {atob} from "buffer";
-import jwt from 'jsonwebtoken';
+import { sign } from 'jsonwebtoken';
 import fetch from 'node-fetch';
 import {isRecord} from "./is-record";
 
@@ -30,7 +30,7 @@ export async function getMeetupToken(): Promise<string> {
 
     const secret = parseSecret(response.SecretString);
 
-    const signedJWT = jwt.sign(
+    const signedJWT = sign(
         {},
         secret.privateKey,
         {

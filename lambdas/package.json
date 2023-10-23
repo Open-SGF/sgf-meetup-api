@@ -6,6 +6,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.4",
     "@types/node": "*",
     "@types/uuid": "*"
   },
