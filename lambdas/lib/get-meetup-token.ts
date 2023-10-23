@@ -7,7 +7,7 @@ import { sign } from 'jsonwebtoken';
 import fetch from 'node-fetch';
 import { isRecord } from './is-record';
 
-interface IMeetupSecret {
+interface MeetupSecret {
 	privateKey: string;
 	userId: string;
 	clientKey: string;
@@ -63,7 +63,7 @@ export async function getMeetupToken(): Promise<string> {
 	return res.access_token;
 }
 
-function parseSecret(secretString: string | undefined): IMeetupSecret {
+function parseSecret(secretString: string | undefined): MeetupSecret {
 	if (!secretString) {
 		throw new Error('Invalid secret json from AWS');
 	}

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import fetch from 'node-fetch';
 import { getMeetupToken } from './lib/get-meetup-token';
+import { MeetupFutureEventsPayload } from './types/MeetupFutureEventsPayload';
 
 async function fetchEvents(meetupAccessToken: string) {
 	const meetupGraphQlEndpoint = 'https://api.meetup.com/gql';
@@ -49,7 +50,10 @@ async function fetchEvents(meetupAccessToken: string) {
       }
     `;
 
-	async function fetchAllFutureEvents(urlname, cursor = null) {
+	async function fetchAllFutureEvents(
+		urlname: string,
+		cursor: string | null = null,
+	) {
 		const requestBody = JSON.stringify({
 			query: GET_FUTURE_EVENTS,
 			variables: {
@@ -70,12 +74,12 @@ async function fetchEvents(meetupAccessToken: string) {
 
 		try {
 			const response = await fetch(meetupGraphQlEndpoint, requestOptions);
-			const data = await response.json();
-			const events = data.data.events.unifiedEvents.edges;
+			const res = (await response.json()) as MeetupFutureEventsPayload;
+			const events = res.data.events?.unifiedEvents.edges ?? [];
 
-			if (data.data.events.unifiedEvents.pageInfo.hasNextPage) {
+			if (res.data.events?.unifiedEvents.pageInfo.hasNextPage) {
 				const nextCursor =
-					data.data.events.unifiedEvents.pageInfo.endCursor;
+					res.data.events.unifiedEvents.pageInfo.endCursor;
 				const nextEvents = await fetchAllFutureEvents(
 					urlname,
 					nextCursor,
