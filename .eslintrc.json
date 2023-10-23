@@ -20,7 +20,14 @@
 		"prettier/prettier": "error"
 	},
 	"ignorePatterns": [
-		"cdk.out",
-		"lambdas"
+		"cdk.out"
+	],
+	"overrides": [
+		{
+			"files": ["lambdas/**/*.ts"],
+			"parserOptions": {
+				"project": "lambdas/tsconfig.json"
+			}
+		}
 	]
 }
