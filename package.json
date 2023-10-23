@@ -8,11 +8,12 @@
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "cdk",
+    "synth": "npm run clean && npm run cdk synth",
     "clean": "rimraf ./cdk.out",
     "deploy": "cross-env BUILD_ENV=production npm run cdk synth",
-    "dev:api": "npm run cdk synth && sam local start-api -t ./cdk.out/sgf-meetup-api.template.json --docker-network sgf-meetup-api",
-    "dev:importer": "npm run cdk synth && sam local invoke -t ./cdk.out/sgf-meetup-api.template.json --docker-network sgf-meetup-api importerFunction",
-    "dev:sync-dynamodb": "npm run cdk synth && npm run ts-node scripts/sync-dynamodb.ts",
+    "dev:api": "npm run synth && sam local start-api -t ./cdk.out/sgf-meetup-api.template.json --docker-network sgf-meetup-api",
+    "dev:importer": "npm run synth && sam local invoke -t ./cdk.out/sgf-meetup-api.template.json --docker-network sgf-meetup-api importerFunction",
+    "dev:sync-dynamodb": "npm run synth && npm run ts-node scripts/sync-dynamodb.ts",
     "ts-node": "ts-node"
   },
   "author": {
