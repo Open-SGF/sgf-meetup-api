@@ -5,7 +5,7 @@ import {
 import { atob } from 'buffer';
 import { sign } from 'jsonwebtoken';
 import fetch from 'node-fetch';
-import { isRecord } from './is-record';
+import { isRecord } from './isRecord';
 
 interface MeetupSecret {
 	privateKey: string;
