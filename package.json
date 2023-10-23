@@ -10,11 +10,9 @@
     "cdk": "cdk",
     "clean": "rimraf ./cdk.out",
     "deploy": "cross-env BUILD_ENV=production npm run cdk synth",
-    "dev:api": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json --docker-network sparkling-tom-cats_default",
-    "dev:api-logging": "npm run cdk synth && sam local start-api -t ./cdk.out/springfieldMeetupApi.template.json --docker-network sparkling-tom-cats_default --log-file api-logs.txt",
-    "dev:importer": "npm run cdk synth && sam local invoke -t ./cdk.out/springfieldMeetupApi.template.json importerFunction",
-    "dev:dynamodb": "docker compose -f ./docker-compose.dynamodb-local.yml -p sparkling-tom-cats up",
-    "dev:sync-dynamodb": "npm run cdk synth && node scripts/sync-dynamodb.js",
+    "dev:api": "npm run cdk synth && sam local start-api -t ./cdk.out/sgf-meetup-api.template.json --docker-network sgf-meetup-api",
+    "dev:importer": "npm run cdk synth && sam local invoke -t ./cdk.out/sgf-meetup-api.template.json --docker-network sgf-meetup-api importerFunction",
+    "dev:sync-dynamodb": "npm run cdk synth && npm run ts-node scripts/sync-dynamodb.ts",
     "ts-node": "ts-node"
   },
   "author": {
