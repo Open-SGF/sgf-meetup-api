@@ -20,6 +20,7 @@
 		"prettier/prettier": "error"
 	},
 	"ignorePatterns": [
-		"cdk.out"
+		"cdk.out",
+		"lambdas"
 	]
 }
