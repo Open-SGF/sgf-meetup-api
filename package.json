@@ -5,8 +5,6 @@
 	"private": true,
 	"scripts": {
 		"postinstall": "(cd lambdas && npm install);",
-		"build": "tsc",
-		"watch": "tsc -w",
 		"cdk": "cdk",
 		"synth": "npm run clean && npm run cdk synth",
 		"clean": "rimraf ./cdk.out",
@@ -14,26 +12,29 @@
 		"dev:api": "npm run synth && sam local start-api -t ./cdk.out/sgf-meetup-api.template.json --docker-network sgf-meetup-api",
 		"dev:importer": "npm run synth && sam local invoke -t ./cdk.out/sgf-meetup-api.template.json --docker-network sgf-meetup-api importerFunction",
 		"dev:sync-dynamodb": "npm run synth && npm run ts-node scripts/sync-dynamodb.ts",
+		"lint": "eslint . --ext .js,.ts,.jsx,.tsx --max-warnings=0",
+		"lint:fix": "npm run lint -- --fix",
 		"ts-node": "ts-node"
-	},
-	"author": {
-		"name": "Aleksandar Simovic <alexander.simovic@gmail.com>",
-		"url": "https://serverless.pub"
-	},
-	"license": "Apache-2.0",
-	"devDependencies": {
-		"@types/node": "*",
-		"aws-cdk": "*",
-		"cross-env": "^7.0.3",
-		"esbuild": "*",
-		"rimraf": "^5.0.5",
-		"ts-node": "^10.9.1",
-		"typescript": "~5.1.6"
 	},
 	"dependencies": {
 		"@aws-sdk/client-dynamodb": "^3.421.0",
 		"aws-cdk-lib": "^2.0.0",
 		"constructs": "^10.0.0",
 		"dotenv": "^16.3.1"
+	},
+	"devDependencies": {
+		"@types/node": "^20.8.7",
+		"@typescript-eslint/eslint-plugin": "^6.8.0",
+		"@typescript-eslint/parser": "^6.8.0",
+		"aws-cdk": "^2.102.0",
+		"cross-env": "^7.0.3",
+		"esbuild": "^0.19.5",
+		"eslint": "^8.52.0",
+		"eslint-config-prettier": "^9.0.0",
+		"eslint-plugin-prettier": "^5.0.1",
+		"prettier": "^3.0.3",
+		"rimraf": "^5.0.5",
+		"ts-node": "^10.9.1",
+		"typescript": "~5.1.6"
 	}
 }
