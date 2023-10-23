@@ -26,4 +26,4 @@ function makeDynamoDBClient() {
 	return client;
 }
 
-export const dynamoDBClient = makeDynamoDBClient();
+export const dynamoDbClient = makeDynamoDBClient();

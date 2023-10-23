@@ -51,7 +51,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		};
 
 		const getAllLambda = new NodejsFunction(this, 'getAllItemsFunction', {
-			entry: join(__dirname, 'lambdas', 'get-all.ts'),
+			entry: join(__dirname, 'lambdas', 'getAll.ts'),
 			...nodeJsFunctionProps,
 		});
 

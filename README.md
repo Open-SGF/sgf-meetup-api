@@ -38,7 +38,7 @@ The whole component contains:
 - An API, with CORS enabled on all HTTP Methods. (Use with caution, for production apps you will want to enable only a certain domain origin to be able to query your API.)
 - Lambda pointing to `lambdas/create.ts`, containing code for __storing__ an item  into the DynamoDB table.
 - Lambda pointing to `lambdas/delete-one.ts`, containing code for __deleting__ an item from the DynamoDB table.
-- Lambda pointing to `lambdas/get-all.ts`, containing code for __getting all items__ from the DynamoDB table.
+- Lambda pointing to `lambdas/getAll.ts`, containing code for __getting all items__ from the DynamoDB table.
 - Lambda pointing to `lambdas/get-one.ts`, containing code for __getting an item__ from the DynamoDB table.
 - Lambda pointing to `lambdas/update-one.ts`, containing code for __updating an item__ in the DynamoDB table.
 - A DynamoDB table `items` that stores the data.

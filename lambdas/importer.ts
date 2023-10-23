@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import fetch from 'node-fetch';
-import { getMeetupToken } from './lib/get-meetup-token';
+import { getMeetupToken } from './lib/getMeetupToken';
 import { MeetupFutureEventsPayload } from './types/MeetupFutureEventsPayload';
 
 async function fetchEvents(meetupAccessToken: string) {
