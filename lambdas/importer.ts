@@ -1,41 +1,7 @@
 import 'dotenv/config';
-import jwt from 'jsonwebtoken';
 import fetch from 'node-fetch';
-import { promises as fs } from 'fs';
+import {getMeetupToken} from "./lib/get-meetup-token";
 
-async function getMeetupAccessToken() {
-    const privateKey = await fs.readFile('./meetup-private-key');
-    const url = 'https://secure.meetup.com/oauth2/access';
-
-    const signedJWT = jwt.sign(
-        {},
-        privateKey,
-        {
-            algorithm: 'RS256',
-            issuer: process.env.MEETUP_CLIENT_KEY,
-            subject: process.env.MEETUP_USER_ID,
-            audience: 'api.meetup.com',
-            keyid: process.env.MEETUP_SIGNING_KEY_ID,
-            expiresIn: 120
-        }
-    );
-
-    const requestBody = new URLSearchParams({
-        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        assertion: signedJWT
-    });
-
-
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: requestBody
-    }).then(res => res.json());
-
-    return res.access_token
-}
 
 async function fetchEvents(meetupAccessToken) {
     const meetupGraphQlEndpoint = 'https://api.meetup.com/gql';
@@ -147,6 +113,6 @@ async function fetchEvents(meetupAccessToken) {
 }
 
 export async function handler() {
-    const token = await getMeetupAccessToken();
+    const token = await getMeetupToken();
     await fetchEvents(token);
 }

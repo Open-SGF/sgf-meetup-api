@@ -1,7 +1,7 @@
 import { IResource, LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
-import { App, Stack, RemovalPolicy } from 'aws-cdk-lib';
+import {App, Stack, RemovalPolicy, Duration} from 'aws-cdk-lib';
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
@@ -38,6 +38,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
         NODE_ENV
       },
       runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.minutes(4),
     }
 
     const getAllLambda = new NodejsFunction(this, 'getAllItemsFunction', {
@@ -50,9 +51,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
       bundling: {
         commandHooks: {
           beforeBundling(inputDir: string, outputDir: string): string[] {
-            const commands = [
-              `cp ${inputDir}/meetup-private-key ${outputDir}`,
-            ]
+            const commands = []
 
             if (process.env.BUILD_ENV !== 'production') {
               commands.push(`cp ${inputDir}/.env ${outputDir}`,)

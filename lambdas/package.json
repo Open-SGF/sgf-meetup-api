@@ -6,10 +6,12 @@
   "license": "Apache-2.0",
   "type": "module",
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.4",
     "@types/node": "*",
     "@types/uuid": "*"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.433.0",
     "aws-sdk": "*",
     "dotenv": "^16.3.1",
     "jsonwebtoken": "^9.0.2",
