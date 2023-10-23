@@ -1,0 +1,97 @@
+import {
+    SecretsManagerClient,
+    GetSecretValueCommand,
+} from "@aws-sdk/client-secrets-manager";
+import {atob} from "buffer";
+import jwt from 'jsonwebtoken';
+import fetch from 'node-fetch';
+import {isRecord} from "./is-record";
+
+interface IMeetupSecret {
+    privateKey: string,
+    userId: string,
+    clientKey: string,
+    signingKeyId: string
+}
+
+const AWS_MEETUP_SECRET_NAME = "prod/sgf-meetup-api/meetup";
+const MEETUP_AUTH_URL = 'https://secure.meetup.com/oauth2/access';
+
+export async function getMeetupToken(): Promise<string> {
+    const client = new SecretsManagerClient({
+        region: "us-east-2",
+    });
+
+    const response = await client.send(
+      new GetSecretValueCommand({
+        SecretId: AWS_MEETUP_SECRET_NAME,
+      })
+    );
+
+    const secret = parseSecret(response.SecretString);
+
+    const signedJWT = jwt.sign(
+        {},
+        secret.privateKey,
+        {
+            algorithm: 'RS256',
+            issuer: secret.clientKey,
+            subject: secret.userId,
+            audience: 'api.meetup.com',
+            keyid: secret.signingKeyId,
+            expiresIn: 120
+        }
+    );
+
+    const requestBody = new URLSearchParams({
+        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion: signedJWT
+    });
+
+
+    const res = await fetch(MEETUP_AUTH_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: requestBody
+    }).then(res => res.json());
+
+    if (!isRecord(res) || !('access_token' in res) || typeof res.access_token !== 'string') {
+        throw new Error('Unexpected response from meetup')
+    }
+
+    return res.access_token
+}
+
+function parseSecret(secretString: string | undefined): IMeetupSecret {
+    if (!secretString) {
+        throw new Error('Invalid secret json from AWS')
+    }
+
+    const secret = JSON.parse(secretString) as unknown;
+
+    if (!isRecord(secret)) {
+        throw new Error('Invalid secret json from AWS')
+    }
+
+    const { meetupPrivateKeyBase64, meetupUserId, meetupClientKey, meetupSigningKeyId } = secret;
+
+    if (
+        typeof meetupPrivateKeyBase64 !== 'string' ||
+        typeof meetupUserId !== 'string' ||
+        typeof meetupClientKey !== 'string' ||
+        typeof meetupSigningKeyId !== 'string'
+    ) {
+        throw new Error('Missing or invalid keys in AWS secret')
+    }
+
+    const privateKey = atob(meetupPrivateKeyBase64);
+
+    return {
+        privateKey,
+        userId: meetupUserId,
+        clientKey: meetupClientKey,
+        signingKeyId: meetupSigningKeyId,
+    };
+}
