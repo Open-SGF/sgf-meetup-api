@@ -51,9 +51,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
       bundling: {
         commandHooks: {
           beforeBundling(inputDir: string, outputDir: string): string[] {
-            const commands = [
-              `cp ${inputDir}/meetup-private-key ${outputDir}`,
-            ]
+            const commands = []
 
             if (process.env.BUILD_ENV !== 'production') {
               commands.push(`cp ${inputDir}/.env ${outputDir}`,)
