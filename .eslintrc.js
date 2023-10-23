@@ -13,11 +13,9 @@ module.exports = {
 		'plugin:import/warnings',
 		'plugin:import/typescript',
 	],
-	parser: '@typescript-eslint/parser',
 	parserOptions: {
 		ecmaVersion: 2020,
 		sourceType: 'module',
-		project: 'tsconfig.json',
 	},
 	plugins: ['@typescript-eslint/eslint-plugin', 'check-file'],
 	rules: {
@@ -40,7 +38,11 @@ module.exports = {
 	ignorePatterns: ['cdk.out'],
 	overrides: [
 		{
-			files: ['**/*.ts'],
+			files: ['**/*.{ts,tsx}'],
+			parser: '@typescript-eslint/parser',
+			parserOptions: {
+				project: 'tsconfig.json',
+			},
 			rules: {
 				'@typescript-eslint/no-explicit-any': 'warn',
 				'@typescript-eslint/no-floating-promises': 'error',
@@ -50,16 +52,9 @@ module.exports = {
 			},
 		},
 		{
-			files: ['lambdas/**/*.ts'],
+			files: ['lambdas/**/*.{ts,tsx}'],
 			parserOptions: {
 				project: 'lambdas/tsconfig.json',
-			},
-		},
-		{
-			files: ['.eslintrc.js'],
-			parser: 'espree',
-			rules: {
-				'prettier/prettier': 'error',
 			},
 		},
 	],
