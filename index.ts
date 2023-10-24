@@ -64,25 +64,16 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		const nodeJsFunctionProps: NodejsFunctionProps = {
 			depsLockFilePath: join(__dirname, 'lambdas', 'package-lock.json'),
 			environment: {
+				NODE_ENV,
 				PRIMARY_KEY: 'itemId',
 				TABLE_NAME: dynamoTable.tableName,
 				LAMBDA_AWS_ACCESS_KEY_ID: 'anything',
 				LAMBDA_AWS_SECRET_ACCESS_KEY: 'at-all',
-				NODE_ENV,
 				EVENTS_TABLE_NAME,
 				EVENTS_GROUP_INDEX_NAME,
 			},
 			runtime: Runtime.NODEJS_18_X,
 			timeout: Duration.minutes(4),
-		};
-
-		const getAllLambda = new NodejsFunction(this, 'getAllItemsFunction', {
-			entry: join(__dirname, 'lambdas', 'getAll.ts'),
-			...nodeJsFunctionProps,
-		});
-
-		const importerLambda = new NodejsFunction(this, 'importerFunction', {
-			entry: join(__dirname, 'lambdas', 'importer.ts'),
 			bundling: {
 				commandHooks: {
 					beforeBundling(
@@ -101,6 +92,15 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 					},
 				},
 			},
+		};
+
+		const getAllLambda = new NodejsFunction(this, 'getAllItemsFunction', {
+			entry: join(__dirname, 'lambdas', 'getAll.ts'),
+			...nodeJsFunctionProps,
+		});
+
+		const importerLambda = new NodejsFunction(this, 'importerFunction', {
+			entry: join(__dirname, 'lambdas', 'importer.ts'),
 			...nodeJsFunctionProps,
 		});
 
