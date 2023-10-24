@@ -3,7 +3,7 @@ import 'dotenv/config';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { isDev } from './util';
 
-function makeDynamoDBClient() {
+function makeDynamoDbClient() {
 	const accessKeyId = process.env.LAMBDA_AWS_ACCESS_KEY_ID ?? '';
 	const secretAccessKey = process.env.LAMBDA_AWS_SECRET_ACCESS_KEY ?? '';
 
@@ -28,4 +28,4 @@ function makeDynamoDBClient() {
 	return client;
 }
 
-export const dynamoDBClient = makeDynamoDBClient();
+export const dynamoDbClient = makeDynamoDbClient();

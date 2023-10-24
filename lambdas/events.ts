@@ -1,7 +1,8 @@
+import 'dotenv/config';
 import { type Handler } from 'aws-lambda';
 import { QueryCommand, AttributeValue } from '@aws-sdk/client-dynamodb';
 
-import { dynamoDBClient } from './lib/dynamodb-client';
+import { dynamoDbClient } from './lib/dynamoDbClient';
 import { MeetupEvent } from './lib/model';
 import { parseDateString } from './lib/util';
 
