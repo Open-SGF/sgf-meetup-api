@@ -54,34 +54,34 @@ async function syncTables(): Promise<void> {
  * Add a simple item with a randomly generated ID to the items table
  */
 async function populateTestData() {
-    const groupNumber = Math.floor(Math.random() * 1000);
+	const groupNumber = Math.floor(Math.random() * 1000);
 
-  for (let i = 0; i < 5; i += 1) {
-    const itemIndex = groupNumber + i;
-    const randomOffset = Math.floor(Math.random() * 100 - 50); 
+	for (let i = 0; i < 5; i += 1) {
+		const itemIndex = groupNumber + i;
+		const randomOffset = Math.floor(Math.random() * 100 - 50);
 
-    const startTime = new Date();
+		const startTime = new Date();
 
-    // Add `randomOffset` days to today
-    startTime.setDate(startTime.getDate() + randomOffset);
+		// Add `randomOffset` days to today
+		startTime.setDate(startTime.getDate() + randomOffset);
 
-    const putParams: PutItemCommandInput = {
-      TableName: "Events",
-      Item: {
-        Id: { S: itemIndex.toString() },
-        MeetupGroup: { S: "group" + groupNumber },
-        Title: { S: "title" + itemIndex },
-        EventUrl: { S: "eventUrl" + itemIndex },
-        Description: { S: `random offset was ${randomOffset} days` },
-        StartTime: { S: startTime.toISOString() },
-        Duration: { S: "duration" + itemIndex },
-      },
-    };
+		const putParams: PutItemCommandInput = {
+			TableName: 'Events',
+			Item: {
+				Id: { S: itemIndex.toString() },
+				MeetupGroup: { S: 'group' + groupNumber },
+				Title: { S: 'title' + itemIndex },
+				EventUrl: { S: 'eventUrl' + itemIndex },
+				Description: { S: `random offset was ${randomOffset} days` },
+				StartTime: { S: startTime.toISOString() },
+				Duration: { S: 'duration' + itemIndex },
+			},
+		};
 
-    const putCommand = new PutItemCommand(putParams);
-    const putResult = await client.send(putCommand);
-    console.log({ putResult });
-  }
+		const putCommand = new PutItemCommand(putParams);
+		const putResult = await client.send(putCommand);
+		console.log({ putResult });
+	}
 }
 
 void syncDb();
