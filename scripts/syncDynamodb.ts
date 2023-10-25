@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import {
 	DynamoDBClient,
 	CreateTableCommand,
@@ -55,15 +54,43 @@ async function syncTables(): Promise<void> {
  * Add a simple item with a randomly generated ID to the items table
  */
 async function populateTestData() {
-	const putParams = {
-		TableName: 'items',
-		Item: {
-			itemId: { S: Math.floor(Math.random() * 100000000).toString() },
-		},
-	} satisfies PutItemCommandInput;
+	for (let groupIndex = 0; groupIndex < 5; groupIndex += 1) {
+		const groupNumber = Math.floor(Math.random() * 1000);
 
-	const putCommand = new PutItemCommand(putParams);
-	await client.send(putCommand);
+		for (let i = 0; i < 5; i += 1) {
+			const itemIndex = groupNumber + i;
+			const randomOffset = Math.floor(Math.random() * 100 - 50);
+
+			const startTime = new Date();
+
+			// Add `randomOffset` days to today
+			startTime.setDate(startTime.getDate() + randomOffset);
+
+			const putParams = {
+				TableName: 'Events',
+				Item: {
+					Id: { S: itemIndex.toString() },
+					MeetupGroupName: { S: 'group' + groupNumber },
+					MeetupGroupUrl: { S: 'group-url' + groupNumber },
+					Title: { S: 'title' + itemIndex },
+					EventUrl: { S: 'eventUrl' + itemIndex },
+					Description: { S: `random offset was ${randomOffset} days` },
+					EventDateTime: { S: startTime.toISOString() },
+					Duration: { S: 'duration' + itemIndex },
+					VenueName: { S: 'venue-name' + itemIndex },
+					VenueAddress: { S: 'venue-address' + itemIndex },
+					VenueCity: { S: 'venue-city' + itemIndex },
+					VenueState: { S: 'venue-state' + itemIndex },
+					VenuePostalCode: { S: 'venue-postcode' + itemIndex },
+					HostName: { S: 'host-name' + itemIndex },
+				},
+			} satisfies PutItemCommandInput;
+
+			const putCommand = new PutItemCommand(putParams);
+			const putResult = await client.send(putCommand);
+			console.log({ putResult });
+		}
+	}
 }
 
 void syncDb();
