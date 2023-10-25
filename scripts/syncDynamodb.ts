@@ -51,7 +51,7 @@ async function syncTables(): Promise<void> {
 }
 
 /**
- * Add a simple item with a randomly generated ID to the items table
+ * Add an event with a randomly generated ID to the Events table
  */
 async function populateTestData() {
 	for (let groupIndex = 0; groupIndex < 5; groupIndex += 1) {
@@ -74,7 +74,9 @@ async function populateTestData() {
 					MeetupGroupUrl: { S: 'group-url' + groupNumber },
 					Title: { S: 'title' + itemIndex },
 					EventUrl: { S: 'eventUrl' + itemIndex },
-					Description: { S: `random offset was ${randomOffset} days` },
+					Description: {
+						S: `random offset was ${randomOffset} days`,
+					},
 					EventDateTime: { S: startTime.toISOString() },
 					Duration: { S: 'duration' + itemIndex },
 					VenueName: { S: 'venue-name' + itemIndex },
@@ -88,7 +90,7 @@ async function populateTestData() {
 
 			const putCommand = new PutItemCommand(putParams);
 			const putResult = await client.send(putCommand);
-			console.log({ putResult });
+			console.log({ putResult }); // eslint-disable-line no-console
 		}
 	}
 }

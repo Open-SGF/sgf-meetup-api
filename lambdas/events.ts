@@ -1,9 +1,9 @@
 import 'dotenv/config';
-import { type Handler } from 'aws-lambda';
+import type { Handler } from 'aws-lambda';
 import { QueryCommand, AttributeValue } from '@aws-sdk/client-dynamodb';
 
 import { dynamoDbClient } from './lib/dynamoDbClient';
-import { Group, Venue, Node as MeetupEvent } from './types/MeetupFutureEventsPayload';
+import { Group, Node as MeetupEvent } from './types/MeetupFutureEventsPayload';
 import { parseDateString } from './lib/util';
 
 const EVENTS_TABLE_NAME = process.env['EVENTS_TABLE_NAME'];
@@ -32,45 +32,44 @@ async function getMeetupEvents(
 		ExpressionAttributeValues: makeExpressionAttributeValues(options),
 		Limit: options.count,
 	});
-	console.log({ queryCommand });
+	console.log({ queryCommand }); // eslint-disable-line no-console
 	const response = await dynamoDbClient.send(queryCommand);
 
-	const events =
-		response.Items?.map((item) => {
-			const group = {
-				name: item.MeetupGroupName.S!,
-				urlname: item.MeetupGroupUrl.S!
-			} satisfies Group;
+	const events = response.Items?.map((item) => {
+		const group = {
+			name: item.MeetupGroupName.S!,
+			urlname: item.MeetupGroupUrl.S!,
+		} satisfies Group;
 
-			const title = item.Title.S!;
-			const eventUrl = item.EventUrl.S!;
-			const description = item.Description.S!;
-			const dateTime = item.EventDateTime.S!;
-			const duration = item.Duration.S!;
-			const venue = {
-				name: item.VenueName.S!,
-				address: item.VenueAddress.S!,
-				city: item.VenueCity.S!,
-				state: item.VenueState.S!,
-				postalCode: item.VenuePostalCode.S!,
-			};
+		const title = item.Title.S!;
+		const eventUrl = item.EventUrl.S!;
+		const description = item.Description.S!;
+		const dateTime = item.EventDateTime.S!;
+		const duration = item.Duration.S!;
+		const venue = {
+			name: item.VenueName.S!,
+			address: item.VenueAddress.S!,
+			city: item.VenueCity.S!,
+			state: item.VenueState.S!,
+			postalCode: item.VenuePostalCode.S!,
+		};
 
-			const meetupEvent: MeetupEvent = {
-				group,
-				title,
-				eventUrl,
-				description,
-				dateTime,
-				duration,
-				venue,
-				host: {
-					name: item.HostName.S!
-				},
-				images: [] // TODO
-			};
+		const meetupEvent: MeetupEvent = {
+			group,
+			title,
+			eventUrl,
+			description,
+			dateTime,
+			duration,
+			venue,
+			host: {
+				name: item.HostName.S!,
+			},
+			images: [], // TODO
+		};
 
-			return meetupEvent;
-		});
+		return meetupEvent;
+	});
 
 	return events ?? [];
 }
@@ -163,7 +162,7 @@ function makeGetMeetupEventsOptions(
 	return options;
 }
 
-export const handler: Handler = async (event, context) => {
+export const handler: Handler = async (event) => {
 	const { queryStringParameters } = event;
 
 	try {
@@ -173,8 +172,9 @@ export const handler: Handler = async (event, context) => {
 		const events = await getMeetupEvents(getMeetupEventsOptions);
 		const body = JSON.stringify({ success: true, events });
 		return { statusCode: 200, body };
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	} catch (error: any) {
-		console.error(error);
+		console.error(error); // eslint-disable-line no-console
 		const body = JSON.stringify({
 			success: false,
 			error,
