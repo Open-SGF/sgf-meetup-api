@@ -1,3 +1,5 @@
+import { config } from 'dotenv';
+import { expand } from "dotenv-expand";
 import {
 	DynamoDBClient,
 	CreateTableCommand,
@@ -7,8 +9,12 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import * as template from '../cdk.out/sgf-meetup-api.template.json';
 
+const env = config()
+expand(env)
+
 const client = new DynamoDBClient({
 	endpoint: process.env.DYNAMODB_ENDPOINT,
+	region: process.env.DYNAMODB_REGION,
 	credentials: {
 		accessKeyId: 'user',
 		secretAccessKey: 'password',
