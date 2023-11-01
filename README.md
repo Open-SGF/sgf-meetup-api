@@ -62,7 +62,7 @@ To fix it:
 - `aws sso login`
 - Open the link in a browser and follow the prompts
 
-### `npm run dev:sync-dynamodb` Hang in linux environments (including WSL)
+### `npm run dev:sync-dynamodb` Hangs in Linux Environments (Including WSL)
 This can be caused by permissions errors with the `./docker` folder that docker compose creates.
 To fix it change the permissions of that folder to your local user
 ```bash
