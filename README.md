@@ -48,7 +48,7 @@ Including the commands in npm scripts.
 
 ## Troubleshooting
 
-### `SSOTokenProviderFailure`
+### `SSOTokenProviderFailure` When Starting Project
 If it's been awhile since you've last run the project, your SSO session in the AWS CLI has expired.
 To fix it:
 - `aws sso login`
