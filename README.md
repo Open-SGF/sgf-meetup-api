@@ -32,12 +32,20 @@ Including the commands in npm scripts.
 - Don't forget to reload your shell after setting this!
 
 ### Install dependencies
-- `nvm install`(if using nvm)
-- `npm install`
+```bash
+nvm install # if using nvm
+npm install
+```
+
+### Create `.env`
+```bash
+`cp .env.example .env`
+```
 
 ## Running the project
 - `nvm use` (if using nvm)
 - `docker compose up -d`
+- `npm run dev:sync-dynamodb`
 - Run importer script
   - `npm run dev:importer`
 - Run API
@@ -53,3 +61,10 @@ If it's been awhile since you've last run the project, your SSO session in the A
 To fix it:
 - `aws sso login`
 - Open the link in a browser and follow the prompts
+
+### `npm run dev:sync-dynamodb` Hang in linux environments (including WSL)
+This can be caused by permissions errors with the `./docker` folder that docker compose creates.
+To fix it change the permissions of that folder to your local user
+```bash
+sudo chown $USER ./docker -R
+```
