@@ -39,7 +39,7 @@ npm install
 
 ### Create `.env`
 ```bash
-`cp .env.example .env`
+cp .env.example .env
 ```
 
 ## Running the project
