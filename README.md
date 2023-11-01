@@ -1,66 +1,55 @@
-# APIGateway with CORS, Lambdas, and CRUD on DynamoDB
-<!--BEGIN STABILITY BANNER-->
----
+# SGF Meetup API
 
-![Stability: Stable](https://img.shields.io/badge/stability-Stable-success.svg?style=for-the-badge)
+## Prerequisites
+- [Node 18.x](https://nodejs.org) (Ideally using [nvm](https://github.com/nvm-sh/nvm))
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
+- An Open SGF AWS Account
+  - Message a project organizer to get one set up 
 
-> **This is a stable example. It should successfully build out of the box**
->
-> This examples is built on Construct Libraries marked "Stable" and does not have any infrastructure prerequisites to build.
+## First Time Setup
 
----
-<!--END STABILITY BANNER-->
+### Sign in to the AWS CLI
+- `aws configure sso`
+  - SSO session name: `<your name>-opensgf`
+  - SSO start URL: `https://opensgf.awsapps.com/start`
+  - SSO region: `us-east-2`
+  - SSO registration scopes: use the default
+- Open the link in a browser
+  - Verify/enter the code from the terminal
+  - Allow access
+- Continue configuration in the terminal
+  - CLI default client Region: `us-east-2`
+  - CLI default output format: use the default
+  - CLI profile name: `<your name>-opensgf`
 
-This an example of an APIGateway with CORS enabled, pointing to five Lambdas executing CRUD operations on a single DynamoDB table.
+### Set Default AWS Profile (Optional)
+Without this you'll need to manually specify your profile for any aws commands.
+Including the commands in npm scripts.
+- Set the `AWS_DEFAULT_PROFILE` environment variable to the profile name you just created
+  - `export AWS_DEFAULT_PROFILE=<your name>-opensgf`
+- Don't forget to reload your shell after setting this!
 
-## Build
+### Install dependencies
+- `nvm install`(optional)
+- `npm install`
 
-To build this app, you need to be in this example's root folder. Then run the following:
+## Running the project
+- `nvm use` (optional)
+- `docker compose up -d`
+- Run importer script
+  - `npm run dev:importer`
+- Run API
+  - `npm run dev:api`
 
-```bash
-npm install -g aws-cdk
-npm install
-npm run build
-```
+## Shutting down
+- `docker compose down`
 
-This will install the necessary CDK, then this example's dependencies, then the lambda functions' dependencies, and then build your TypeScript files and your CloudFormation template.
+## Troubleshooting
 
-## Deploy
-
-Run `cdk deploy`. This will deploy / redeploy your Stack to your AWS Account.
-
-After the deployment you will see the API's URL, which represents the url you can then use.
-
-## The Component Structure
-
-The whole component contains:
-
-- An API, with CORS enabled on all HTTP Methods. (Use with caution, for production apps you will want to enable only a certain domain origin to be able to query your API.)
-- Lambda pointing to `lambdas/create.ts`, containing code for __storing__ an item  into the DynamoDB table.
-- Lambda pointing to `lambdas/delete-one.ts`, containing code for __deleting__ an item from the DynamoDB table.
-- Lambda pointing to `lambdas/getAll.ts`, containing code for __getting all items__ from the DynamoDB table.
-- Lambda pointing to `lambdas/get-one.ts`, containing code for __getting an item__ from the DynamoDB table.
-- Lambda pointing to `lambdas/update-one.ts`, containing code for __updating an item__ in the DynamoDB table.
-- A DynamoDB table `items` that stores the data.
-- Five `LambdaIntegrations` that connect these Lambdas to the API.
-
-## CDK Toolkit
-
-The [`cdk.json`](./cdk.json) file in the root of this repository includes
-instructions for the CDK toolkit on how to execute this program.
-
-After building your TypeScript code, you will be able to run the CDK toolkit commands as usual:
-
-```bash
-    $ cdk ls
-    <list all stacks in this program>
-
-    $ cdk synth
-    <generates and outputs cloudformation template>
-
-    $ cdk deploy
-    <deploys stack to your account>
-
-    $ cdk diff
-    <shows diff against deployed stack>
-```
+### `SSOTokenProviderFailure`
+If it's been awhile since you've last run the project, your SSO session in the AWS CLI has expired.
+To fix it:
+- `aws sso login`
+- Open the link in a browser and follow the prompts
