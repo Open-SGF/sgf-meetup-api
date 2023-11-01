@@ -15,13 +15,13 @@
   - SSO session name: `<your name>-opensgf`
   - SSO start URL: `https://opensgf.awsapps.com/start`
   - SSO region: `us-east-2`
-  - SSO registration scopes: use the default
+  - SSO registration scopes: use the default (push enter)
 - Open the link in a browser
   - Verify/enter the code from the terminal
   - Allow access
 - Continue configuration in the terminal
   - CLI default client Region: `us-east-2`
-  - CLI default output format: use the default
+  - CLI default output format: use the default (push enter)
   - CLI profile name: `<your name>-opensgf`
 
 ### Set Default AWS Profile (Optional)
@@ -32,11 +32,11 @@ Including the commands in npm scripts.
 - Don't forget to reload your shell after setting this!
 
 ### Install dependencies
-- `nvm install`(optional)
+- `nvm install`(if using nvm)
 - `npm install`
 
 ## Running the project
-- `nvm use` (optional)
+- `nvm use` (if using nvm)
 - `docker compose up -d`
 - Run importer script
   - `npm run dev:importer`
