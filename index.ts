@@ -20,6 +20,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 	constructor(app: App, id: string) {
 		super(app, id);
 
+		const NODE_ENV = process.env.BUILD_ENV ?? 'development';
+
 		const dynamoTable = new Table(this, 'items', {
 			partitionKey: {
 				name: 'itemId',
@@ -35,7 +37,29 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			removalPolicy: RemovalPolicy.DESTROY, // NOT recommended for production code
 		});
 
-		const NODE_ENV = process.env.BUILD_ENV ?? 'development';
+		const EVENTS_TABLE_NAME = 'Events';
+		const EVENTS_GROUP_INDEX_NAME = 'EventsByGroupIndex';
+
+		const eventsTable = new Table(this, EVENTS_TABLE_NAME, {
+			partitionKey: {
+				name: 'Id',
+				type: AttributeType.STRING,
+			},
+			tableName: EVENTS_TABLE_NAME,
+			removalPolicy: RemovalPolicy.DESTROY, // NOT recommended for production code
+		});
+
+		eventsTable.addGlobalSecondaryIndex({
+			indexName: EVENTS_GROUP_INDEX_NAME,
+			partitionKey: {
+				name: 'MeetupGroupName',
+				type: AttributeType.STRING,
+			},
+			sortKey: {
+				name: 'EventDateTime',
+				type: AttributeType.STRING,
+			},
+		});
 
 		const nodeJsFunctionProps: NodejsFunctionProps = {
 			depsLockFilePath: join(__dirname, 'lambdas', 'package-lock.json'),
@@ -45,6 +69,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				LAMBDA_AWS_ACCESS_KEY_ID: 'anything',
 				LAMBDA_AWS_SECRET_ACCESS_KEY: 'at-all',
 				NODE_ENV,
+				EVENTS_TABLE_NAME,
+				EVENTS_GROUP_INDEX_NAME,
 			},
 			runtime: Runtime.NODEJS_18_X,
 			timeout: Duration.minutes(4),
@@ -78,9 +104,15 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			...nodeJsFunctionProps,
 		});
 
+		const getEventsLambda = new NodejsFunction(this, 'getEventsFunction', {
+			entry: join(__dirname, 'lambdas', 'events.ts'),
+			...nodeJsFunctionProps,
+		});
+
 		// Grant the Lambda function read access to the DynamoDB table
 		dynamoTable.grantReadWriteData(getAllLambda);
 		dynamoTable.grantReadWriteData(importerLambda);
+		eventsTable.grantReadWriteData(getEventsLambda);
 
 		const importScheduleRule = new Rule(this, 'importerEventBridgeRule', {
 			schedule: Schedule.expression('cron(0 2 * * ? *)'),
@@ -90,6 +122,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		// Integrate the Lambda functions with the API Gateway resource
 		const getAllIntegration = new LambdaIntegration(getAllLambda);
+		const getEventsIntegration = new LambdaIntegration(getEventsLambda);
 
 		// Create an API Gateway resource for each of the CRUD operations
 		const api = new RestApi(this, 'itemsApi', {
@@ -101,6 +134,10 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		const items = api.root.addResource('items');
 		items.addMethod('GET', getAllIntegration);
 		addCorsOptions(items);
+
+		const eventsResource = api.root.addResource('events');
+		eventsResource.addMethod('GET', getEventsIntegration);
+		addCorsOptions(eventsResource);
 	}
 }
 
