@@ -19,6 +19,7 @@ export interface Edge {
 }
 
 export interface Node {
+	id: string;
 	title: string;
 	eventUrl: string;
 	description: string;
