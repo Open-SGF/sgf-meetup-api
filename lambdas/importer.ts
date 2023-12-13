@@ -98,10 +98,6 @@ async function fetchEvents(meetupAccessToken: string) {
 	}
 
 	async function fetchAndPrintAllFutureEvents() {
-		if (GROUP_URLNAMES === undefined) {
-			throw new Error('Group Urlnames is undefined');
-		}
-
 		for (const urlname of GROUP_URLNAMES) {
 			const futureEvents = await fetchAllFutureEvents(urlname);
 
