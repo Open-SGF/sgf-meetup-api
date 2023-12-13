@@ -68,3 +68,8 @@ To fix it change the permissions of that folder to your local user
 ```bash
 sudo chown $USER ./docker -R
 ```
+
+### `npm run dev:sync-dynamodb` Causes "UnrecognizedClientException: The security token included in the request is invalid."
+Specify a DYNAMODB_ENDPOINT environment variable pointing to localhost.
+
+Example: `DYNAMODB_ENDPOINT=http://localhost:8000 npm run dev:sync-dynamodb`
