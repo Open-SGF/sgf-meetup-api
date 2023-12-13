@@ -7,13 +7,7 @@ async function fetchEvents(meetupAccessToken: string) {
 	const meetupGraphQlEndpoint = 'https://api.meetup.com/gql';
 	const batchSize = 10; // Number of events to fetch in each batch
 
-	const GROUP_URLNAMES = [
-		'open-sgf',
-		'springfield-women-in-tech',
-		'sgfdevs',
-		'sgfaws',
-		'sgfdotnet',
-	];
+	const GROUP_URLNAMES = process.env['MEETUP_GROUP_URLNAMES']?.split(',');
 
 	const GET_FUTURE_EVENTS = `
       query ($urlname: String!, $itemsNum: Int!, $cursor: String) {
@@ -102,6 +96,10 @@ async function fetchEvents(meetupAccessToken: string) {
 	}
 
 	async function fetchAndPrintAllFutureEvents() {
+		if (GROUP_URLNAMES === undefined) {
+			throw new Error('Group Urlnames is undefined');
+		}
+
 		for (const urlname of GROUP_URLNAMES) {
 			const futureEvents = await fetchAllFutureEvents(urlname);
 
