@@ -3,7 +3,7 @@ import type { Handler } from 'aws-lambda';
 import { QueryCommand, AttributeValue } from '@aws-sdk/client-dynamodb';
 
 import { dynamoDbClient } from './lib/dynamoDbClient';
-import { Group, Node as MeetupEvent } from './types/MeetupFutureEventsPayload';
+import { Group, MeetupEvent } from './types/MeetupFutureEventsPayload';
 import { parseDateString } from './lib/util';
 
 const EVENTS_TABLE_NAME = process.env['EVENTS_TABLE_NAME'];

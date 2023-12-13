@@ -27,3 +27,5 @@ function makeDynamoDBClient() {
 }
 
 export const dynamoDbClient = makeDynamoDBClient();
+
+function saveEvent(event:

@@ -15,10 +15,13 @@ export interface UnifiedEvents {
 }
 
 export interface Edge {
-	node: Node;
+	node: MeetupEvent;
 }
 
-export interface Node {
+/**
+ * Container for all the stuff associated with a Meetup event
+ */
+export interface MeetupEvent {
 	id: string;
 	title: string;
 	eventUrl: string;
