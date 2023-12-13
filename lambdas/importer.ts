@@ -107,6 +107,7 @@ async function fetchEvents(meetupAccessToken: string) {
 				console.log('Event:', event.node.title);
 				// eslint-disable-next-line no-console
 				console.log('Event ID:', event.node.id);
+				// eslint-disable-next-line no-console
 				console.log('Event ID type:', typeof event.node.id);
 				// eslint-disable-next-line no-console
 				console.log('Event Link:', event.node.eventUrl);
