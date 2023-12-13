@@ -7,7 +7,9 @@ async function fetchEvents(meetupAccessToken: string) {
 	const meetupGraphQlEndpoint = 'https://api.meetup.com/gql';
 	const batchSize = 10; // Number of events to fetch in each batch
 
-	const GROUP_URLNAMES = ['open-sgf', 'springfield-women-in-tech', 'sgfdevs'];
+	const GROUP_URLNAMES = (
+		process.env.MEETUP_GROUP_URLNAMES?.split(',') ?? []
+	).map((group) => group.trim());
 
 	const GET_FUTURE_EVENTS = `
       query ($urlname: String!, $itemsNum: Int!, $cursor: String) {

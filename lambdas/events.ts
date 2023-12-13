@@ -9,8 +9,8 @@ import {
 } from './types/MeetupFutureEventsPayload';
 import { parseDateString } from './lib/util';
 
-const EVENTS_TABLE_NAME = process.env['EVENTS_TABLE_NAME'];
-const EVENTS_GROUP_INDEX_NAME = process.env['EVENTS_GROUP_INDEX_NAME'];
+const EVENTS_TABLE_NAME = process.env.EVENTS_TABLE_NAME;
+const EVENTS_GROUP_INDEX_NAME = process.env.EVENTS_GROUP_INDEX_NAME;
 
 type GetMeetupEventsOptions = {
 	count: number;
