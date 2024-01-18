@@ -52,7 +52,7 @@ function makeKeyConditionExpression({
 	before,
 	after,
 }: GetMeetupEventsOptions): string {
-	let expr = 'MeetupGroupName = :group';
+	let expr = 'MeetupGroupUrlName = :group';
 
 	if (before && after) {
 		expr += ' AND EventDateTime BETWEEN :after AND :before';

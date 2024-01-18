@@ -23,7 +23,9 @@ const client = new DynamoDBClient({
 
 async function syncDb(): Promise<void> {
 	await syncTables();
-	await populateTestData();
+	if (false) {
+		await populateTestData();
+	}
 }
 
 /**
@@ -77,7 +79,7 @@ async function populateTestData() {
 				Item: {
 					Id: { S: itemIndex.toString() },
 					MeetupGroupName: { S: 'group' + groupNumber },
-					MeetupGroupUrl: { S: 'group-url' + groupNumber },
+					MeetupGroupUrlName: { S: 'group-url' + groupNumber },
 					Title: { S: 'title' + itemIndex },
 					EventUrl: { S: 'eventUrl' + itemIndex },
 					Description: {

@@ -37,7 +37,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		eventsTable.addGlobalSecondaryIndex({
 			indexName: EVENTS_GROUP_INDEX_NAME,
 			partitionKey: {
-				name: 'MeetupGroupName',
+				name: 'MeetupGroupUrlName',
 				type: AttributeType.STRING,
 			},
 			sortKey: {
