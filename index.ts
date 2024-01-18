@@ -22,21 +22,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		const NODE_ENV = process.env.BUILD_ENV ?? 'development';
 
-		const dynamoTable = new Table(this, 'items', {
-			partitionKey: {
-				name: 'itemId',
-				type: AttributeType.STRING,
-			},
-			tableName: 'items',
-
-			/**
-			 *  The default removal policy is RETAIN, which means that cdk destroy will not attempt to delete
-			 * the new table, and it will remain in your account until manually deleted. By setting the policy to
-			 * DESTROY, cdk destroy will delete the table (even if it has data in it)
-			 */
-			removalPolicy: RemovalPolicy.DESTROY, // NOT recommended for production code
-		});
-
 		const EVENTS_TABLE_NAME = 'Events';
 		const EVENTS_GROUP_INDEX_NAME = 'EventsByGroupIndex';
 
@@ -64,8 +49,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		const nodeJsFunctionProps: NodejsFunctionProps = {
 			depsLockFilePath: join(__dirname, 'lambdas', 'package-lock.json'),
 			environment: {
-				PRIMARY_KEY: 'itemId',
-				TABLE_NAME: dynamoTable.tableName,
 				LAMBDA_AWS_ACCESS_KEY_ID: 'anything',
 				LAMBDA_AWS_SECRET_ACCESS_KEY: 'at-all',
 				NODE_ENV,
@@ -75,11 +58,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			runtime: Runtime.NODEJS_18_X,
 			timeout: Duration.minutes(4),
 		};
-
-		const getAllLambda = new NodejsFunction(this, 'getAllItemsFunction', {
-			entry: join(__dirname, 'lambdas', 'getAll.ts'),
-			...nodeJsFunctionProps,
-		});
 
 		const importerLambda = new NodejsFunction(this, 'importerFunction', {
 			entry: join(__dirname, 'lambdas', 'importer.ts'),
@@ -110,8 +88,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		});
 
 		// Grant the Lambda function read access to the DynamoDB table
-		dynamoTable.grantReadWriteData(getAllLambda);
-		dynamoTable.grantReadWriteData(importerLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
 
 		const importScheduleRule = new Rule(this, 'importerEventBridgeRule', {
@@ -121,19 +97,14 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		importScheduleRule.addTarget(new LambdaFunction(importerLambda));
 
 		// Integrate the Lambda functions with the API Gateway resource
-		const getAllIntegration = new LambdaIntegration(getAllLambda);
 		const getEventsIntegration = new LambdaIntegration(getEventsLambda);
 
 		// Create an API Gateway resource for each of the CRUD operations
-		const api = new RestApi(this, 'itemsApi', {
-			restApiName: 'Items Service',
+		const api = new RestApi(this, 'eventsApi', {
+			restApiName: 'Events Service',
 			// In case you want to manage binary types, uncomment the following
 			// binaryMediaTypes: ["*/*"],
 		});
-
-		const items = api.root.addResource('items');
-		items.addMethod('GET', getAllIntegration);
-		addCorsOptions(items);
 
 		const eventsResource = api.root.addResource('events');
 		eventsResource.addMethod('GET', getEventsIntegration);
