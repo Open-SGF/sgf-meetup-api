@@ -1,15 +1,12 @@
 import 'dotenv/config';
 import fetch from 'node-fetch';
-import {
-	DynamoDBClient,
-	CreateTableCommand,
-	PutItemCommand,
-	CreateTableCommandInput,
-	PutItemCommandInput,
-} from '@aws-sdk/client-dynamodb';
+import { PutItemCommand, PutItemCommandInput } from '@aws-sdk/client-dynamodb';
 
 import { getMeetupToken } from './lib/getMeetupToken';
-import { MeetupFutureEventsPayload, meetupEventToDynamoDbItem } from './types/MeetupFutureEventsPayload';
+import {
+	MeetupFutureEventsPayload,
+	meetupEventToDynamoDbItem,
+} from './types/MeetupFutureEventsPayload';
 import { dynamoDbClient } from './lib/dynamoDbClient';
 
 const GET_FUTURE_EVENTS = `
@@ -59,14 +56,14 @@ async function importEventsToDynamoDb(meetupAccessToken: string) {
 	const batchSize = 10; // Number of events to fetch in each batch
 
 	const GROUP_URLNAMES = (
-		process.env.MEETUP_GROUP_URLNAMES?.split(',').map((userpass) => userpass.split(':')[0]) ?? []
+		process.env.MEETUP_GROUP_URLNAMES?.split(',').map(
+			(userpass) => userpass.split(':')[0],
+		) ?? []
 	).map((group) => group.trim());
 
 	if (GROUP_URLNAMES.length === 0) {
-		throw new Error("No groups specified in environment variable");
+		throw new Error('No groups specified in environment variable');
 	}
-
-	// console.log({ GROUP_URLNAMES });
 
 	async function fetchAllFutureEvents(
 		urlname: string,
@@ -81,8 +78,6 @@ async function importEventsToDynamoDb(meetupAccessToken: string) {
 			},
 		});
 
-		// console.log({ requestBody });
-
 		const requestOptions = {
 			method: 'POST',
 			headers: {
@@ -95,8 +90,9 @@ async function importEventsToDynamoDb(meetupAccessToken: string) {
 		try {
 			const response = await fetch(meetupGraphQlEndpoint, requestOptions);
 			const res = (await response.json()) as MeetupFutureEventsPayload;
-			// console.log({ res: JSON.stringify(res) });
-			const events = res.data.events?.unifiedEvents.edges.map((edge) => edge.node) ?? [];
+			const events =
+				res.data.events?.unifiedEvents.edges.map((edge) => edge.node) ??
+				[];
 
 			if (res.data.events?.unifiedEvents.pageInfo.hasNextPage) {
 				const nextCursor =
@@ -117,13 +113,16 @@ async function importEventsToDynamoDb(meetupAccessToken: string) {
 	}
 
 	async function saveAllFutureEvents() {
-		console.log({ "events table": process.env.EVENTS_TABLE_NAME });
 		for (const urlname of GROUP_URLNAMES) {
-			console.log("fetching for", urlname);
+			// eslint-disable-next-line no-console
+			console.log('fetching for', urlname);
 			const futureEvents = await fetchAllFutureEvents(urlname);
+			// eslint-disable-next-line no-console
 			console.log({ futureEvents });
 
-			const eventsAsDynamoDbItems = futureEvents.map((event) => meetupEventToDynamoDbItem(event));
+			const eventsAsDynamoDbItems = futureEvents.map((event) =>
+				meetupEventToDynamoDbItem(event),
+			);
 
 			for (const item of eventsAsDynamoDbItems) {
 				const putParams = {
@@ -142,6 +141,5 @@ async function importEventsToDynamoDb(meetupAccessToken: string) {
 
 export async function handler() {
 	const token = await getMeetupToken();
-	console.log({ token });
 	await importEventsToDynamoDb(token);
 }

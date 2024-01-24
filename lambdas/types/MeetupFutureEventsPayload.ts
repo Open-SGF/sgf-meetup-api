@@ -59,7 +59,6 @@ export function meetupEventFromDynamoDbItem(
 export function meetupEventToDynamoDbItem(
 	meetupEvent: MeetupEvent,
 ): Record<string, AttributeValue> {
-
 	const item: Record<string, AttributeValue> = {
 		Id: { S: meetupEvent.id },
 		MeetupGroupName: { S: meetupEvent.group.name },
