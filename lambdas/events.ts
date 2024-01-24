@@ -1,5 +1,9 @@
 import 'dotenv/config';
-import type { Handler } from 'aws-lambda';
+import type {
+	APIGatewayEvent,
+	APIGatewayProxyEventQueryStringParameters,
+	Handler,
+} from 'aws-lambda';
 import { QueryCommand, AttributeValue } from '@aws-sdk/client-dynamodb';
 
 import { dynamoDbClient } from './lib/dynamoDbClient';
@@ -52,7 +56,7 @@ function makeKeyConditionExpression({
 	before,
 	after,
 }: GetMeetupEventsOptions): string {
-	let expr = 'MeetupGroupName = :group';
+	let expr = 'MeetupGroupUrlName = :group';
 
 	if (before && after) {
 		expr += ' AND EventDateTime BETWEEN :after AND :before';
@@ -93,7 +97,7 @@ function makeExpressionAttributeValues({
  * be passed to `getMeetupEvents` to run the query the user is requesting.
  */
 function makeGetMeetupEventsOptions(
-	queryStringParameters: Record<string, string>,
+	queryStringParameters: APIGatewayProxyEventQueryStringParameters,
 ): GetMeetupEventsOptions {
 	// Check for `group` query string parameter
 	const groupParam = queryStringParameters?.['group'];
@@ -133,13 +137,55 @@ function makeGetMeetupEventsOptions(
 	return options;
 }
 
-export const handler: Handler = async (event) => {
-	const { queryStringParameters } = event;
+function validatePassword(urlname: string, password: string) {
+	for (const userpass of process.env.MEETUP_GROUP_URLNAMES!.split(',')) {
+		const [_urlname, _password] = userpass.split(':');
+		// eslint-disable-next-line no-console
+		console.log({ urlname, password, _urlname, _password });
+
+		if (urlname === _urlname) {
+			return password === _password;
+		}
+	}
+
+	return false;
+}
+
+export const handler: Handler = async (event: APIGatewayEvent) => {
+	const { headers, queryStringParameters } = event;
 
 	try {
+		const authHeader = headers['Authorization'];
+
+		if (authHeader == null) {
+			return {
+				statusCode: 401,
+				body: JSON.stringify({
+					error: 'Authorization header is required',
+				}),
+			};
+		}
+
+		const [urlname, password] = authHeader.split(':');
+
+		if (!validatePassword(urlname, password)) {
+			// eslint-disable-next-line no-console
+			console.error(`Bad password provided for urlname ${urlname}`);
+			return {
+				statusCode: 401,
+				body: JSON.stringify({
+					error: 'Authorization header is not valid',
+				}),
+			};
+		}
+
+		// eslint-disable-next-line no-console
+		console.log(`Returning events requested by user ${urlname}`);
+
 		const getMeetupEventsOptions = makeGetMeetupEventsOptions(
-			queryStringParameters,
+			queryStringParameters!,
 		);
+
 		const events = await getMeetupEvents(getMeetupEventsOptions);
 		const body = JSON.stringify({ success: true, events });
 		return { statusCode: 200, body };

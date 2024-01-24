@@ -17,10 +17,7 @@ function makeDynamoDBClient() {
 
 		client = new DynamoDBClient({ endpoint, credentials });
 	} else {
-		throw new Error('not implemented'); // Doesn't support production DynamoDB yet
-
-		// // TODO: set up access to real AWS
-		// client = new DynamoDBClient();
+		client = new DynamoDBClient();
 	}
 
 	return client;

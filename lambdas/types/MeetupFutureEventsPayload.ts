@@ -21,7 +21,7 @@ export function meetupEventFromDynamoDbItem(
 ): MeetupEvent {
 	const group = {
 		name: item.MeetupGroupName.S!,
-		urlname: item.MeetupGroupUrl.S!,
+		urlname: item.MeetupGroupUrlName.S!,
 	} satisfies Group;
 
 	const id = item.Id.S!;
@@ -62,7 +62,7 @@ export function meetupEventToDynamoDbItem(
 	const item: Record<string, AttributeValue> = {
 		Id: { S: meetupEvent.id },
 		MeetupGroupName: { S: meetupEvent.group.name },
-		MeetupGroupUrl: { S: meetupEvent.group.urlname },
+		MeetupGroupUrlName: { S: meetupEvent.group.urlname },
 		Title: { S: meetupEvent.title },
 		EventUrl: { S: meetupEvent.eventUrl },
 		Description: { S: meetupEvent.description },

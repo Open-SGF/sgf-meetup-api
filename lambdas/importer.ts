@@ -1,57 +1,69 @@
 import 'dotenv/config';
 import fetch from 'node-fetch';
-import { getMeetupToken } from './lib/getMeetupToken';
-import { MeetupFutureEventsPayload } from './types/MeetupFutureEventsPayload';
+import { PutItemCommand, PutItemCommandInput } from '@aws-sdk/client-dynamodb';
 
-async function fetchEvents(meetupAccessToken: string) {
+import { getMeetupToken } from './lib/getMeetupToken';
+import {
+	MeetupFutureEventsPayload,
+	meetupEventToDynamoDbItem,
+} from './types/MeetupFutureEventsPayload';
+import { dynamoDbClient } from './lib/dynamoDbClient';
+
+const GET_FUTURE_EVENTS = `
+  query ($urlname: String!, $itemsNum: Int!, $cursor: String) {
+	events: groupByUrlname(urlname: $urlname) {
+	  unifiedEvents(input: { first: $itemsNum, after: $cursor }) {
+		count
+		pageInfo {
+		  endCursor
+		  hasNextPage
+		}
+		edges {
+		  node {
+			id
+			title
+			eventUrl
+			description
+			dateTime
+			duration
+			venue {
+			  name
+			  address
+			  city
+			  state
+			  postalCode
+			}
+			group {
+			  name
+			  urlname
+			}
+			host {
+			  name
+			}
+			images {
+			  baseUrl
+			  preview
+			}
+		  }
+		}
+	  }
+	}
+  }
+`;
+
+async function importEventsToDynamoDb(meetupAccessToken: string) {
 	const meetupGraphQlEndpoint = 'https://api.meetup.com/gql';
 	const batchSize = 10; // Number of events to fetch in each batch
 
 	const GROUP_URLNAMES = (
-		process.env.MEETUP_GROUP_URLNAMES?.split(',') ?? []
+		process.env.MEETUP_GROUP_URLNAMES?.split(',').map(
+			(userpass) => userpass.split(':')[0],
+		) ?? []
 	).map((group) => group.trim());
 
-	const GET_FUTURE_EVENTS = `
-      query ($urlname: String!, $itemsNum: Int!, $cursor: String) {
-        events: groupByUrlname(urlname: $urlname) {
-          unifiedEvents(input: { first: $itemsNum, after: $cursor }) {
-            count
-            pageInfo {
-              endCursor
-              hasNextPage
-            }
-            edges {
-              node {
-                id
-                title
-                eventUrl
-                description
-                dateTime
-                duration
-                venue {
-                  name
-                  address
-                  city
-                  state
-                  postalCode
-                }
-                group {
-                  name
-                  urlname
-                }
-                host {
-                  name
-                }
-                images {
-                  baseUrl
-                  preview
-                }
-              }
-            }
-          }
-        }
-      }
-    `;
+	if (GROUP_URLNAMES.length === 0) {
+		throw new Error('No groups specified in environment variable');
+	}
 
 	async function fetchAllFutureEvents(
 		urlname: string,
@@ -78,7 +90,9 @@ async function fetchEvents(meetupAccessToken: string) {
 		try {
 			const response = await fetch(meetupGraphQlEndpoint, requestOptions);
 			const res = (await response.json()) as MeetupFutureEventsPayload;
-			const events = res.data.events?.unifiedEvents.edges ?? [];
+			const events =
+				res.data.events?.unifiedEvents.edges.map((edge) => edge.node) ??
+				[];
 
 			if (res.data.events?.unifiedEvents.pageInfo.hasNextPage) {
 				const nextCursor =
@@ -98,52 +112,34 @@ async function fetchEvents(meetupAccessToken: string) {
 		}
 	}
 
-	async function fetchAndPrintAllFutureEvents() {
+	async function saveAllFutureEvents() {
 		for (const urlname of GROUP_URLNAMES) {
+			// eslint-disable-next-line no-console
+			console.log('fetching for', urlname);
 			const futureEvents = await fetchAllFutureEvents(urlname);
+			// eslint-disable-next-line no-console
+			console.log({ futureEvents });
 
-			futureEvents.forEach((event) => {
-				// eslint-disable-next-line no-console
-				console.log('--------------');
-				// eslint-disable-next-line no-console
-				console.log('Event:', event.node.title);
-				// eslint-disable-next-line no-console
-				console.log('Event ID:', event.node.id);
-				// eslint-disable-next-line no-console
-				console.log('Event ID type:', typeof event.node.id);
-				// eslint-disable-next-line no-console
-				console.log('Event Link:', event.node.eventUrl);
-				// eslint-disable-next-line no-console
-				console.log('Description:', event.node.description);
-				// eslint-disable-next-line no-console
-				console.log('Time:', new Date(event.node.dateTime));
-				// eslint-disable-next-line no-console
-				console.log('Duration:', event.node.duration);
-				// eslint-disable-next-line no-console
-				console.log(
-					'Location:',
-					event.node.venue.name +
-						'\n' +
-						event.node.venue.address +
-						'\n' +
-						event.node.venue.city +
-						', ' +
-						event.node.venue.state +
-						'\n' +
-						event.node.venue.postalCode,
-				);
-				// eslint-disable-next-line no-console
-				console.log('Group:', event.node.group.name);
-				// eslint-disable-next-line no-console
-				console.log('--------------');
-			});
+			const eventsAsDynamoDbItems = futureEvents.map((event) =>
+				meetupEventToDynamoDbItem(event),
+			);
+
+			for (const item of eventsAsDynamoDbItems) {
+				const putParams = {
+					TableName: process.env.EVENTS_TABLE_NAME,
+					Item: item,
+				} satisfies PutItemCommandInput;
+				const putCommand = new PutItemCommand(putParams);
+				const putResult = await dynamoDbClient.send(putCommand);
+				console.log({ putResult }); // eslint-disable-line no-console
+			}
 		}
 	}
 
-	await fetchAndPrintAllFutureEvents();
+	await saveAllFutureEvents();
 }
 
 export async function handler() {
 	const token = await getMeetupToken();
-	await fetchEvents(token);
+	await importEventsToDynamoDb(token);
 }
