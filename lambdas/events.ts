@@ -148,7 +148,7 @@ function validatePassword(urlname: string, password: string) {
 		}
 	}
 
-	throw new Error(`Password not found for urlname ${urlname}`);
+	return false;
 }
 
 export const handler: Handler = async (event: APIGatewayEvent) => {
