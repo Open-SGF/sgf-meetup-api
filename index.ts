@@ -57,10 +57,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			},
 			runtime: Runtime.NODEJS_18_X,
 			timeout: Duration.minutes(4),
-		};
-
-		const importerLambda = new NodejsFunction(this, 'importerFunction', {
-			entry: join(__dirname, 'lambdas', 'importer.ts'),
 			bundling: {
 				commandHooks: {
 					beforeBundling(
@@ -79,6 +75,10 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 					},
 				},
 			},
+		};
+
+		const importerLambda = new NodejsFunction(this, 'importerFunction', {
+			entry: join(__dirname, 'lambdas', 'importer.ts'),
 			...nodeJsFunctionProps,
 		});
 
