@@ -1,16 +1,17 @@
 # SGF Meetup API
 
 ## Table of Contents
-- [For Users](#for-users)
+- [How to Use This API](#how-to-use-this-api)
 	- [Requesting an API Key](#requesting-an-api-key)
-- [For Devs](#for-devs)
+	- [Authentication](#authentication)
+- [For Contributors](#for-contributors)
 	- [Prerequisites](#prerequisites)
 	- [First Time Setup](#first-time-setup)
 	- [Running the Project](#running-the-project)
 	- [Shutting Down](#shutting-down)
 	- [Troubleshooting](#troubleshooting)
 
-## For Users
+## How to Use This API
 
 ### Requesting an API Key
 
@@ -18,7 +19,11 @@ Request an API key by opening a GitHub Issue in the [SGF Meetup API repo](https:
 
 In the GitHub Issue, submit a username for the API and contact information.  We will assign a password to the username and send it to the contact information listed.
 
-## For Devs
+### Authentication
+
+
+
+## For Contributors
 
 ### Prerequisites
 - [Node 18.x](https://nodejs.org) (Ideally using [nvm](https://github.com/nvm-sh/nvm))
