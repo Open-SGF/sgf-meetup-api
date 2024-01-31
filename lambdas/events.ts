@@ -140,8 +140,6 @@ function makeGetMeetupEventsOptions(
 function validatePassword(urlname: string, password: string) {
 	for (const userpass of process.env.MEETUP_GROUP_URLNAMES!.split(',')) {
 		const [_urlname, _password] = userpass.split(':');
-		// eslint-disable-next-line no-console
-		console.log({ urlname, password, _urlname, _password });
 
 		if (urlname === _urlname) {
 			return password === _password;
