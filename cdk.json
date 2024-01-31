@@ -1,3 +1,4 @@
 {
-	"app": "npm run ts-node index"
+	"app": "npm run ts-node index",
+	"requireApproval": "never"
 }
