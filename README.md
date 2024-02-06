@@ -1,5 +1,7 @@
 # SGF Meetup API
 
+The SGF Meetup API lists Meetup event details for local tech groups in the Springfield, MO area.
+
 ## Table of Contents
 - [How to Use This API](#how-to-use-this-api)
 	- [Requesting an API Key](#requesting-an-api-key)
