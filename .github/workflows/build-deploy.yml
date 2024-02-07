@@ -18,6 +18,8 @@ jobs:
       - name: Create environment files
         env:
           MEETUP_PRIVATE_KEY_BASE64: ${{ secrets.MEETUP_PRIVATE_KEY_BASE64 }}
+		  API_KEYS: ${{ secrets.API_KEYS }}
+		  MEETUP_GROUP_NAMES: ${{ secrets.MEETUP_GROUP_NAMES }}
         run: echo -n $MEETUP_PRIVATE_KEY_BASE64 | base64 --decode > ./meetup-private-key
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@master
