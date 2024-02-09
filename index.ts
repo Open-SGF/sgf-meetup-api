@@ -58,7 +58,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				EVENTS_TABLE_NAME,
 				EVENTS_GROUP_INDEX_NAME,
 				API_KEYS,
-				MEETUP_GROUP_NAMES
+				MEETUP_GROUP_NAMES,
 			},
 			runtime: Runtime.NODEJS_18_X,
 			timeout: Duration.minutes(4),
