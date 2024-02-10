@@ -56,7 +56,7 @@ async function importEventsToDynamoDb(meetupAccessToken: string) {
 	const batchSize = 10; // Number of events to fetch in each batch
 
 	const GROUP_URLNAMES = (
-		process.env.MEETUP_GROUP_URLNAMES?.split(',').map(
+		process.env.MEETUP_GROUP_NAMES?.split(',').map(
 			(userpass) => userpass.split(':')[0],
 		) ?? []
 	).map((group) => group.trim());

@@ -46,6 +46,9 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			},
 		});
 
+		const API_KEYS = process.env.API_KEYS!;
+		const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
+
 		const nodeJsFunctionProps: NodejsFunctionProps = {
 			depsLockFilePath: join(__dirname, 'lambdas', 'package-lock.json'),
 			environment: {
@@ -54,6 +57,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				NODE_ENV,
 				EVENTS_TABLE_NAME,
 				EVENTS_GROUP_INDEX_NAME,
+				API_KEYS,
+				MEETUP_GROUP_NAMES,
 			},
 			runtime: Runtime.NODEJS_18_X,
 			timeout: Duration.minutes(4),

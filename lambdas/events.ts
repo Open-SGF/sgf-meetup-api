@@ -137,16 +137,9 @@ function makeGetMeetupEventsOptions(
 	return options;
 }
 
-function validatePassword(urlname: string, password: string) {
-	for (const userpass of process.env.MEETUP_GROUP_URLNAMES!.split(',')) {
-		const [_urlname, _password] = userpass.split(':');
-
-		if (urlname === _urlname) {
-			return password === _password;
-		}
-	}
-
-	return false;
+function validateKey(apiKey: string) {
+	const validKeys = process.env.API_KEYS!.split(',');
+	return validKeys.includes(apiKey);
 }
 
 export const handler: Handler = async (event: APIGatewayEvent) => {
@@ -164,11 +157,9 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
 			};
 		}
 
-		const [urlname, password] = authHeader.split(':');
-
-		if (!validatePassword(urlname, password)) {
+		if (!validateKey(authHeader)) {
 			// eslint-disable-next-line no-console
-			console.error(`Bad password provided for urlname ${urlname}`);
+			console.error('Bad API key');
 			return {
 				statusCode: 401,
 				body: JSON.stringify({
@@ -176,9 +167,6 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
 				}),
 			};
 		}
-
-		// eslint-disable-next-line no-console
-		console.log(`Returning events requested by user ${urlname}`);
 
 		const getMeetupEventsOptions = makeGetMeetupEventsOptions(
 			queryStringParameters!,
