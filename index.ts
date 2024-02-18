@@ -31,7 +31,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				type: AttributeType.STRING,
 			},
 			tableName: EVENTS_TABLE_NAME,
-			removalPolicy: RemovalPolicy.DESTROY, // NOT recommended for production code
+			removalPolicy: RemovalPolicy.RETAIN,
 		});
 
 		eventsTable.addGlobalSecondaryIndex({
@@ -46,6 +46,30 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			},
 		});
 
+		const IMPORTER_LOG_TABLE_NAME = 'ImporterLog';
+		const IMPORTER_LOG_GROUP_INDEX_NAME = 'ImporterLogByGroupIndex';
+
+		const importerLogTable = new Table(this, IMPORTER_LOG_TABLE_NAME, {
+			partitionKey: {
+				name: 'Id',
+				type: AttributeType.STRING,
+			},
+			tableName: IMPORTER_LOG_TABLE_NAME,
+			removalPolicy: RemovalPolicy.RETAIN,
+		});
+
+		importerLogTable.addGlobalSecondaryIndex({
+			indexName: IMPORTER_LOG_GROUP_INDEX_NAME,
+			partitionKey: {
+				name: 'MeetupGroupUrlName',
+				type: AttributeType.STRING,
+			},
+			sortKey: {
+				name: 'LogDateTime',
+				type: AttributeType.STRING,
+			},
+		});
+
 		const API_KEYS = process.env.API_KEYS!;
 		const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
 
@@ -56,9 +80,10 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				LAMBDA_AWS_SECRET_ACCESS_KEY: 'at-all',
 				NODE_ENV,
 				EVENTS_TABLE_NAME,
+				IMPORTER_LOG_TABLE_NAME,
 				EVENTS_GROUP_INDEX_NAME,
 				API_KEYS,
-				MEETUP_GROUP_NAMES
+				MEETUP_GROUP_NAMES,
 			},
 			runtime: Runtime.NODEJS_18_X,
 			timeout: Duration.minutes(4),
