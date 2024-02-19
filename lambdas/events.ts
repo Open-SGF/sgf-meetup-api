@@ -35,6 +35,7 @@ async function getMeetupEvents(
 	const queryCommand: QueryCommand = new QueryCommand({
 		TableName: EVENTS_TABLE_NAME,
 		IndexName: EVENTS_GROUP_INDEX_NAME,
+		FilterExpression: 'attribute_not_exists(DeletedAtDateTime)',
 		KeyConditionExpression: makeKeyConditionExpression(options),
 		ExpressionAttributeValues: makeExpressionAttributeValues(options),
 		Limit: options.count,

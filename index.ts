@@ -23,6 +23,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		const NODE_ENV = process.env.BUILD_ENV ?? 'development';
 
 		const EVENTS_TABLE_NAME = 'Events';
+		const EVENTS_ID_INDEX_NAME = 'EventsById';
 		const EVENTS_GROUP_INDEX_NAME = 'EventsByGroupIndex';
 
 		const eventsTable = new Table(this, EVENTS_TABLE_NAME, {
@@ -47,27 +48,18 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		});
 
 		const IMPORTER_LOG_TABLE_NAME = 'ImporterLog';
-		const IMPORTER_LOG_GROUP_INDEX_NAME = 'ImporterLogByGroupIndex';
 
 		const importerLogTable = new Table(this, IMPORTER_LOG_TABLE_NAME, {
 			partitionKey: {
 				name: 'Id',
 				type: AttributeType.STRING,
 			},
+			sortKey: {
+				name: 'StartedAt',
+				type: AttributeType.STRING,
+			},
 			tableName: IMPORTER_LOG_TABLE_NAME,
 			removalPolicy: RemovalPolicy.RETAIN,
-		});
-
-		importerLogTable.addGlobalSecondaryIndex({
-			indexName: IMPORTER_LOG_GROUP_INDEX_NAME,
-			partitionKey: {
-				name: 'MeetupGroupUrlName',
-				type: AttributeType.STRING,
-			},
-			sortKey: {
-				name: 'LogDateTime',
-				type: AttributeType.STRING,
-			},
 		});
 
 		const API_KEYS = process.env.API_KEYS!;
@@ -82,6 +74,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				EVENTS_TABLE_NAME,
 				IMPORTER_LOG_TABLE_NAME,
 				EVENTS_GROUP_INDEX_NAME,
+				EVENTS_ID_INDEX_NAME,
 				API_KEYS,
 				MEETUP_GROUP_NAMES,
 			},
@@ -119,6 +112,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		// Grant the Lambda function read access to the DynamoDB table
 		eventsTable.grantReadWriteData(getEventsLambda);
+		importerLogTable.grantReadWriteData(importerLambda);
 
 		const importScheduleRule = new Rule(this, 'importerEventBridgeRule', {
 			schedule: Schedule.expression('cron(0 0-23/2 * * *)'), // "run every 2 hours"
