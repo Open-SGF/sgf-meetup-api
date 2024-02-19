@@ -8,12 +8,13 @@ export interface MeetupEvent {
 	title: string;
 	eventUrl: string;
 	description: string;
-	dateTime: string;
+	dateTime: Date;
 	duration: string;
 	venue: Venue;
 	group: Group;
 	host: Host;
 	images: Image[];
+	deletedAt?: Date;
 }
 
 export function meetupEventFromDynamoDbItem(
@@ -28,7 +29,7 @@ export function meetupEventFromDynamoDbItem(
 	const title = item.Title.S!;
 	const eventUrl = item.EventUrl.S!;
 	const description = item.Description.S!;
-	const dateTime = item.EventDateTime.S!;
+	const dateTime = new Date(item.EventDateTime.S!);
 	const duration = item.Duration.S!;
 	const venue = {
 		name: item.VenueName.S!,
@@ -37,6 +38,12 @@ export function meetupEventFromDynamoDbItem(
 		state: item.VenueState.S!,
 		postalCode: item.VenuePostalCode.S!,
 	};
+
+	const deletedAtTimestamp = item.DeletedAtDateTime?.S;
+	const deletedAt =
+		deletedAtTimestamp === undefined
+			? undefined
+			: new Date(deletedAtTimestamp);
 
 	const meetupEvent: MeetupEvent = {
 		id,
@@ -51,6 +58,7 @@ export function meetupEventFromDynamoDbItem(
 			name: item.HostName.S!,
 		},
 		images: [], // TODO
+		deletedAt,
 	};
 
 	return meetupEvent;
@@ -66,7 +74,7 @@ export function meetupEventToDynamoDbItem(
 		Title: { S: meetupEvent.title },
 		EventUrl: { S: meetupEvent.eventUrl },
 		Description: { S: meetupEvent.description },
-		EventDateTime: { S: meetupEvent.dateTime },
+		EventDateTime: { S: meetupEvent.dateTime.toISOString() },
 		Duration: { S: meetupEvent.duration },
 		VenueName: { S: meetupEvent.venue.name },
 		VenueAddress: { S: meetupEvent.venue.address },
@@ -75,6 +83,10 @@ export function meetupEventToDynamoDbItem(
 		VenuePostalCode: { S: meetupEvent.venue.postalCode },
 		HostName: { S: meetupEvent.host.name },
 	};
+
+	if (meetupEvent.deletedAt !== undefined) {
+		item.DeletedAtDateTime = { S: meetupEvent.deletedAt.toISOString() };
+	}
 
 	return item;
 }
