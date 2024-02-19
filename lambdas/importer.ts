@@ -172,7 +172,7 @@ async function getAllSavedFutureEvents(): Promise<MeetupEvent[]> {
 }
 
 /**
- * Set DeletedAtDateTime on a list of events to mark them as delete
+ * Set DeletedAtDateTime on a list of events to mark them as deleted
  */
 async function deleteEventsById(eventIds: string[]): Promise<void> {
 	const nowTimestamp = new Date().toISOString();
