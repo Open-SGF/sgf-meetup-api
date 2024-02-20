@@ -59,7 +59,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				type: AttributeType.STRING,
 			},
 			tableName: IMPORTER_LOG_TABLE_NAME,
-			removalPolicy: RemovalPolicy.RETAIN,
+			removalPolicy: RemovalPolicy.DESTROY,
 		});
 
 		const API_KEYS = process.env.API_KEYS!;
