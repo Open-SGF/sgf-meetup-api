@@ -61,7 +61,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			tableName: IMPORTER_LOG_TABLE_NAME,
 			removalPolicy: RemovalPolicy.DESTROY,
 		});
-		importerLogTable; // TODO: delete this line for silencing no-unused-vars
 
 		const API_KEYS = process.env.API_KEYS!;
 		const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
@@ -116,8 +115,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		// getEventsLambda.permissionsNode.addDependency(eventsTable);
 		// importerLambda.node.addDependency(importerLogTable);
 		// importerLambda.permissionsNode.addDependency(importerLogTable);
-		// eventsTable.grantReadWriteData(getEventsLambda);
-		// importerLogTable.grantReadWriteData(importerLambda);
+		eventsTable.grantReadWriteData(getEventsLambda);
+		importerLogTable.grantReadWriteData(importerLambda);
 
 		const importScheduleRule = new Rule(this, 'importerEventBridgeRule', {
 			// schedule: Schedule.expression('cron(0 0-23/2 * * ? *)'), // "run every 2 hours"
