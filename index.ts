@@ -61,6 +61,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			tableName: IMPORTER_LOG_TABLE_NAME,
 			removalPolicy: RemovalPolicy.DESTROY,
 		});
+		importerLogTable; // TODO: delete this line for silencing no-unused-vars
 
 		const API_KEYS = process.env.API_KEYS!;
 		const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
