@@ -111,12 +111,12 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		});
 
 		// Grant the Lambda function read access to the DynamoDB table
-		getEventsLambda.node.addDependency(eventsTable);
-		getEventsLambda.permissionsNode.addDependency(eventsTable);
-		importerLambda.node.addDependency(importerLogTable);
-		importerLambda.permissionsNode.addDependency(importerLogTable);
-		eventsTable.grantReadWriteData(getEventsLambda);
-		importerLogTable.grantReadWriteData(importerLambda);
+		// getEventsLambda.node.addDependency(eventsTable);
+		// getEventsLambda.permissionsNode.addDependency(eventsTable);
+		// importerLambda.node.addDependency(importerLogTable);
+		// importerLambda.permissionsNode.addDependency(importerLogTable);
+		// eventsTable.grantReadWriteData(getEventsLambda);
+		// importerLogTable.grantReadWriteData(importerLambda);
 
 		const importScheduleRule = new Rule(this, 'importerEventBridgeRule', {
 			// schedule: Schedule.expression('cron(0 0-23/2 * * ? *)'), // "run every 2 hours"
