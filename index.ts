@@ -112,7 +112,9 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		// Grant the Lambda function read access to the DynamoDB table
 		getEventsLambda.node.addDependency(eventsTable);
+		getEventsLambda.permissionsNode.addDependency(eventsTable);
 		importerLambda.node.addDependency(importerLogTable);
+		importerLambda.permissionsNode.addDependency(importerLogTable);
 		eventsTable.grantReadWriteData(getEventsLambda);
 		importerLogTable.grantReadWriteData(importerLambda);
 
