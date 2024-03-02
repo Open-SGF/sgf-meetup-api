@@ -14,6 +14,7 @@ import {
 } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { join } from 'path';
 
 export class ApiLambdaCrudDynamoDBStack extends Stack {
@@ -104,6 +105,17 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			entry: join(__dirname, 'lambdas', 'importer.ts'),
 			...nodeJsFunctionProps,
 		});
+
+		const meetupKeySecret = Secret.fromSecretAttributes(
+			this,
+			'MeetupKeySecret',
+			{
+				secretCompleteArn:
+					'arn:aws:secretsmanager:us-east-2:391849688676:secret:prod/sgf-meetup-api/meetup-UbNhVU',
+			},
+		);
+
+		meetupKeySecret.grantRead(importerLambda);
 
 		const getEventsLambda = new NodejsFunction(this, 'getEventsFunction', {
 			entry: join(__dirname, 'lambdas', 'events.ts'),
