@@ -128,6 +128,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		// importerLambda.node.addDependency(importerLogTable);
 		// importerLambda.permissionsNode.addDependency(importerLogTable);
 		eventsTable.grantReadWriteData(getEventsLambda);
+		eventsTable.grantReadWriteData(importerLambda);
 		importerLogTable.grantReadWriteData(importerLambda);
 
 		const importScheduleRule = new Rule(this, 'importerEventBridgeRule', {
