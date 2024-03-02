@@ -1,5 +1,9 @@
 name: Delete CDK stack
 
+on:
+  push:
+    branches: [ delete-12341234 ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
