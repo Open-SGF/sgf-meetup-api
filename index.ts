@@ -132,8 +132,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		importerLogTable.grantReadWriteData(importerLambda);
 
 		const importScheduleRule = new Rule(this, 'importerEventBridgeRule', {
-			// schedule: Schedule.expression('cron(0 0-23/2 * * ? *)'), // "run every 2 hours"
-			schedule: Schedule.expression('cron(0-59/2 * * * ? *)'), // "run every 2 minutes"
+			schedule: Schedule.expression('cron(0 0-23/2 * * ? *)'), // "run every 2 hours"
+			// schedule: Schedule.expression('cron(0-59/2 * * * ? *)'), // "run every 2 minutes"
 		});
 
 		importScheduleRule.addTarget(new LambdaFunction(importerLambda));
