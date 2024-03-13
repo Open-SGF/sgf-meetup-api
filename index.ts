@@ -1,3 +1,4 @@
+import { join } from 'path';
 import {
 	IResource,
 	LambdaIntegration,
@@ -15,7 +16,8 @@ import {
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import { join } from 'path';
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as route53 from "aws-cdk-lib/aws-route53";
 
 export class ApiLambdaCrudDynamoDBStack extends Stack {
 	constructor(app: App, id: string) {
@@ -26,6 +28,12 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		const EVENTS_TABLE_NAME = 'Events';
 		const EVENTS_ID_INDEX_NAME = 'EventsById';
 		const EVENTS_GROUP_INDEX_NAME = 'EventsByGroupIndex';
+
+		const ROOT_DOMAIN = 'opensgf.org';
+
+		const zone = route53.HostedZone.fromLookup(this, 'BaseZone', {
+			domainName: ROOT_DOMAIN
+		});
 
 		const eventsTable = new Table(this, EVENTS_TABLE_NAME, {
 			partitionKey: {
@@ -140,10 +148,20 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		// Integrate the Lambda functions with the API Gateway resource
 		const getEventsIntegration = new LambdaIntegration(getEventsLambda);
+		const EVENTS_API_SUBDOMAIN = 'sgf-meetup-api';
+		const EVENTS_API_DOMAIN_NAME = `${EVENTS_API_SUBDOMAIN}.${ROOT_DOMAIN}`;
+
+		const certificate = new acm.Certificate(this, 'EventsApiCert', {
+			domainName: EVENTS_API_DOMAIN_NAME
+		});
 
 		// Create an API Gateway resource for each of the CRUD operations
 		const api = new RestApi(this, 'eventsApi', {
 			restApiName: 'Events Service',
+			domainName: {
+				domainName: EVENTS_API_DOMAIN_NAME,
+				certificate
+			}
 			// In case you want to manage binary types, uncomment the following
 			// binaryMediaTypes: ["*/*"],
 		});
@@ -151,6 +169,12 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		const eventsResource = api.root.addResource('events');
 		eventsResource.addMethod('GET', getEventsIntegration);
 		addCorsOptions(eventsResource);
+
+		new route53.CnameRecord(this, "EventsApiCname", {
+			zone,
+			recordName: EVENTS_API_SUBDOMAIN,
+			domainName: api.domainName!.domainName
+		});
 	}
 }
 
