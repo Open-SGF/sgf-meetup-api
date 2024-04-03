@@ -7,9 +7,9 @@ import {
 	ScanCommand,
 	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb';
+import * as lambda from '@aws-sdk/client-lambda';
 import { v4 as uuid } from 'uuid';
 
-import { getMeetupToken } from './lib/getMeetupToken';
 import {
 	MeetupEvent,
 	MeetupFutureEventsPayload,
@@ -380,6 +380,20 @@ async function importEventsToDynamoDb(
 }
 
 export async function handler() {
-	const token = await getMeetupToken();
+	const invokeGetMeetupTokenCommand = new lambda.InvokeCommand({
+		FunctionName: 'getMeetupToken',
+		Payload: JSON.stringify({ clientId: 'importer' }),
+		LogType: lambda.LogType.Tail,
+	});
+	const client = new lambda.LambdaClient();
+
+	const response = await client.send(invokeGetMeetupTokenCommand);
+	const payload = Buffer.from(response.Payload!).toString();
+	const logs = Buffer.from(response.LogResult!).toString();
+	console.log('response from getMeetupToken'); // eslint-disable-line no-console
+	console.log({ payload, logs }); // eslint-disable-line no-console
+
+	const token = JSON.parse(payload).token;
+
 	await importEventsToDynamoDb(token, true);
 }

@@ -1,3 +1,4 @@
+import { join } from 'path';
 import {
 	IResource,
 	LambdaIntegration,
@@ -15,17 +16,36 @@ import {
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import { join } from 'path';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+
+// const AWS_ACCOUNT_ID = process.env.AWS_ACCOUNT_ID!;
+// const AWS_REGION = process.env.AWS_REGION!;
+const AWS_ACCOUNT_ID = '391849688676';
+const AWS_REGION = 'us-east-2';
+const MEETUP_KEY_ARN =
+	'arn:aws:secretsmanager:us-east-2:391849688676:secret:prod/sgf-meetup-api/meetup-UbNhVU';
+
+const NODE_ENV = process.env.BUILD_ENV ?? 'development';
+const EVENTS_TABLE_NAME = 'Events';
+const IMPORTER_LOG_TABLE_NAME = 'ImporterLog';
+const EVENTS_ID_INDEX_NAME = 'EventsById';
+const EVENTS_GROUP_INDEX_NAME = 'EventsByGroupIndex';
+const ROOT_DOMAIN = 'opensgf.org';
+const EVENTS_API_SUBDOMAIN = 'sgf-meetup-api';
+const EVENTS_API_DOMAIN_NAME = `${EVENTS_API_SUBDOMAIN}.${ROOT_DOMAIN}`;
+
+// user/client info
+const API_KEYS = process.env.API_KEYS!;
+const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
 
 export class ApiLambdaCrudDynamoDBStack extends Stack {
 	constructor(app: App, id: string) {
-		super(app, id);
-
-		const NODE_ENV = process.env.BUILD_ENV ?? 'development';
-
-		const EVENTS_TABLE_NAME = 'Events';
-		const EVENTS_ID_INDEX_NAME = 'EventsById';
-		const EVENTS_GROUP_INDEX_NAME = 'EventsByGroupIndex';
+		super(app, id, {
+			env: {
+				account: AWS_ACCOUNT_ID,
+				region: AWS_REGION,
+			},
+		});
 
 		const eventsTable = new Table(this, EVENTS_TABLE_NAME, {
 			partitionKey: {
@@ -48,8 +68,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			},
 		});
 
-		const IMPORTER_LOG_TABLE_NAME = 'ImporterLog';
-
 		const importerLogTable = new Table(this, IMPORTER_LOG_TABLE_NAME, {
 			partitionKey: {
 				name: 'Id',
@@ -62,9 +80,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			tableName: IMPORTER_LOG_TABLE_NAME,
 			removalPolicy: RemovalPolicy.RETAIN,
 		});
-
-		const API_KEYS = process.env.API_KEYS!;
-		const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
 
 		const nodeJsFunctionProps: NodejsFunctionProps = {
 			depsLockFilePath: join(__dirname, 'lambdas', 'package-lock.json'),
@@ -108,25 +123,26 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		const meetupKeySecret = Secret.fromSecretAttributes(
 			this,
-			'MeetupKeySecret',
-			{
-				secretCompleteArn:
-					'arn:aws:secretsmanager:us-east-2:391849688676:secret:prod/sgf-meetup-api/meetup-UbNhVU',
-			},
+			'meetupKeySecret',
+			{ secretCompleteArn: MEETUP_KEY_ARN },
 		);
-
-		meetupKeySecret.grantRead(importerLambda);
 
 		const getEventsLambda = new NodejsFunction(this, 'getEventsFunction', {
 			entry: join(__dirname, 'lambdas', 'events.ts'),
 			...nodeJsFunctionProps,
 		});
 
-		// Grant the Lambda function read access to the DynamoDB table
-		// getEventsLambda.node.addDependency(eventsTable);
-		// getEventsLambda.permissionsNode.addDependency(eventsTable);
-		// importerLambda.node.addDependency(importerLogTable);
-		// importerLambda.permissionsNode.addDependency(importerLogTable);
+		const getMeetupTokenLambda = new NodejsFunction(
+			this,
+			'getMeetupTokenFunction',
+			{
+				entry: join(__dirname, 'lambdas', 'getMeetupToken.ts'),
+				...nodeJsFunctionProps,
+			},
+		);
+
+		meetupKeySecret.grantRead(getMeetupTokenLambda);
+		getMeetupTokenLambda.grantInvoke(importerLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
 		eventsTable.grantReadWriteData(importerLambda);
 		importerLogTable.grantReadWriteData(importerLambda);
@@ -141,9 +157,19 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		// Integrate the Lambda functions with the API Gateway resource
 		const getEventsIntegration = new LambdaIntegration(getEventsLambda);
 
+		const certificate = acm.Certificate.fromCertificateArn(
+			this,
+			'domainCert',
+			'arn:aws:acm:us-east-1:391849688676:certificate/5ee46982-62f7-4b30-8437-11e3aac800a6',
+		);
+
 		// Create an API Gateway resource for each of the CRUD operations
 		const api = new RestApi(this, 'eventsApi', {
 			restApiName: 'Events Service',
+			domainName: {
+				domainName: EVENTS_API_DOMAIN_NAME,
+				certificate,
+			},
 			// In case you want to manage binary types, uncomment the following
 			// binaryMediaTypes: ["*/*"],
 		});
