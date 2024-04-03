@@ -1,5 +1,7 @@
 import { join } from 'path';
 import {
+	BasePathMapping,
+	DomainName,
 	IResource,
 	LambdaIntegration,
 	MockIntegration,
@@ -16,7 +18,6 @@ import {
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 
 // const AWS_ACCOUNT_ID = process.env.AWS_ACCOUNT_ID!;
 // const AWS_REGION = process.env.AWS_REGION!;
@@ -157,24 +158,36 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		// Integrate the Lambda functions with the API Gateway resource
 		const getEventsIntegration = new LambdaIntegration(getEventsLambda);
 
-		const certificate = acm.Certificate.fromCertificateArn(
+		// const certificate = acm.Certificate.fromCertificateArn(
+		// 	this,
+		// 	'domainCert',
+		// 	'arn:aws:acm:us-east-2:391849688676:certificate/c64e30b4-1531-4357-bf80-672b4d8978c8',
+		// );
+
+		const domainName = DomainName.fromDomainNameAttributes(
 			this,
-			'domainCert',
-			'arn:aws:acm:us-east-2:391849688676:certificate/c64e30b4-1531-4357-bf80-672b4d8978c8',
+			'eventsApiDomainName',
+			{
+				domainName: EVENTS_API_DOMAIN_NAME,
+				domainNameAliasHostedZoneId: 'ZOJJZC49E0EPZ',
+				domainNameAliasTarget:
+					'd-x4jexiktj7.execute-api.us-east-2.amazonaws.com',
+			},
 		);
 
 		// Create an API Gateway resource for each of the CRUD operations
-		const api = new RestApi(this, 'eventsApi', {
+		const restApi = new RestApi(this, 'eventsApi', {
 			restApiName: 'Events Service',
-			domainName: {
-				domainName: EVENTS_API_DOMAIN_NAME,
-				certificate,
-			},
 			// In case you want to manage binary types, uncomment the following
 			// binaryMediaTypes: ["*/*"],
 		});
 
-		const eventsResource = api.root.addResource('events');
+		new BasePathMapping(this, 'apiBasePathMapping', {
+			domainName,
+			restApi,
+		});
+
+		const eventsResource = restApi.root.addResource('events');
 		eventsResource.addMethod('GET', getEventsIntegration);
 		addCorsOptions(eventsResource);
 	}
