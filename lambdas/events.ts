@@ -144,9 +144,8 @@ function validateKey(apiKey: string) {
 }
 
 export const handler: Handler = async (event: APIGatewayEvent) => {
-	const { headers, queryStringParameters } = event;
-
 	try {
+		const { headers, queryStringParameters } = event;
 		const authHeader = headers['Authorization'];
 
 		if (authHeader == null) {

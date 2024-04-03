@@ -5,7 +5,8 @@ import {
 import { atob } from 'buffer';
 import { sign } from 'jsonwebtoken';
 import fetch from 'node-fetch';
-import { isRecord } from './isRecord';
+import { isRecord } from './lib/isRecord';
+import type { Handler } from 'aws-lambda';
 
 interface MeetupSecret {
 	privateKey: string;
@@ -99,3 +100,30 @@ function parseSecret(secretString: string | undefined): MeetupSecret {
 		signingKeyId: meetupSigningKeyId,
 	};
 }
+
+export interface MeetupTokenRequestEvent {
+	clientId: string;
+}
+
+export const handler: Handler = async (event: MeetupTokenRequestEvent) => {
+	try {
+		const { clientId } = event;
+		console.info(`Getting Meetup.com API key for client ${clientId}`); // eslint-disable-line no-console
+
+		const token = await getMeetupToken();
+		return { token };
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	} catch (error: any) {
+		if (error instanceof Error) {
+			return {
+				errorName: error.name,
+				errorMessage: error.message,
+			};
+		}
+
+		return {
+			errorName: error?.name,
+			errorMessage: String(error),
+		};
+	}
+};
