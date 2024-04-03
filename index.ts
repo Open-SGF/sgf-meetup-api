@@ -160,7 +160,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		const certificate = acm.Certificate.fromCertificateArn(
 			this,
 			'domainCert',
-			'arn:aws:acm:us-east-1:391849688676:certificate/5ee46982-62f7-4b30-8437-11e3aac800a6',
+			'arn:aws:acm:us-east-2:391849688676:certificate/c64e30b4-1531-4357-bf80-672b4d8978c8',
 		);
 
 		// Create an API Gateway resource for each of the CRUD operations
