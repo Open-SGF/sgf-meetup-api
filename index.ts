@@ -143,7 +143,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		);
 
 		meetupKeySecret.grantRead(getMeetupTokenLambda);
-		getMeetupTokenLambda.grantInvoke(importerLambda.role!);
+		getMeetupTokenLambda.grantInvoke(importerLambda);
+		importerLambda.grantInvoke(getMeetupTokenLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
 		eventsTable.grantReadWriteData(importerLambda);
 		importerLogTable.grantReadWriteData(importerLambda);
