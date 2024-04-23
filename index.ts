@@ -18,10 +18,7 @@ import {
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import { ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
-// const AWS_ACCOUNT_ID = process.env.AWS_ACCOUNT_ID!;
-// const AWS_REGION = process.env.AWS_REGION!;
 const AWS_ACCOUNT_ID = '391849688676';
 const AWS_REGION = 'us-east-2';
 const MEETUP_KEY_ARN =
@@ -35,6 +32,7 @@ const EVENTS_GROUP_INDEX_NAME = 'EventsByGroupIndex';
 const ROOT_DOMAIN = 'opensgf.org';
 const EVENTS_API_SUBDOMAIN = 'sgf-meetup-api';
 const EVENTS_API_DOMAIN_NAME = `${EVENTS_API_SUBDOMAIN}.${ROOT_DOMAIN}`;
+const GET_MEETUP_TOKEN_FUNCTION_NAME = 'getMeetupTokenFunction';
 
 // user/client info
 const API_KEYS = process.env.API_KEYS!;
@@ -95,6 +93,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				EVENTS_ID_INDEX_NAME,
 				API_KEYS,
 				MEETUP_GROUP_NAMES,
+				GET_MEETUP_TOKEN_FUNCTION_NAME,
 			},
 			runtime: Runtime.NODEJS_18_X,
 			timeout: Duration.minutes(4),
@@ -118,21 +117,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			},
 		};
 
-		const importerLambdaRole = new Role(this, 'importerFunctionRole', {
-			managedPolicies: [
-				ManagedPolicy.fromAwsManagedPolicyName(
-					'service-role/AWSLambdaBasicExecutionRole',
-				),
-				ManagedPolicy.fromAwsManagedPolicyName(
-					'service-role/AWSLambdaVPCAccessExecutionRole',
-				),
-			],
-			assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
-		});
-
 		const importerLambda = new NodejsFunction(this, 'importerFunction', {
 			entry: join(__dirname, 'lambdas', 'importer.ts'),
-			role: importerLambdaRole,
 			...nodeJsFunctionProps,
 		});
 
@@ -149,7 +135,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		const getMeetupTokenLambda = new NodejsFunction(
 			this,
-			'getMeetupTokenFunction',
+			GET_MEETUP_TOKEN_FUNCTION_NAME,
 			{
 				entry: join(__dirname, 'lambdas', 'getMeetupToken.ts'),
 				...nodeJsFunctionProps,
@@ -157,8 +143,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		);
 
 		meetupKeySecret.grantRead(getMeetupTokenLambda);
-		getMeetupTokenLambda.grantInvoke(importerLambdaRole);
-		// importerLambda.grantInvoke(getMeetupTokenLambda);
+		getMeetupTokenLambda.grantInvoke(importerLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
 		eventsTable.grantReadWriteData(importerLambda);
 		importerLogTable.grantReadWriteData(importerLambda);
