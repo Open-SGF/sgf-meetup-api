@@ -4,6 +4,7 @@ node_modules/
 lambdas/.env
 lambdas/meetup-private-key
 cdk.out/
+cdk.context.json
 .DS_Store
 docker/
 api-logs.txt
