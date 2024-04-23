@@ -138,6 +138,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			GET_MEETUP_TOKEN_FUNCTION_NAME,
 			{
 				entry: join(__dirname, 'lambdas', 'getMeetupToken.ts'),
+				functionName: GET_MEETUP_TOKEN_FUNCTION_NAME,
 				...nodeJsFunctionProps,
 			},
 		);
