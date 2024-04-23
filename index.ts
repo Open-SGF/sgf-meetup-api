@@ -120,8 +120,12 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		const importerLambdaRole = new Role(this, 'importerFunctionRole', {
 			managedPolicies: [
-				ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-				ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
+				ManagedPolicy.fromAwsManagedPolicyName(
+					'service-role/AWSLambdaBasicExecutionRole',
+				),
+				ManagedPolicy.fromAwsManagedPolicyName(
+					'service-role/AWSLambdaVPCAccessExecutionRole',
+				),
 			],
 			assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
 		});
