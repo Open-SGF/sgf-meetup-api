@@ -18,6 +18,7 @@ import {
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+import { ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 // const AWS_ACCOUNT_ID = process.env.AWS_ACCOUNT_ID!;
 // const AWS_REGION = process.env.AWS_REGION!;
@@ -117,8 +118,17 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			},
 		};
 
+		const importerLambdaRole = new Role(this, 'importerFunctionRole', {
+			managedPolicies: [
+				ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+				ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
+			],
+			assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+		});
+
 		const importerLambda = new NodejsFunction(this, 'importerFunction', {
 			entry: join(__dirname, 'lambdas', 'importer.ts'),
+			role: importerLambdaRole,
 			...nodeJsFunctionProps,
 		});
 
@@ -143,8 +153,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		);
 
 		meetupKeySecret.grantRead(getMeetupTokenLambda);
-		// getMeetupTokenLambda.grantInvoke(importerLambda);
-		importerLambda.grantInvoke(getMeetupTokenLambda);
+		getMeetupTokenLambda.grantInvoke(importerLambdaRole);
+		// importerLambda.grantInvoke(getMeetupTokenLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
 		eventsTable.grantReadWriteData(importerLambda);
 		importerLogTable.grantReadWriteData(importerLambda);
