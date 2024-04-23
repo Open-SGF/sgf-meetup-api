@@ -19,7 +19,8 @@ import {
 import { dynamoDbClient } from './lib/dynamoDbClient';
 
 const EVENTS_TABLE_NAME = process.env.EVENTS_TABLE_NAME;
-const GET_MEETUP_TOKEN_FUNCTION_NAME = process.env.GET_MEETUP_TOKEN_FUNCTION_NAME;
+const GET_MEETUP_TOKEN_FUNCTION_NAME =
+	process.env.GET_MEETUP_TOKEN_FUNCTION_NAME;
 
 const GET_FUTURE_EVENTS = `
   query ($urlname: String!, $itemsNum: Int!, $cursor: String) {
