@@ -25,7 +25,10 @@ const GET_MEETUP_TOKEN_FUNCTION_NAME =
 const GET_FUTURE_EVENTS = `
   query ($urlname: String!, $itemsNum: Int!, $cursor: String) {
 	events: groupByUrlname(urlname: $urlname) {
-	  unifiedEvents(input: { first: $itemsNum, after: $cursor }) {
+	  eventSearch(
+		input: { first: $itemsNum, after: $cursor },
+		filter: { status: UPCOMING, query: "" }
+	  ) {
 		count
 		pageInfo {
 		  endCursor
@@ -63,6 +66,56 @@ const GET_FUTURE_EVENTS = `
 	}
   }
 `;
+
+// TODO: investigate questions:
+// * how far back in time do returned events go? some past events are definitely included
+//   * i think we basically get all the events. some past events were returned.
+// * are events guaranteed to be returned in chronological order?
+//   * don't know if it's guaranteed but we do get them in order
+// const GET_FUTURE_EVENTS = `
+//   query ($urlname: String!, $itemsNum: Int!, $cursor: String) {
+// 	events: groupByUrlname(urlname: $urlname) {
+// 	  unifiedEvents(
+// 		input: { first: $itemsNum, after: $cursor },
+// 		filter: { status: UPCOMING }
+// 	  ) {
+// 		count
+// 		pageInfo {
+// 		  endCursor
+// 		  hasNextPage
+// 		}
+// 		edges {
+// 		  node {
+// 			id
+// 			title
+// 			eventUrl
+// 			description
+// 			dateTime
+// 			duration
+// 			venue {
+// 			  name
+// 			  address
+// 			  city
+// 			  state
+// 			  postalCode
+// 			}
+// 			group {
+// 			  name
+// 			  urlname
+// 			}
+// 			host {
+// 			  name
+// 			}
+// 			images {
+// 			  baseUrl
+// 			  preview
+// 			}
+// 		  }
+// 		}
+// 	  }
+// 	}
+//   }
+// `;
 
 interface ImportErrorRecord {
 	errorName: string;
@@ -119,9 +172,7 @@ async function writeImportLog({
 	} satisfies PutItemCommandInput;
 
 	const putCommand = new PutItemCommand(putParams);
-	const putResult = await dynamoDbClient.send(putCommand);
-
-	console.log({ writeImportLogResult: putResult }); // eslint-disable-line no-console
+	await dynamoDbClient.send(putCommand);
 }
 
 async function getAllSavedFutureEvents(): Promise<MeetupEvent[]> {
@@ -148,8 +199,6 @@ async function getAllSavedFutureEvents(): Promise<MeetupEvent[]> {
 				':now': { S: new Date().toISOString() },
 			},
 		});
-
-		console.log({ scanCommand }); // eslint-disable-line no-console
 
 		const response = await dynamoDbClient.send(scanCommand);
 
@@ -204,6 +253,7 @@ async function importEventsToDynamoDb(
 ): Promise<void> {
 	const meetupGraphQlEndpoint = 'https://api.meetup.com/gql';
 	const batchSize = 10; // Number of events to fetch in each batch
+	const LIMIT = 30;
 
 	const GROUP_NAMES = (
 		process.env.MEETUP_GROUP_NAMES?.split(',').map(
@@ -218,6 +268,7 @@ async function importEventsToDynamoDb(
 	async function fetchAllFutureEvents(
 		urlname: string,
 		cursor: string | null = null,
+		runningCount: number = 0,
 	) {
 		const requestBody = JSON.stringify({
 			query: GET_FUTURE_EVENTS,
@@ -237,22 +288,33 @@ async function importEventsToDynamoDb(
 			body: requestBody,
 		};
 
+		// eslint-disable-next-line no-console
+		// console.log({ requestOptions });
+
 		try {
 			const response = await fetch(meetupGraphQlEndpoint, requestOptions);
 			const res = (await response.json()) as MeetupFutureEventsPayload;
-			const unifiedEvents = res.data.events?.unifiedEvents;
+			console.log({ data: res.data.events, errors: res.errors });
+			const unifiedEvents = res.data.events?.eventSearch;
+			console.log({ unifiedEvents });
 			const events =
 				unifiedEvents?.edges.map((edge) => {
 					edge.node.dateTime = new Date(edge.node.dateTime); // Rewrite string timestamp to Date object
 					return edge.node;
 				}) ?? [];
 
-			if (unifiedEvents?.pageInfo.hasNextPage) {
+			runningCount += events.length;
+			console.log({ CURRENTevents: events.map((ev) => [ev.id, ev.title, ev.dateTime, unifiedEvents?.pageInfo.endCursor]) });
+			console.log({ runningCount });
+
+			if (unifiedEvents?.pageInfo.hasNextPage && runningCount < LIMIT) {
 				const nextCursor = unifiedEvents.pageInfo.endCursor;
 				const nextEvents = await fetchAllFutureEvents(
 					urlname,
 					nextCursor,
+					runningCount
 				);
+				console.log({ ALLevents: events.map((ev) => [ev.id, ev.title]) });
 				events.push(...nextEvents);
 			}
 
@@ -391,9 +453,9 @@ export async function handler() {
 
 	const response = await client.send(invokeGetMeetupTokenCommand);
 	const payload = Buffer.from(response.Payload!).toString();
-	const logs = Buffer.from(response.LogResult!).toString();
-	console.log('response from getMeetupToken'); // eslint-disable-line no-console
-	console.log({ payload, logs }); // eslint-disable-line no-console
+	// const logs = Buffer.from(response.LogResult!).toString();
+	// console.log('response from getMeetupToken'); // eslint-disable-line no-console
+	// console.log({ payload, logs }); // eslint-disable-line no-console
 
 	const token = JSON.parse(payload).token;
 
