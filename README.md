@@ -66,7 +66,7 @@ npm install
 
 #### Create `.env`
 ```bash
-cp .env.example .env
+cp lambdas/.env.example lambdas/.env
 ```
 
 ### Running the project
