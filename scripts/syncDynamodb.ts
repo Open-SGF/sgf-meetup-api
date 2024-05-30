@@ -6,10 +6,11 @@ import {
 	PutItemCommand,
 	CreateTableCommandInput,
 	PutItemCommandInput,
+	ListTablesCommand,
 } from '@aws-sdk/client-dynamodb';
 import * as template from '../cdk.out/sgf-meetup-api.template.json';
 
-const env = config();
+const env = config({ path: 'lambdas/.env' });
 expand(env);
 
 const client = new DynamoDBClient({
@@ -33,6 +34,10 @@ async function syncDb(): Promise<void> {
  * template, run a CreateTableCommand to create the table in the local DynamoDB
  */
 async function syncTables(): Promise<void> {
+	const listTablesCommand = new ListTablesCommand({});
+
+	const listTablesResult = await client.send(listTablesCommand);
+
 	// Look at each resource in the template
 	for (const [resourceKey, resourceValue] of Object.entries(
 		template.Resources,
@@ -45,10 +50,24 @@ async function syncTables(): Promise<void> {
 		const createTableParams =
 			resourceValue.Properties as CreateTableCommandInput;
 
+		const tableName = createTableParams.TableName;
+
+		if (tableName === undefined) {
+			continue;
+		}
+
+		if (listTablesResult.TableNames?.includes(tableName)) {
+			// eslint-disable-next-line no-console
+			console.log(`Table ${tableName} already exists, skipping`);
+			continue;
+		}
+
 		const createTableCommand = new CreateTableCommand(createTableParams);
 		try {
 			// Send the CreateTableCommand
 			await client.send(createTableCommand);
+			// eslint-disable-next-line no-console
+			console.log(`Table ${tableName} created`);
 		} catch (err) {
 			// eslint-disable-next-line no-console
 			console.error(`Error when creating table resource ${resourceKey}:`);
