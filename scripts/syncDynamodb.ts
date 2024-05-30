@@ -38,8 +38,6 @@ async function syncTables(): Promise<void> {
 
 	const listTablesResult = await client.send(listTablesCommand);
 
-	console.log(listTablesResult);
-
 	// Look at each resource in the template
 	for (const [resourceKey, resourceValue] of Object.entries(
 		template.Resources,
@@ -59,6 +57,7 @@ async function syncTables(): Promise<void> {
 		}
 
 		if (listTablesResult.TableNames?.includes(tableName)) {
+			// eslint-disable-next-line no-console
 			console.log(`Table ${tableName} already exists, skipping`);
 			continue;
 		}
@@ -67,6 +66,7 @@ async function syncTables(): Promise<void> {
 		try {
 			// Send the CreateTableCommand
 			await client.send(createTableCommand);
+			// eslint-disable-next-line no-console
 			console.log(`Table ${tableName} created`);
 		} catch (err) {
 			// eslint-disable-next-line no-console
