@@ -69,10 +69,15 @@ npm install
 cp lambdas/.env.example lambdas/.env
 ```
 
-### Running the project
-- `nvm use` (if using nvm)
+#### Setup initial database
 - `docker compose up -d`
+  - If you are on linux or WSL there will likely be permission issues with a folder used by docker
+  - You can fix those with `sudo chown -R 1000:1000 docker/dynamodb`
 - `npm run dev:sync-dynamodb`
+
+### Running the project
+- `docker compose up -d` (if not already running)
+- `nvm use` (if using nvm)
 - Run importer script
   - `npm run dev:importer`
 - Run API
