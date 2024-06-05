@@ -18,11 +18,14 @@ import {
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+import { Role } from 'aws-cdk-lib/aws-iam';
 
 const AWS_ACCOUNT_ID = '391849688676';
 const AWS_REGION = 'us-east-2';
 const MEETUP_KEY_ARN =
 	'arn:aws:secretsmanager:us-east-2:391849688676:secret:prod/sgf-meetup-api/meetup-UbNhVU';
+const SECRETS_ACCESS_ROLE_ARN =
+	'arn:aws:iam::391849688676:role/aws-reserved/sso.amazonaws.com/us-east-2/AWSReservedSSO_SgfMeetupApiSecretOnlyAccess_3c2a00e4cc366092';
 
 const NODE_ENV = process.env.BUILD_ENV ?? 'development';
 const EVENTS_TABLE_NAME = 'Events';
@@ -143,8 +146,15 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			},
 		);
 
+		const getMeetupTokenRole = Role.fromRoleArn(
+			this,
+			'getMeetupTokenRole',
+			SECRETS_ACCESS_ROLE_ARN,
+		);
+
 		meetupKeySecret.grantRead(getMeetupTokenLambda);
 		getMeetupTokenLambda.grantInvoke(importerLambda);
+		getMeetupTokenLambda.grantInvoke(getMeetupTokenRole);
 		eventsTable.grantReadWriteData(getEventsLambda);
 		eventsTable.grantReadWriteData(importerLambda);
 		importerLogTable.grantReadWriteData(importerLambda);
