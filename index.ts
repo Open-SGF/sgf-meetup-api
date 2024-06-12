@@ -160,9 +160,9 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		});
 
 		new CfnOutput(this, 'getMeetupTokenLambdaInvokePolicyArn', {
-            value: policy.policyArn,
-            description: 'ARN of the policy to invoke lambda'
-        });
+			value: policy.policyArn,
+			description: 'ARN of the policy to invoke lambda',
+		});
 
 		getMeetupTokenLambda.grantInvoke(importerLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
