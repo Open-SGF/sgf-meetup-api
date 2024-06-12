@@ -17,15 +17,10 @@ import {
 } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import { Effect, Policy, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
+import { Effect, Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 const AWS_ACCOUNT_ID = '391849688676';
 const AWS_REGION = 'us-east-2';
-const MEETUP_KEY_ARN =
-	'arn:aws:secretsmanager:us-east-2:391849688676:secret:prod/sgf-meetup-api/meetup-UbNhVU';
-const SECRETS_ACCESS_ROLE_ARN =
-	'arn:aws:iam::391849688676:role/aws-reserved/sso.amazonaws.com/us-east-2/AWSReservedSSO_SgfMeetupApiSecretOnlyAccess_3c2a00e4cc366092';
 
 const NODE_ENV = process.env.BUILD_ENV ?? 'development';
 const EVENTS_TABLE_NAME = 'Events';
@@ -40,6 +35,10 @@ const GET_MEETUP_TOKEN_FUNCTION_NAME = 'getMeetupTokenFunction';
 // user/client info
 const API_KEYS = process.env.API_KEYS!;
 const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
+const MEETUP_PRIVATE_KEY_BASE64 = process.env.MEETUP_PRIVATE_KEY_BASE64!;
+const MEETUP_USER_ID = process.env.MEETUP_USER_ID!;
+const MEETUP_CLIENT_KEY = process.env.MEETUP_CLIENT_KEY!;
+const MEETUP_SIGNING_KEY_ID = process.env.MEETUP_SIGNING_KEY_ID!;
 
 export class ApiLambdaCrudDynamoDBStack extends Stack {
 	constructor(app: App, id: string) {
@@ -86,18 +85,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		const nodeJsFunctionProps: NodejsFunctionProps = {
 			depsLockFilePath: join(__dirname, 'lambdas', 'package-lock.json'),
-			environment: {
-				LAMBDA_AWS_ACCESS_KEY_ID: 'anything',
-				LAMBDA_AWS_SECRET_ACCESS_KEY: 'at-all',
-				NODE_ENV,
-				EVENTS_TABLE_NAME,
-				IMPORTER_LOG_TABLE_NAME,
-				EVENTS_GROUP_INDEX_NAME,
-				EVENTS_ID_INDEX_NAME,
-				API_KEYS,
-				MEETUP_GROUP_NAMES,
-				GET_MEETUP_TOKEN_FUNCTION_NAME,
-			},
 			runtime: Runtime.NODEJS_18_X,
 			timeout: Duration.minutes(4),
 			bundling: {
@@ -123,17 +110,25 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		const importerLambda = new NodejsFunction(this, 'importerFunction', {
 			entry: join(__dirname, 'lambdas', 'importer.ts'),
 			...nodeJsFunctionProps,
+			environment: {
+				NODE_ENV,
+				EVENTS_TABLE_NAME,
+				IMPORTER_LOG_TABLE_NAME,
+				MEETUP_GROUP_NAMES,
+				GET_MEETUP_TOKEN_FUNCTION_NAME,
+			},
 		});
-
-		const meetupKeySecret = Secret.fromSecretAttributes(
-			this,
-			'meetupKeySecret',
-			{ secretCompleteArn: MEETUP_KEY_ARN },
-		);
 
 		const getEventsLambda = new NodejsFunction(this, 'getEventsFunction', {
 			entry: join(__dirname, 'lambdas', 'events.ts'),
 			...nodeJsFunctionProps,
+			environment: {
+				NODE_ENV,
+				EVENTS_TABLE_NAME,
+				EVENTS_GROUP_INDEX_NAME,
+				EVENTS_ID_INDEX_NAME,
+				API_KEYS,
+			},
 		});
 
 		const getMeetupTokenLambda = new NodejsFunction(
@@ -143,6 +138,13 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				entry: join(__dirname, 'lambdas', 'getMeetupToken.ts'),
 				functionName: GET_MEETUP_TOKEN_FUNCTION_NAME,
 				...nodeJsFunctionProps,
+				environment: {
+					NODE_ENV,
+					MEETUP_PRIVATE_KEY_BASE64,
+					MEETUP_USER_ID,
+					MEETUP_CLIENT_KEY,
+					MEETUP_SIGNING_KEY_ID,
+				},
 			},
 		);
 
@@ -157,15 +159,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			],
 		});
 
-		const getMeetupTokenRole = Role.fromRoleArn(
-			this,
-			'getMeetupTokenRole',
-			SECRETS_ACCESS_ROLE_ARN,
-		);
-
-		meetupKeySecret.grantRead(getMeetupTokenLambda);
 		getMeetupTokenLambda.grantInvoke(importerLambda);
-		getMeetupTokenLambda.grantInvoke(getMeetupTokenRole);
 		eventsTable.grantReadWriteData(getEventsLambda);
 		eventsTable.grantReadWriteData(importerLambda);
 		importerLogTable.grantReadWriteData(importerLambda);

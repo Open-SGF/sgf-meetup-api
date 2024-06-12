@@ -10,17 +10,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: '18.18.0'
       - name: Install dependencies
         run: npm ci
-      - name: Create environment files # TODO: delete; don't think we need this
-        env:
-          MEETUP_PRIVATE_KEY_BASE64: ${{ secrets.MEETUP_PRIVATE_KEY_BASE64 }}
-          API_KEYS: ${{ secrets.API_KEYS }}
-          MEETUP_GROUP_NAMES: ${{ secrets.MEETUP_GROUP_NAMES }}
-        run: echo -n $MEETUP_PRIVATE_KEY_BASE64 | base64 --decode > ./meetup-private-key
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@master
         with:
@@ -35,4 +29,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           API_KEYS: ${{ secrets.API_KEYS }}
           MEETUP_GROUP_NAMES: ${{ secrets.MEETUP_GROUP_NAMES }}
+          MEETUP_PRIVATE_KEY_BASE64: ${{ secrets.MEETUP_PRIVATE_KEY_BASE64 }}
+          MEETUP_USER_ID: ${{ secrets.MEETUP_USER_ID }}
+          MEETUP_CLIENT_KEY: ${{ secrets.MEETUP_CLIENT_KEY }}
+          MEETUP_SIGNING_KEY_ID: ${{ secrets.MEETUP_SIGNING_KEY_ID }}
         run: npm run cdk deploy
