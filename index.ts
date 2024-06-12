@@ -17,13 +17,10 @@ import {
 } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import { Effect, Policy, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
+import { Effect, Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 const AWS_ACCOUNT_ID = '391849688676';
 const AWS_REGION = 'us-east-2';
-const MEETUP_KEY_ARN =
-	'arn:aws:secretsmanager:us-east-2:391849688676:secret:prod/sgf-meetup-api/meetup-UbNhVU';
 
 const NODE_ENV = process.env.BUILD_ENV ?? 'development';
 const EVENTS_TABLE_NAME = 'Events';
@@ -147,7 +144,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 					MEETUP_USER_ID,
 					MEETUP_CLIENT_KEY,
 					MEETUP_SIGNING_KEY_ID,
-				}
+				},
 			},
 		);
 
@@ -161,7 +158,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				}),
 			],
 		});
-
 
 		getMeetupTokenLambda.grantInvoke(importerLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
