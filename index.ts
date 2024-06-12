@@ -147,15 +147,15 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		);
 
 		new Policy(this, 'getMeetupTokenLambdaInvokePolicy', {
-            policyName: 'getMeetupTokenLambdaInvokePolicy',
-            statements: [
-                new PolicyStatement({
-                    actions: ['lambda:InvokeFunction'],
-                    resources: [getMeetupTokenLambda.functionArn],
-                    effect: Effect.ALLOW
-                })
-            ]
-        });
+			policyName: 'getMeetupTokenLambdaInvokePolicy',
+			statements: [
+				new PolicyStatement({
+					actions: ['lambda:InvokeFunction'],
+					resources: [getMeetupTokenLambda.functionArn],
+					effect: Effect.ALLOW,
+				}),
+			],
+		});
 
 		const getMeetupTokenRole = Role.fromRoleArn(
 			this,
