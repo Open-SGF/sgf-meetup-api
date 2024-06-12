@@ -148,7 +148,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			},
 		);
 
-		new Policy(this, 'getMeetupTokenLambdaInvokePolicy', {
+		const getMeetupTokenLambdaInvokePolicy = new Policy(this, 'getMeetupTokenLambdaInvokePolicy', {
 			policyName: 'getMeetupTokenLambdaInvokePolicy',
 			statements: [
 				new PolicyStatement({
@@ -160,7 +160,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		});
 
 		new CfnOutput(this, 'getMeetupTokenLambdaInvokePolicyArn', {
-			value: policy.policyArn,
+			value: getMeetupTokenLambdaInvokePolicy.policyArn,
 			description: 'ARN of the policy to invoke lambda',
 		});
 
