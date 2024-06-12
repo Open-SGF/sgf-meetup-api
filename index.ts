@@ -10,7 +10,7 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
-import { App, Stack, RemovalPolicy, Duration } from 'aws-cdk-lib';
+import { App, Stack, RemovalPolicy, Duration, CfnOutput } from 'aws-cdk-lib';
 import {
 	NodejsFunction,
 	NodejsFunctionProps,
@@ -158,6 +158,11 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				}),
 			],
 		});
+
+		new CfnOutput(this, 'getMeetupTokenLambdaInvokePolicyArn', {
+            value: policy.policyArn,
+            description: 'ARN of the policy to invoke lambda'
+        });
 
 		getMeetupTokenLambda.grantInvoke(importerLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
