@@ -10,14 +10,14 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
-import { App, Stack, RemovalPolicy, Duration } from 'aws-cdk-lib';
+import { App, Stack, RemovalPolicy, Duration, CfnOutput } from 'aws-cdk-lib';
 import {
 	NodejsFunction,
 	NodejsFunctionProps,
 } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
-import { Effect, Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { Effect, ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 const AWS_ACCOUNT_ID = '391849688676';
 const AWS_REGION = 'us-east-2';
@@ -148,15 +148,24 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			},
 		);
 
-		new Policy(this, 'getMeetupTokenLambdaInvokePolicy', {
-			policyName: 'getMeetupTokenLambdaInvokePolicy',
-			statements: [
-				new PolicyStatement({
-					actions: ['lambda:InvokeFunction'],
-					resources: [getMeetupTokenLambda.functionArn],
-					effect: Effect.ALLOW,
-				}),
-			],
+		const getMeetupTokenLambdaInvokePolicy = new ManagedPolicy(
+			this,
+			'getMeetupTokenLambdaInvokePolicy',
+			{
+				managedPolicyName: 'getMeetupTokenLambdaInvokePolicy',
+				statements: [
+					new PolicyStatement({
+						actions: ['lambda:InvokeFunction'],
+						resources: [getMeetupTokenLambda.functionArn],
+						effect: Effect.ALLOW,
+					}),
+				],
+			},
+		);
+
+		new CfnOutput(this, 'getMeetupTokenLambdaInvokePolicyArn', {
+			value: getMeetupTokenLambdaInvokePolicy.managedPolicyArn,
+			description: 'ARN of the policy to invoke lambda',
 		});
 
 		getMeetupTokenLambda.grantInvoke(importerLambda);
