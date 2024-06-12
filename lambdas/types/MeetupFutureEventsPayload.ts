@@ -98,10 +98,10 @@ export interface MeetupFutureEventsPayload {
 }
 
 export interface Events {
-	unifiedEvents: UnifiedEvents;
+	eventSearch: EventSearch;
 }
 
-export interface UnifiedEvents {
+export interface EventSearch {
 	count: number;
 	pageInfo: PageInfo;
 	edges: Edge[];
