@@ -1,7 +1,3 @@
-import {
-	SecretsManagerClient,
-	GetSecretValueCommand,
-} from '@aws-sdk/client-secrets-manager';
 import { atob } from 'buffer';
 import { sign } from 'jsonwebtoken';
 import fetch from 'node-fetch';
@@ -15,21 +11,15 @@ interface MeetupSecret {
 	signingKeyId: string;
 }
 
-const AWS_MEETUP_SECRET_NAME = 'prod/sgf-meetup-api/meetup';
 const MEETUP_AUTH_URL = 'https://secure.meetup.com/oauth2/access';
 
+const MEETUP_PRIVATE_KEY_BASE64 = process.env.MEETUP_PRIVATE_KEY_BASE64;
+const MEETUP_USER_ID = process.env.MEETUP_USER_ID;
+const MEETUP_CLIENT_KEY = process.env.MEETUP_CLIENT_KEY;
+const MEETUP_SIGNING_KEY_ID = process.env.MEETUP_SIGNING_KEY_ID;
+
 export async function getMeetupToken(): Promise<string> {
-	const client = new SecretsManagerClient({
-		region: 'us-east-2',
-	});
-
-	const response = await client.send(
-		new GetSecretValueCommand({
-			SecretId: AWS_MEETUP_SECRET_NAME,
-		}),
-	);
-
-	const secret = parseSecret(response.SecretString);
+	const secret = parseSecret();
 
 	const signedJWT = sign({}, secret.privateKey, {
 		algorithm: 'RS256',
@@ -64,40 +54,23 @@ export async function getMeetupToken(): Promise<string> {
 	return res.access_token;
 }
 
-function parseSecret(secretString: string | undefined): MeetupSecret {
-	if (!secretString) {
-		throw new Error('Invalid secret json from AWS');
-	}
-
-	const secret = JSON.parse(secretString) as unknown;
-
-	if (!isRecord(secret)) {
-		throw new Error('Invalid secret json from AWS');
-	}
-
-	const {
-		meetupPrivateKeyBase64,
-		meetupUserId,
-		meetupClientKey,
-		meetupSigningKeyId,
-	} = secret;
-
+function parseSecret(): MeetupSecret {
 	if (
-		typeof meetupPrivateKeyBase64 !== 'string' ||
-		typeof meetupUserId !== 'string' ||
-		typeof meetupClientKey !== 'string' ||
-		typeof meetupSigningKeyId !== 'string'
+		typeof MEETUP_PRIVATE_KEY_BASE64 !== 'string' ||
+		typeof MEETUP_USER_ID !== 'string' ||
+		typeof MEETUP_CLIENT_KEY !== 'string' ||
+		typeof MEETUP_SIGNING_KEY_ID !== 'string'
 	) {
 		throw new Error('Missing or invalid keys in AWS secret');
 	}
 
-	const privateKey = atob(meetupPrivateKeyBase64);
+	const privateKey = atob(MEETUP_PRIVATE_KEY_BASE64);
 
 	return {
 		privateKey,
-		userId: meetupUserId,
-		clientKey: meetupClientKey,
-		signingKeyId: meetupSigningKeyId,
+		userId: MEETUP_USER_ID,
+		clientKey: MEETUP_CLIENT_KEY,
+		signingKeyId: MEETUP_SIGNING_KEY_ID,
 	};
 }
 
