@@ -18,7 +18,7 @@ import {
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import { Role } from 'aws-cdk-lib/aws-iam';
+import { Policy, Role } from 'aws-cdk-lib/aws-iam';
 
 const AWS_ACCOUNT_ID = '391849688676';
 const AWS_REGION = 'us-east-2';
@@ -145,6 +145,17 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				...nodeJsFunctionProps,
 			},
 		);
+
+		new Policy(this, 'getMeetupTokenLambdaInvokePolicy', {
+            policyName: 'getMeetupTokenLambdaInvokePolicy',
+            statements: [
+                new iam.PolicyStatement({
+                    actions: ['lambda:InvokeFunction'],
+                    resources: [getMeetupTokenLambda.functionArn],
+                    effect: iam.Effect.ALLOW
+                })
+            ]
+        });
 
 		const getMeetupTokenRole = Role.fromRoleArn(
 			this,
