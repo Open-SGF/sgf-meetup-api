@@ -35,7 +35,7 @@ const GET_MEETUP_TOKEN_FUNCTION_NAME = 'getMeetupTokenFunction';
 // user/client info
 const API_KEYS = process.env.API_KEYS!;
 const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
-const MEETUP_PRIVATE_KEY_BASE64 = process.env.MEETUP_PRIVATE_KEY_BASE64!;
+const MEETUP_PRIVATE_KEY = process.env.MEETUP_PRIVATE_KEY!;
 const MEETUP_USER_ID = process.env.MEETUP_USER_ID!;
 const MEETUP_CLIENT_KEY = process.env.MEETUP_CLIENT_KEY!;
 const MEETUP_SIGNING_KEY_ID = process.env.MEETUP_SIGNING_KEY_ID!;
@@ -140,7 +140,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				...nodeJsFunctionProps,
 				environment: {
 					NODE_ENV,
-					MEETUP_PRIVATE_KEY_BASE64,
+					MEETUP_PRIVATE_KEY,
 					MEETUP_USER_ID,
 					MEETUP_CLIENT_KEY,
 					MEETUP_SIGNING_KEY_ID,

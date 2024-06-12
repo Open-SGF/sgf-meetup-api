@@ -1,4 +1,3 @@
-import { atob } from 'buffer';
 import { sign } from 'jsonwebtoken';
 import fetch from 'node-fetch';
 import { isRecord } from './lib/isRecord';
@@ -13,7 +12,7 @@ interface MeetupSecret {
 
 const MEETUP_AUTH_URL = 'https://secure.meetup.com/oauth2/access';
 
-const MEETUP_PRIVATE_KEY_BASE64 = process.env.MEETUP_PRIVATE_KEY_BASE64;
+const MEETUP_PRIVATE_KEY = process.env.MEETUP_PRIVATE_KEY;
 const MEETUP_USER_ID = process.env.MEETUP_USER_ID;
 const MEETUP_CLIENT_KEY = process.env.MEETUP_CLIENT_KEY;
 const MEETUP_SIGNING_KEY_ID = process.env.MEETUP_SIGNING_KEY_ID;
@@ -56,7 +55,7 @@ export async function getMeetupToken(): Promise<string> {
 
 function parseSecret(): MeetupSecret {
 	if (
-		typeof MEETUP_PRIVATE_KEY_BASE64 !== 'string' ||
+		typeof MEETUP_PRIVATE_KEY !== 'string' ||
 		typeof MEETUP_USER_ID !== 'string' ||
 		typeof MEETUP_CLIENT_KEY !== 'string' ||
 		typeof MEETUP_SIGNING_KEY_ID !== 'string'
@@ -64,10 +63,8 @@ function parseSecret(): MeetupSecret {
 		throw new Error('Missing or invalid keys in AWS secret');
 	}
 
-	const privateKey = atob(MEETUP_PRIVATE_KEY_BASE64);
-
 	return {
-		privateKey,
+		privateKey: MEETUP_PRIVATE_KEY,
 		userId: MEETUP_USER_ID,
 		clientKey: MEETUP_CLIENT_KEY,
 		signingKeyId: MEETUP_SIGNING_KEY_ID,
