@@ -17,6 +17,7 @@ import {
 	meetupEventToDynamoDbItem,
 } from './types/MeetupFutureEventsPayload';
 import { dynamoDbClient } from './lib/dynamoDbClient';
+import { quiet } from 'aws-cdk-lib/core/lib/private/jsii-deprecated';
 
 const EVENTS_TABLE_NAME = process.env.EVENTS_TABLE_NAME;
 const GET_MEETUP_TOKEN_FUNCTION_NAME =
@@ -215,7 +216,7 @@ async function importEventsToDynamoDb(
 		throw new Error('No groups specified in environment variable');
 	}
 
-	async function fetchAllFutureEvents(
+	async function fetchAllFutureEvents( //get next 6 months events //fetch all future events
 		urlname: string,
 		cursor: string | null = null,
 	) {
@@ -236,17 +237,34 @@ async function importEventsToDynamoDb(
 			},
 			body: requestBody,
 		};
-
 		try {
 			const response = await fetch(meetupGraphQlEndpoint, requestOptions);
 			const res = (await response.json()) as MeetupFutureEventsPayload;
 			const unifiedEvents = res.data.events?.unifiedEvents;
 			const events =
 				unifiedEvents?.edges.map((edge) => {
-					edge.node.dateTime = new Date(edge.node.dateTime); // Rewrite string timestamp to Date object
+					edge.node.dateTime = new Date(edge.node.dateTime);
+					const currentDate = new Date(); // Rewrite string timestamp to Date object
+					currentDate.setMonth(currentDate.getMonth() + 6);
+					if (edge.node.dateTime === currentDate) {
+						console.log('test'); // eslint-disable-line no-console
+						console.log(events); // eslint-disable-line no-console
+					}
+					//console.log(events);
 					return edge.node;
 				}) ?? [];
-
+			events.forEach((events) => {
+				//check if event is within 6 months
+				const currentDate = new Date(); // Rewrite string timestamp to Date object
+				currentDate.setMonth(currentDate.getMonth() + 6); //set date to 6 months from now
+				if (events.dateTime >= currentDate) {
+					//if event is within 6 months
+					console.log('test'); // for testing things
+					console.log(events.dateTime); // logs date of events
+					process.exit(); //for testing things
+					//TODO: where does the code need to go after this?
+				}
+			});
 			if (unifiedEvents?.pageInfo.hasNextPage) {
 				const nextCursor = unifiedEvents.pageInfo.endCursor;
 				const nextEvents = await fetchAllFutureEvents(
@@ -254,15 +272,15 @@ async function importEventsToDynamoDb(
 					nextCursor,
 				);
 				events.push(...nextEvents);
+				console.log('test'); // eslint-disable-line no-console
 			}
-
 			return events;
 		} catch (error) {
 			// eslint-disable-next-line no-console
 			console.error('Error fetching future events:', error);
 			return [];
 		}
-	}
+	} //END fetchAllFutureEvents
 
 	const successGroupNames = new Array<string>();
 	const failedGroupNames = new Array<string>();
