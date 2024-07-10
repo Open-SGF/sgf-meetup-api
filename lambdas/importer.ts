@@ -252,10 +252,7 @@ async function importEventsToDynamoDb(
 				const currentDate = new Date(); // Rewrite string timestamp to Date object
 				currentDate.setMonth(currentDate.getMonth() + 6); //set date to 6 months from now
 				if (events.dateTime >= currentDate) {
-					//if event is within 6 months
 					done = true;
-					//process.exit(); //for testing things
-					//TODO: where does the code need to go after this?
 				}
 			});
 			if (!done) {
