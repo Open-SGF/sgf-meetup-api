@@ -244,23 +244,16 @@ async function importEventsToDynamoDb(
 					edge.node.dateTime = new Date(edge.node.dateTime);
 					const currentDate = new Date(); // Rewrite string timestamp to Date object
 					currentDate.setMonth(currentDate.getMonth() + 6);
-					if (edge.node.dateTime === currentDate) {
-						console.log('test'); // eslint-disable-line no-console
-						console.log(events); // eslint-disable-line no-console
-					}
 					//console.log(events);
 					return edge.node;
 				}) ?? [];
 			events.forEach((events) => {
 				//check if event is within 6 months
 				const currentDate = new Date(); // Rewrite string timestamp to Date object
-				console.log(events);
 				currentDate.setMonth(currentDate.getMonth() + 6); //set date to 6 months from now
 				if (events.dateTime >= currentDate) {
 					//if event is within 6 months
 					done = true;
-					console.log('test'); // for testing things
-					console.log(events.dateTime); // logs date of events
 					//process.exit(); //for testing things
 					//TODO: where does the code need to go after this?
 				}
@@ -273,7 +266,6 @@ async function importEventsToDynamoDb(
 						nextCursor,
 					);
 					events.push(...nextEvents);
-					console.log('test'); // eslint-disable-line no-console
 				}
 			}
 			return events;
