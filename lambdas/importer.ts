@@ -17,7 +17,6 @@ import {
 	meetupEventToDynamoDbItem,
 } from './types/MeetupFutureEventsPayload';
 import { dynamoDbClient } from './lib/dynamoDbClient';
-import { quiet } from 'aws-cdk-lib/core/lib/private/jsii-deprecated';
 
 const EVENTS_TABLE_NAME = process.env.EVENTS_TABLE_NAME;
 const GET_MEETUP_TOKEN_FUNCTION_NAME =
@@ -215,7 +214,7 @@ async function importEventsToDynamoDb(
 	if (GROUP_NAMES.length === 0) {
 		throw new Error('No groups specified in environment variable');
 	}
-
+	let done = false;
 	async function fetchAllFutureEvents( //get next 6 months events //fetch all future events
 		urlname: string,
 		cursor: string | null = null,
@@ -228,7 +227,6 @@ async function importEventsToDynamoDb(
 				cursor,
 			},
 		});
-
 		const requestOptions = {
 			method: 'POST',
 			headers: {
@@ -256,23 +254,27 @@ async function importEventsToDynamoDb(
 			events.forEach((events) => {
 				//check if event is within 6 months
 				const currentDate = new Date(); // Rewrite string timestamp to Date object
+				console.log(events);
 				currentDate.setMonth(currentDate.getMonth() + 6); //set date to 6 months from now
 				if (events.dateTime >= currentDate) {
 					//if event is within 6 months
+					done = true;
 					console.log('test'); // for testing things
 					console.log(events.dateTime); // logs date of events
-					process.exit(); //for testing things
+					//process.exit(); //for testing things
 					//TODO: where does the code need to go after this?
 				}
 			});
-			if (unifiedEvents?.pageInfo.hasNextPage) {
-				const nextCursor = unifiedEvents.pageInfo.endCursor;
-				const nextEvents = await fetchAllFutureEvents(
-					urlname,
-					nextCursor,
-				);
-				events.push(...nextEvents);
-				console.log('test'); // eslint-disable-line no-console
+			if (!done) {
+				if (unifiedEvents?.pageInfo.hasNextPage) {
+					const nextCursor = unifiedEvents.pageInfo.endCursor;
+					const nextEvents = await fetchAllFutureEvents(
+						urlname,
+						nextCursor,
+					);
+					events.push(...nextEvents);
+					console.log('test'); // eslint-disable-line no-console
+				}
 			}
 			return events;
 		} catch (error) {
