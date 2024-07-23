@@ -247,23 +247,19 @@ async function importEventsToDynamoDb(
 					//console.log(events);
 					return edge.node;
 				}) ?? [];
-			events.forEach((events) => {
-				//check if event is within 6 months
-				const currentDate = new Date(); // Rewrite string timestamp to Date object
-				currentDate.setMonth(currentDate.getMonth() + 6); //set date to 6 months from now
-				if (events.dateTime >= currentDate) {
-					done = true;
-				}
-			});
-			if (!done) {
-				if (unifiedEvents?.pageInfo.hasNextPage) {
-					const nextCursor = unifiedEvents.pageInfo.endCursor;
-					const nextEvents = await fetchAllFutureEvents(
-						urlname,
-						nextCursor,
-					);
-					events.push(...nextEvents);
-				}
+			const sixMonthsFromNow = new Date();
+			sixMonthsFromNow.setMonth(new Date().getMonth() + 6);
+			const hasEventsPast6Months = events.some(
+				(event) => event.dateTime >= sixMonthsFromNow,
+			);
+
+			if (!hasEventsPast6Months && unifiedEvents?.pageInfo.hasNextPage) {
+				const nextCursor = unifiedEvents.pageInfo.endCursor;
+				const nextEvents = await fetchAllFutureEvents(
+					urlname,
+					nextCursor,
+				);
+				events.push(...nextEvents);
 			}
 			return events;
 		} catch (error) {
