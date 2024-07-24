@@ -214,8 +214,7 @@ async function importEventsToDynamoDb(
 	if (GROUP_NAMES.length === 0) {
 		throw new Error('No groups specified in environment variable');
 	}
-	let done = false;
-	async function fetchAllFutureEvents( //get next 6 months events //fetch all future events
+	async function fetchNext6MonthsOfEvents( //get next 6 months events //fetch all future events
 		urlname: string,
 		cursor: string | null = null,
 	) {
@@ -242,8 +241,6 @@ async function importEventsToDynamoDb(
 			const events =
 				unifiedEvents?.edges.map((edge) => {
 					edge.node.dateTime = new Date(edge.node.dateTime);
-					const currentDate = new Date(); // Rewrite string timestamp to Date object
-					currentDate.setMonth(currentDate.getMonth() + 6);
 					//console.log(events);
 					return edge.node;
 				}) ?? [];
@@ -255,7 +252,7 @@ async function importEventsToDynamoDb(
 
 			if (!hasEventsPast6Months && unifiedEvents?.pageInfo.hasNextPage) {
 				const nextCursor = unifiedEvents.pageInfo.endCursor;
-				const nextEvents = await fetchAllFutureEvents(
+				const nextEvents = await fetchNext6MonthsOfEvents(
 					urlname,
 					nextCursor,
 				);
@@ -267,7 +264,7 @@ async function importEventsToDynamoDb(
 			console.error('Error fetching future events:', error);
 			return [];
 		}
-	} //END fetchAllFutureEvents
+	}
 
 	const successGroupNames = new Array<string>();
 	const failedGroupNames = new Array<string>();
@@ -314,7 +311,7 @@ async function importEventsToDynamoDb(
 			try {
 				// eslint-disable-next-line no-console
 				console.log('fetching for', groupName);
-				const futureEvents = await fetchAllFutureEvents(groupName);
+				const futureEvents = await fetchNext6MonthsOfEvents(groupName);
 				// eslint-disable-next-line no-console
 				console.log({ futureEvents });
 
