@@ -214,8 +214,7 @@ async function importEventsToDynamoDb(
 	if (GROUP_NAMES.length === 0) {
 		throw new Error('No groups specified in environment variable');
 	}
-
-	async function fetchAllFutureEvents(
+	async function fetchNext6MonthsOfEvents(
 		urlname: string,
 		cursor: string | null = null,
 	) {
@@ -227,7 +226,6 @@ async function importEventsToDynamoDb(
 				cursor,
 			},
 		});
-
 		const requestOptions = {
 			method: 'POST',
 			headers: {
@@ -236,7 +234,6 @@ async function importEventsToDynamoDb(
 			},
 			body: requestBody,
 		};
-
 		try {
 			const response = await fetch(meetupGraphQlEndpoint, requestOptions);
 			const res = (await response.json()) as MeetupFutureEventsPayload;
@@ -246,16 +243,20 @@ async function importEventsToDynamoDb(
 					edge.node.dateTime = new Date(edge.node.dateTime); // Rewrite string timestamp to Date object
 					return edge.node;
 				}) ?? [];
+			const sixMonthsFromNow = new Date();
+			sixMonthsFromNow.setMonth(new Date().getMonth() + 6);
+			const hasEventsPast6Months = events.some(
+				(event) => event.dateTime >= sixMonthsFromNow,
+			);
 
-			if (unifiedEvents?.pageInfo.hasNextPage) {
+			if (!hasEventsPast6Months && unifiedEvents?.pageInfo.hasNextPage) {
 				const nextCursor = unifiedEvents.pageInfo.endCursor;
-				const nextEvents = await fetchAllFutureEvents(
+				const nextEvents = await fetchNext6MonthsOfEvents(
 					urlname,
 					nextCursor,
 				);
 				events.push(...nextEvents);
 			}
-
 			return events;
 		} catch (error) {
 			// eslint-disable-next-line no-console
@@ -309,7 +310,7 @@ async function importEventsToDynamoDb(
 			try {
 				// eslint-disable-next-line no-console
 				console.log('fetching for', groupName);
-				const futureEvents = await fetchAllFutureEvents(groupName);
+				const futureEvents = await fetchNext6MonthsOfEvents(groupName);
 				// eslint-disable-next-line no-console
 				console.log({ futureEvents });
 
