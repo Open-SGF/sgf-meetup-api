@@ -214,7 +214,7 @@ async function importEventsToDynamoDb(
 	if (GROUP_NAMES.length === 0) {
 		throw new Error('No groups specified in environment variable');
 	}
-	async function fetchNext6MonthsOfEvents( //get next 6 months events //fetch all future events
+	async function fetchNext6MonthsOfEvents(
 		urlname: string,
 		cursor: string | null = null,
 	) {
@@ -240,8 +240,7 @@ async function importEventsToDynamoDb(
 			const unifiedEvents = res.data.events?.unifiedEvents;
 			const events =
 				unifiedEvents?.edges.map((edge) => {
-					edge.node.dateTime = new Date(edge.node.dateTime);
-					//console.log(events);
+					edge.node.dateTime = new Date(edge.node.dateTime); // Rewrite string timestamp to Date object
 					return edge.node;
 				}) ?? [];
 			const sixMonthsFromNow = new Date();
