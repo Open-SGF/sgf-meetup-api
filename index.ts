@@ -33,7 +33,6 @@ const EVENTS_API_DOMAIN_NAME = `${EVENTS_API_SUBDOMAIN}.${ROOT_DOMAIN}`;
 const GET_MEETUP_TOKEN_FUNCTION_NAME = 'getMeetupTokenFunction';
 
 // user/client info
-const API_KEYS = process.env.API_KEYS!;
 const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
 const MEETUP_PRIVATE_KEY = process.env.MEETUP_PRIVATE_KEY!;
 const MEETUP_USER_ID = process.env.MEETUP_USER_ID!;
@@ -127,7 +126,6 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				EVENTS_TABLE_NAME,
 				EVENTS_GROUP_INDEX_NAME,
 				EVENTS_ID_INDEX_NAME,
-				API_KEYS,
 			},
 		});
 
