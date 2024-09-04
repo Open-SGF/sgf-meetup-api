@@ -9,6 +9,7 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import * as lambda from '@aws-sdk/client-lambda';
 import { v4 as uuid } from 'uuid';
+import * as Sentry from '@sentry/node';
 
 import {
 	MeetupEvent,
@@ -18,49 +19,51 @@ import {
 } from './types/MeetupFutureEventsPayload';
 import { dynamoDbClient } from './lib/dynamoDbClient';
 
+Sentry.init({ dsn: process.env.SENTRY_DSN });
+
 const EVENTS_TABLE_NAME = process.env.EVENTS_TABLE_NAME;
 const GET_MEETUP_TOKEN_FUNCTION_NAME =
 	process.env.GET_MEETUP_TOKEN_FUNCTION_NAME;
 
 const GET_FUTURE_EVENTS = `
   query ($urlname: String!, $itemsNum: Int!, $cursor: String) {
-	events: groupByUrlname(urlname: $urlname) {
-	  unifiedEvents(input: { first: $itemsNum, after: $cursor }) {
-		count
-		pageInfo {
-		  endCursor
-		  hasNextPage
-		}
-		edges {
-		  node {
-			id
-			title
-			eventUrl
-			description
-			dateTime
-			duration
-			venue {
-			  name
-			  address
-			  city
-			  state
-			  postalCode
-			}
-			group {
-			  name
-			  urlname
-			}
-			host {
-			  name
-			}
-			images {
-			  baseUrl
-			  preview
-			}
-		  }
-		}
-	  }
-	}
+    events: groupByUrlname(urlname: $urlname) {
+      unifiedEvents(input: { first: $itemsNum, after: $cursor }) {
+        count
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+        edges {
+          node {
+            id
+            title
+            eventUrl
+            description
+            dateTime
+            duration
+            venue {
+              name
+              address
+              city
+              state
+              postalCode
+            }
+            group {
+              name
+              urlname
+            }
+            host {
+              name
+            }
+            images {
+              baseUrl
+              preview
+            }
+          }
+        }
+      }
+    }
   }
 `;
 
@@ -383,20 +386,27 @@ async function importEventsToDynamoDb(
 }
 
 export async function handler() {
-	const invokeGetMeetupTokenCommand = new lambda.InvokeCommand({
-		FunctionName: GET_MEETUP_TOKEN_FUNCTION_NAME,
-		Payload: JSON.stringify({ clientId: 'importer' }),
-		LogType: lambda.LogType.Tail,
-	});
-	const client = new lambda.LambdaClient();
+	try {
+		throw new Error('Test error for Sentry');
+		const invokeGetMeetupTokenCommand = new lambda.InvokeCommand({
+			FunctionName: GET_MEETUP_TOKEN_FUNCTION_NAME,
+			Payload: JSON.stringify({ clientId: 'importer' }),
+			LogType: lambda.LogType.Tail,
+		});
+		const client = new lambda.LambdaClient();
 
-	const response = await client.send(invokeGetMeetupTokenCommand);
-	const payload = Buffer.from(response.Payload!).toString();
-	const logs = Buffer.from(response.LogResult!).toString();
-	console.log('response from getMeetupToken'); // eslint-disable-line no-console
-	console.log({ payload, logs }); // eslint-disable-line no-console
+		const response = await client.send(invokeGetMeetupTokenCommand);
+		const payload = Buffer.from(response.Payload!).toString();
+		const logs = Buffer.from(response.LogResult!).toString();
+		console.log('response from getMeetupToken'); // eslint-disable-line no-console
+		console.log({ payload, logs }); // eslint-disable-line no-console
 
-	const token = JSON.parse(payload).token;
+		const token = JSON.parse(payload).token;
 
-	await importEventsToDynamoDb(token, true);
+		await importEventsToDynamoDb(token, true);
+	} catch (error) {
+		Sentry.captureException(error);
+		console.error(error);
+		console.log('this works'); // eslint-disable-line no-console
+	}
 }
