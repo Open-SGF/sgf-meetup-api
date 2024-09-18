@@ -415,8 +415,7 @@ export async function handler() {
 		await importEventsToDynamoDb(token, true);
 	} catch (error) {
 		Sentry.captureException(error);
-		console.error(error + "this doesn't work"); // eslint-disable-line no-console
-		console.log('this works'); // eslint-disable-line no-console
+		console.error(error + " this doesn't work"); // eslint-disable-line no-console
 		await new Promise((resolve) => setTimeout(resolve, 5000));
 	}
 }
