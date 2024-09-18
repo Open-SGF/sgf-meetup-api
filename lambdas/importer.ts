@@ -18,8 +18,13 @@ import {
 	meetupEventToDynamoDbItem,
 } from './types/MeetupFutureEventsPayload';
 import { dynamoDbClient } from './lib/dynamoDbClient';
+import { error } from 'aws-cdk/lib/logging';
 
-Sentry.init({ dsn: process.env.SENTRY_DSN });
+console.log(process.env.SENTRY_DSN); // eslint-disable-line no-console
+Sentry.init({
+	dsn: process.env.SENTRY_DSN,
+	debug: true, // Enable debug logging
+});
 
 const EVENTS_TABLE_NAME = process.env.EVENTS_TABLE_NAME;
 const GET_MEETUP_TOKEN_FUNCTION_NAME =
@@ -262,8 +267,10 @@ async function importEventsToDynamoDb(
 			}
 			return events;
 		} catch (error) {
+			Sentry.captureException(error);
 			// eslint-disable-next-line no-console
 			console.error('Error fetching future events:', error);
+			await new Promise((resolve) => setTimeout(resolve, 5000));
 			return [];
 		}
 	}
@@ -285,6 +292,11 @@ async function importEventsToDynamoDb(
 	} catch (err) {
 		console.error('Unable to get saved events'); // eslint-disable-line no-console
 		console.error(err); // eslint-disable-line no-console
+
+		Sentry.captureException(error);
+		console.error(error + "this doesn't work"); // eslint-disable-line no-console
+		console.log('this works'); // eslint-disable-line no-console
+		await new Promise((resolve) => setTimeout(resolve, 5000));
 
 		if (err instanceof Error) {
 			errors.push({
@@ -328,7 +340,6 @@ async function importEventsToDynamoDb(
 					} satisfies PutItemCommandInput;
 					const putCommand = new PutItemCommand(putParams);
 					const putResult = await dynamoDbClient.send(putCommand);
-
 					eventCount += 1;
 
 					console.log({ putResult }); // eslint-disable-line no-console
@@ -340,7 +351,9 @@ async function importEventsToDynamoDb(
 				// eslint-disable-next-line no-console
 				console.error(`Failed to save events for ${groupName}`);
 				console.error(err); // eslint-disable-line no-console
-
+				Sentry.captureException(err);
+				// eslint-disable-next-line no-console
+				await new Promise((resolve) => setTimeout(resolve, 5000));
 				if (err instanceof Error) {
 					errors.push({
 						errorName: err.name,
@@ -384,29 +397,26 @@ async function importEventsToDynamoDb(
 		errors,
 	});
 }
-
 export async function handler() {
 	try {
-		throw new Error('Test error for Sentry');
 		const invokeGetMeetupTokenCommand = new lambda.InvokeCommand({
 			FunctionName: GET_MEETUP_TOKEN_FUNCTION_NAME,
 			Payload: JSON.stringify({ clientId: 'importer' }),
 			LogType: lambda.LogType.Tail,
 		});
 		const client = new lambda.LambdaClient();
-
 		const response = await client.send(invokeGetMeetupTokenCommand);
 		const payload = Buffer.from(response.Payload!).toString();
 		const logs = Buffer.from(response.LogResult!).toString();
 		console.log('response from getMeetupToken'); // eslint-disable-line no-console
 		console.log({ payload, logs }); // eslint-disable-line no-console
-
 		const token = JSON.parse(payload).token;
 
 		await importEventsToDynamoDb(token, true);
 	} catch (error) {
 		Sentry.captureException(error);
-		console.error(error);
+		console.error(error + "this doesn't work"); // eslint-disable-line no-console
 		console.log('this works'); // eslint-disable-line no-console
+		await new Promise((resolve) => setTimeout(resolve, 5000));
 	}
 }
