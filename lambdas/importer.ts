@@ -97,7 +97,6 @@ async function writeImportLog({
 	errors,
 }: ImportLogRecord): Promise<void> {
 	const id = uuid();
-
 	const item: Record<string, AttributeValue> = {
 		Id: { S: id },
 		SuccessGroupNames: {
@@ -146,7 +145,6 @@ async function getAllSavedFutureEvents(): Promise<MeetupEvent[]> {
 			lastEvaluatedKey === undefined
 				? undefined
 				: { S: lastEvaluatedKey.Id! };
-
 		const scanCommand: ScanCommand = new ScanCommand({
 			TableName: EVENTS_TABLE_NAME,
 			ExclusiveStartKey: lastCheckedId,
@@ -186,7 +184,6 @@ async function getAllSavedFutureEvents(): Promise<MeetupEvent[]> {
  */
 async function deleteEventsById(eventIds: string[]): Promise<void> {
 	const nowTimestamp = new Date().toISOString();
-
 	for (const id of eventIds) {
 		console.log(`Setting DeletedAtDateTime on event ${id}...`); // eslint-disable-line no-console
 		const updateCommand = new UpdateItemCommand({
