@@ -176,6 +176,27 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			description: 'ARN of the policy to invoke lambda',
 		});
 
+		const sentryLambdaLayerPolicy = new ManagedPolicy(
+			this,
+			'sentryLambdaLayerPolicy',
+			{
+				managedPolicyName: 'sentryLambdaLayerPolicy',
+				statements: [
+					new PolicyStatement({
+						actions: ['lambda:GetLayerVersion'],
+						resources: [
+							'arn:aws:lambda:us-east-2:943013980633:layer:SentryNodeServerlessSDK:*',
+						],
+					}),
+				],
+			},
+		);
+
+		new CfnOutput(this, 'sentryLambdaLayerPolicyArn', {
+			value: sentryLambdaLayerPolicy.managedPolicyArn,
+			description: 'ARN of the policy to get sentry lambda layer version',
+		});
+
 		getMeetupTokenLambda.grantInvoke(importerLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
 		eventsTable.grantReadWriteData(importerLambda);
