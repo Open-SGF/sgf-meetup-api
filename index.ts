@@ -1,3 +1,4 @@
+import { platform } from 'node:os';
 import { join } from 'path';
 import {
 	BasePathMapping,
@@ -100,7 +101,9 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 						outputDir: string,
 					): string[] {
 						return [
-							`cp ${inputDir}/.env ${outputDir} 2>/dev/null || :`,
+							platform() === 'win32'
+								? `copy ${inputDir}\\.env ${outputDir} >$null 2>&1`
+								: `cp ${inputDir}/.env ${outputDir} 2>/dev/null || :`,
 						];
 					},
 					beforeInstall(): string[] {
