@@ -18,7 +18,7 @@ const EVENTS_GROUP_INDEX_NAME = process.env.EVENTS_GROUP_INDEX_NAME;
 
 type GetMeetupEventsOptions = {
 	count: number;
-	page: number;
+	page?: string;
 	group: string;
 	before?: Date;
 	after?: Date;
@@ -38,10 +38,13 @@ async function getMeetupEvents(
 		FilterExpression: 'attribute_not_exists(DeletedAtDateTime)',
 		KeyConditionExpression: makeKeyConditionExpression(options),
 		ExpressionAttributeValues: makeExpressionAttributeValues(options),
-		Limit: options.count,
+		//ExclusiveStartKey: options.count, //Pagination not implemented
+		Limit: options.count, //it can be the number of events to return in pagination
 	});
 	console.log({ queryCommand }); // eslint-disable-line no-console
 	const response = await dynamoDbClient.send(queryCommand);
+
+	//const lastEvaluatedKey = response.LastEvaluatedKey;
 
 	const events = response.Items?.map((item) =>
 		meetupEventFromDynamoDbItem(item),
@@ -100,6 +103,10 @@ function makeExpressionAttributeValues({
 function makeGetMeetupEventsOptions(
 	queryStringParameters: APIGatewayProxyEventQueryStringParameters,
 ): GetMeetupEventsOptions {
+	// Check for pagination (`limit` and `page` query string parameters)
+	const limit = queryStringParameters?.['limit'];
+	const page = queryStringParameters?.['page'];
+
 	// Check for `group` query string parameter
 	const groupParam = queryStringParameters?.['group'];
 	if (!groupParam) {
@@ -108,8 +115,8 @@ function makeGetMeetupEventsOptions(
 	}
 
 	const options: GetMeetupEventsOptions = {
-		count: 100,
-		page: 0,
+		count: limit ? +limit : 2, //100,
+		page: page, //Pagination not implemented
 		group: groupParam,
 	};
 
