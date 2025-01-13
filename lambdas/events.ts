@@ -38,13 +38,19 @@ async function getMeetupEvents(
 		FilterExpression: 'attribute_not_exists(DeletedAtDateTime)',
 		KeyConditionExpression: makeKeyConditionExpression(options),
 		ExpressionAttributeValues: makeExpressionAttributeValues(options),
-		//ExclusiveStartKey: options.count, //Pagination not implemented
+		ExclusiveStartKey: options.page ? b64Decode(options.page) : undefined, //Pagination not implemented
 		Limit: options.count, //it can be the number of events to return in pagination
 	});
+
 	console.log({ queryCommand }); // eslint-disable-line no-console
 	const response = await dynamoDbClient.send(queryCommand);
 
-	//const lastEvaluatedKey = response.LastEvaluatedKey;
+	let lastEvaluatedKey;
+	if (response.LastEvaluatedKey !== undefined) {
+		lastEvaluatedKey = b64Encode(response.LastEvaluatedKey);
+	}
+
+	console.log({ lastEvaluatedKey }); // eslint-disable-line no-console
 
 	const events = response.Items?.map((item) =>
 		meetupEventFromDynamoDbItem(item),
@@ -116,7 +122,7 @@ function makeGetMeetupEventsOptions(
 
 	const options: GetMeetupEventsOptions = {
 		count: limit ? +limit : 2, //100,
-		page: page, //Pagination not implemented
+		page: page,
 		group: groupParam,
 	};
 
@@ -148,6 +154,15 @@ function makeGetMeetupEventsOptions(
 function validateKey(apiKey: string) {
 	const validKeys = process.env.API_KEYS!.split(',');
 	return validKeys.includes(apiKey);
+}
+
+function b64Encode(input: Record<string, AttributeValue>): string {
+	return Buffer.from(JSON.stringify(input)).toString('base64');
+}
+
+function b64Decode(input: string): Record<string, AttributeValue> {
+	const jsonString = Buffer.from(input, 'base64').toString('utf-8');
+	return JSON.parse(jsonString);
 }
 
 export const handler: Handler = async (event: APIGatewayEvent) => {
