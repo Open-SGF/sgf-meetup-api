@@ -69,6 +69,11 @@ npm install
 cp lambdas/.env.example lambdas/.env
 ```
 
+#### Populate additional env variables
+- `MEETUP_GROUP_NAMES` should be a comma seperated list of meetup group names to import events from
+  - This value can be pulled from the url of a Meetup groups page e.g. with meetup.com/sgfdevs, sgfdevs is the group name
+- `API_KEYS` should be a comma seperated list of strings you'll use to locally call the API
+
 #### Setup initial database
 - `docker compose up -d`
   - If you are on linux or WSL there will likely be permission issues with a folder used by docker
@@ -82,6 +87,8 @@ cp lambdas/.env.example lambdas/.env
   - `npm run dev:importer`
 - Run API
   - `npm run dev:api`
+  - Use an API client (like [Postman](https://www.postman.com/)) to send requests to `http://localhost/events`
+    - You'll need to make sure the `Authorization` header is set to one of your `API_KEYS` from your `.env`
 
 ### Shutting down
 - `docker compose down`
