@@ -8,7 +8,8 @@ import { QueryCommand, AttributeValue } from '@aws-sdk/client-dynamodb';
 
 import { dynamoDbClient } from './lib/dynamoDbClient';
 import {
-	MeetupEvent,
+	PageInfo,
+	MeetupEvents,
 	meetupEventFromDynamoDbItem,
 } from './types/MeetupFutureEventsPayload';
 import { parseDateString } from './lib/util';
@@ -31,7 +32,7 @@ type GetMeetupEventsOptions = {
  */
 async function getMeetupEvents(
 	options: GetMeetupEventsOptions,
-): Promise<MeetupEvent[]> {
+): Promise<MeetupEvents> {
 	const queryCommand: QueryCommand = new QueryCommand({
 		TableName: EVENTS_TABLE_NAME,
 		IndexName: EVENTS_GROUP_INDEX_NAME,
@@ -45,18 +46,26 @@ async function getMeetupEvents(
 	console.log({ queryCommand }); // eslint-disable-line no-console
 	const response = await dynamoDbClient.send(queryCommand);
 
+	let pInfo: PageInfo = { endCursor: '', hasNextPage: false };
 	let lastEvaluatedKey;
 	if (response.LastEvaluatedKey !== undefined) {
 		lastEvaluatedKey = b64Encode(response.LastEvaluatedKey);
+		pInfo = {
+			endCursor: lastEvaluatedKey,
+			hasNextPage: lastEvaluatedKey !== undefined,
+		};
 	}
-
-	console.log({ lastEvaluatedKey }); // eslint-disable-line no-console
 
 	const events = response.Items?.map((item) =>
 		meetupEventFromDynamoDbItem(item),
 	);
 
-	return events ?? [];
+	const meetupEvents: MeetupEvents = {
+		pageInfo: pInfo,
+		events: events ?? [],
+	};
+
+	return meetupEvents;
 }
 
 /**
@@ -111,7 +120,7 @@ function makeGetMeetupEventsOptions(
 ): GetMeetupEventsOptions {
 	// Check for pagination (`limit` and `page` query string parameters)
 	const limit = queryStringParameters?.['limit'];
-	const page = queryStringParameters?.['page'];
+	const cursor = queryStringParameters?.['cursor'];
 
 	// Check for `group` query string parameter
 	const groupParam = queryStringParameters?.['group'];
@@ -121,8 +130,8 @@ function makeGetMeetupEventsOptions(
 	}
 
 	const options: GetMeetupEventsOptions = {
-		count: limit ? +limit : 2, //100,
-		page: page,
+		count: limit ? +limit : 20,
+		page: cursor,
 		group: groupParam,
 	};
 
@@ -195,7 +204,11 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
 		);
 
 		const events = await getMeetupEvents(getMeetupEventsOptions);
-		const body = JSON.stringify({ success: true, events });
+		const body = JSON.stringify({
+			success: true,
+			pageInfo: events.pageInfo,
+			events: events.events,
+		});
 		return { statusCode: 200, body };
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	} catch (error: any) {
