@@ -39,8 +39,8 @@ async function getMeetupEvents(
 		FilterExpression: 'attribute_not_exists(DeletedAtDateTime)',
 		KeyConditionExpression: makeKeyConditionExpression(options),
 		ExpressionAttributeValues: makeExpressionAttributeValues(options),
-		ExclusiveStartKey: options.page ? b64Decode(options.page) : undefined, //Pagination not implemented
-		Limit: options.count, //it can be the number of events to return in pagination
+		ExclusiveStartKey: options.page ? b64Decode(options.page) : undefined,
+		Limit: options.count,
 	});
 
 	console.log({ queryCommand }); // eslint-disable-line no-console
