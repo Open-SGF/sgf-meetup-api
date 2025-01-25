@@ -39,17 +39,18 @@ async function getMeetupEvents(
 		FilterExpression: 'attribute_not_exists(DeletedAtDateTime)',
 		KeyConditionExpression: makeKeyConditionExpression(options),
 		ExpressionAttributeValues: makeExpressionAttributeValues(options),
-		ExclusiveStartKey: options.page ? b64Decode(options.page) : undefined,
+		ExclusiveStartKey: options.page
+			? deserializeLastEvaluatedKey(options)
+			: undefined,
 		Limit: options.count,
 	});
 
-	console.log({ queryCommand }); // eslint-disable-line no-console
 	const response = await dynamoDbClient.send(queryCommand);
 
 	let pInfo: PageInfo = { endCursor: '', hasNextPage: false };
 	let lastEvaluatedKey;
 	if (response.LastEvaluatedKey !== undefined) {
-		lastEvaluatedKey = b64Encode(response.LastEvaluatedKey);
+		lastEvaluatedKey = serializeLastEvaluatedKey(response.LastEvaluatedKey);
 		pInfo = {
 			endCursor: lastEvaluatedKey,
 			hasNextPage: lastEvaluatedKey !== undefined,
@@ -165,13 +166,34 @@ function validateKey(apiKey: string) {
 	return validKeys.includes(apiKey);
 }
 
-function b64Encode(input: Record<string, AttributeValue>): string {
-	return Buffer.from(JSON.stringify(input)).toString('base64');
+function serializeLastEvaluatedKey(
+	input: Record<string, AttributeValue>,
+): string {
+	const id = input.Id.S!;
+	const dateObject = new Date(input.EventDateTime.S!);
+	const timestamp = dateObject.getTime();
+
+	const concatenated = id.concat('_').concat(timestamp.toString());
+	return Buffer.from(concatenated).toString('base64');
 }
 
-function b64Decode(input: string): Record<string, AttributeValue> {
-	const jsonString = Buffer.from(input, 'base64').toString('utf-8');
-	return JSON.parse(jsonString);
+function deserializeLastEvaluatedKey({
+	page,
+	group,
+}: GetMeetupEventsOptions): Record<string, AttributeValue> {
+	const token = Buffer.from(page!, 'base64').toString('utf-8');
+	const id_Datetime = token.split('_');
+	const id = id_Datetime[0];
+
+	const dateTime = new Date(+id_Datetime[1]).toISOString();
+
+	const key = {
+		EventDateTime: { S: dateTime },
+		MeetupGroupUrlName: { S: group },
+		Id: { S: id },
+	};
+
+	return key;
 }
 
 export const handler: Handler = async (event: APIGatewayEvent) => {
