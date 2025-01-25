@@ -199,7 +199,7 @@ function deserializeLastEvaluatedKey({
 export const handler: Handler = async (event: APIGatewayEvent) => {
 	try {
 		const { headers, queryStringParameters } = event;
-		const authHeader = headers['Authorization'];
+		let authHeader = headers['Authorization'];
 
 		if (authHeader == null) {
 			return {
@@ -208,6 +208,10 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
 					error: 'Authorization header is required',
 				}),
 			};
+		}
+
+		if (authHeader.startsWith('Bearer ')) {
+			authHeader = authHeader.replace('Bearer ', '');
 		}
 
 		if (!validateKey(authHeader)) {
