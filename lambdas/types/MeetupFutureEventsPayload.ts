@@ -16,6 +16,10 @@ export interface MeetupEvent {
 	images: Image[];
 	deletedAt?: Date;
 }
+export interface MeetupEvents {
+	pageInfo: PageInfo;
+	events: MeetupEvent[];
+}
 
 export function meetupEventFromDynamoDbItem(
 	item: Record<string, AttributeValue>,

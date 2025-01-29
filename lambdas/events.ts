@@ -8,7 +8,8 @@ import { QueryCommand, AttributeValue } from '@aws-sdk/client-dynamodb';
 
 import { dynamoDbClient } from './lib/dynamoDbClient';
 import {
-	MeetupEvent,
+	PageInfo,
+	MeetupEvents,
 	meetupEventFromDynamoDbItem,
 } from './types/MeetupFutureEventsPayload';
 import { parseDateString } from './lib/util';
@@ -18,7 +19,7 @@ const EVENTS_GROUP_INDEX_NAME = process.env.EVENTS_GROUP_INDEX_NAME;
 
 type GetMeetupEventsOptions = {
 	count: number;
-	page: number;
+	page?: string;
 	group: string;
 	before?: Date;
 	after?: Date;
@@ -31,23 +32,41 @@ type GetMeetupEventsOptions = {
  */
 async function getMeetupEvents(
 	options: GetMeetupEventsOptions,
-): Promise<MeetupEvent[]> {
+): Promise<MeetupEvents> {
 	const queryCommand: QueryCommand = new QueryCommand({
 		TableName: EVENTS_TABLE_NAME,
 		IndexName: EVENTS_GROUP_INDEX_NAME,
 		FilterExpression: 'attribute_not_exists(DeletedAtDateTime)',
 		KeyConditionExpression: makeKeyConditionExpression(options),
 		ExpressionAttributeValues: makeExpressionAttributeValues(options),
+		ExclusiveStartKey: options.page
+			? deserializeLastEvaluatedKey(options)
+			: undefined,
 		Limit: options.count,
 	});
-	console.log({ queryCommand }); // eslint-disable-line no-console
+
 	const response = await dynamoDbClient.send(queryCommand);
+
+	let pInfo: PageInfo = { endCursor: '', hasNextPage: false };
+	let lastEvaluatedKey;
+	if (response.LastEvaluatedKey !== undefined) {
+		lastEvaluatedKey = serializeLastEvaluatedKey(response.LastEvaluatedKey);
+		pInfo = {
+			endCursor: lastEvaluatedKey,
+			hasNextPage: lastEvaluatedKey !== undefined,
+		};
+	}
 
 	const events = response.Items?.map((item) =>
 		meetupEventFromDynamoDbItem(item),
 	);
 
-	return events ?? [];
+	const meetupEvents: MeetupEvents = {
+		pageInfo: pInfo,
+		events: events ?? [],
+	};
+
+	return meetupEvents;
 }
 
 /**
@@ -100,6 +119,10 @@ function makeExpressionAttributeValues({
 function makeGetMeetupEventsOptions(
 	queryStringParameters: APIGatewayProxyEventQueryStringParameters,
 ): GetMeetupEventsOptions {
+	// Check for pagination (`limit` and `page` query string parameters)
+	const limit = queryStringParameters?.['limit'];
+	const cursor = queryStringParameters?.['cursor'];
+
 	// Check for `group` query string parameter
 	const groupParam = queryStringParameters?.['group'];
 	if (!groupParam) {
@@ -108,8 +131,8 @@ function makeGetMeetupEventsOptions(
 	}
 
 	const options: GetMeetupEventsOptions = {
-		count: 100,
-		page: 0,
+		count: limit ? +limit : 20,
+		page: cursor,
 		group: groupParam,
 	};
 
@@ -141,6 +164,36 @@ function makeGetMeetupEventsOptions(
 function validateKey(apiKey: string) {
 	const validKeys = process.env.API_KEYS!.split(',');
 	return validKeys.includes(apiKey);
+}
+
+function serializeLastEvaluatedKey(
+	input: Record<string, AttributeValue>,
+): string {
+	const id = input.Id.S!;
+	const dateObject = new Date(input.EventDateTime.S!);
+	const timestamp = dateObject.getTime();
+
+	const concatenated = id.concat('_').concat(timestamp.toString());
+	return Buffer.from(concatenated).toString('base64');
+}
+
+function deserializeLastEvaluatedKey({
+	page,
+	group,
+}: GetMeetupEventsOptions): Record<string, AttributeValue> {
+	const token = Buffer.from(page!, 'base64').toString('utf-8');
+	const id_Datetime = token.split('_');
+	const id = id_Datetime[0];
+
+	const dateTime = new Date(+id_Datetime[1]).toISOString();
+
+	const key = {
+		EventDateTime: { S: dateTime },
+		MeetupGroupUrlName: { S: group },
+		Id: { S: id },
+	};
+
+	return key;
 }
 
 export const handler: Handler = async (event: APIGatewayEvent) => {
@@ -177,7 +230,11 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
 		);
 
 		const events = await getMeetupEvents(getMeetupEventsOptions);
-		const body = JSON.stringify({ success: true, events });
+		const body = JSON.stringify({
+			success: true,
+			pageInfo: events.pageInfo,
+			events: events.events,
+		});
 		return { statusCode: 200, body };
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	} catch (error: any) {

@@ -8,3 +8,4 @@ cdk.context.json
 .DS_Store
 docker/
 api-logs.txt
+.vscode/
