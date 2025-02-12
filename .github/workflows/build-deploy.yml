@@ -27,7 +27,6 @@ jobs:
         env:
           BUILD_ENV: 'production'
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          MEETUP_GROUP_NAMES: ${{ secrets.MEETUP_GROUP_NAMES }}
           MEETUP_PRIVATE_KEY: ${{ secrets.MEETUP_PRIVATE_KEY }}
           MEETUP_USER_ID: ${{ secrets.MEETUP_USER_ID }}
           MEETUP_CLIENT_KEY: ${{ secrets.MEETUP_CLIENT_KEY }}

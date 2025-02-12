@@ -19,6 +19,7 @@ import {
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Effect, ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import {StringParameter} from "aws-cdk-lib/aws-ssm";
 
 const AWS_ACCOUNT_ID = '391849688676';
 const AWS_REGION = 'us-east-2';
@@ -34,7 +35,6 @@ const EVENTS_API_DOMAIN_NAME = `${EVENTS_API_SUBDOMAIN}.${ROOT_DOMAIN}`;
 const GET_MEETUP_TOKEN_FUNCTION_NAME = 'getMeetupTokenFunction';
 
 // user/client info
-const MEETUP_GROUP_NAMES = process.env.MEETUP_GROUP_NAMES!;
 const MEETUP_PRIVATE_KEY = process.env.MEETUP_PRIVATE_KEY!;
 const MEETUP_USER_ID = process.env.MEETUP_USER_ID!;
 const MEETUP_CLIENT_KEY = process.env.MEETUP_CLIENT_KEY!;
@@ -48,6 +48,10 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				region: AWS_REGION,
 			},
 		});
+
+
+		const MEETUP_GROUP_NAMES = StringParameter.valueForStringParameter(this, 'sgf-meetup-api/meetup-group-names');
+		const API_KEYS = StringParameter.valueForStringParameter(this, 'sgf-meetup-api/api-keys');
 
 		const eventsTable = new Table(this, EVENTS_TABLE_NAME, {
 			partitionKey: {
@@ -136,6 +140,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				EVENTS_TABLE_NAME,
 				EVENTS_GROUP_INDEX_NAME,
 				EVENTS_ID_INDEX_NAME,
+				API_KEYS,
 			},
 		});
 
