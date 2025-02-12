@@ -51,11 +51,11 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
 		const MEETUP_GROUP_NAMES = StringParameter.valueForStringParameter(
 			this,
-			'sgf-meetup-api/meetup-group-names',
+			'/sgf-meetup-api/meetup-group-names',
 		);
 		const API_KEYS = StringParameter.valueForStringParameter(
 			this,
-			'sgf-meetup-api/api-keys',
+			'/sgf-meetup-api/api-keys',
 		);
 
 		const eventsTable = new Table(this, EVENTS_TABLE_NAME, {
