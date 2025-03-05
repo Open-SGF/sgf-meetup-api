@@ -2,10 +2,11 @@ import * as dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import {
 	AttributeValue,
+	BatchGetItemCommand,
+	BatchWriteItemCommand,
 	PutItemCommand,
 	PutItemCommandInput,
 	ScanCommand,
-	UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb';
 import * as lambda from '@aws-sdk/client-lambda';
 import { v4 as uuid } from 'uuid';
@@ -19,10 +20,12 @@ import {
 	meetupEventToDynamoDbItem,
 } from './types/MeetupFutureEventsPayload';
 import { dynamoDbClient } from './lib/dynamoDbClient';
+import { chunkArray } from './lib/util';
 
-const EVENTS_TABLE_NAME = process.env.EVENTS_TABLE_NAME;
+const EVENTS_TABLE_NAME = process.env.EVENTS_TABLE_NAME!;
+const OLD_EVENTS_TABLE_NAME = process.env.OLD_EVENTS_TABLE_NAME!;
 const GET_MEETUP_TOKEN_FUNCTION_NAME =
-	process.env.GET_MEETUP_TOKEN_FUNCTION_NAME;
+	process.env.GET_MEETUP_TOKEN_FUNCTION_NAME!;
 
 const GET_FUTURE_EVENTS = `
   query ($urlname: String!, $itemsNum: Int!, $cursor: String) {
@@ -175,28 +178,48 @@ async function getAllSavedFutureEvents(): Promise<MeetupEvent[]> {
 	return allEvents;
 }
 
-/**
- * Set DeletedAtDateTime on a list of events to mark them as deleted
- */
 async function deleteEventsById(eventIds: string[]): Promise<void> {
-	const nowTimestamp = new Date().toISOString();
+	if (eventIds.length === 0) {
+		return;
+	}
 
-	for (const id of eventIds) {
-		console.log(`Setting DeletedAtDateTime on event ${id}...`); // eslint-disable-line no-console
-		const updateCommand = new UpdateItemCommand({
-			TableName: EVENTS_TABLE_NAME,
-			Key: {
-				Id: { S: id },
-			},
-			AttributeUpdates: {
-				DeletedAtDateTime: {
-					Value: { S: nowTimestamp },
+	const originalEvents = [];
+	for (const idsChunk of chunkArray(eventIds, 100)) {
+		// BatchGet limit: 100 items
+		const batchGet = new BatchGetItemCommand({
+			RequestItems: {
+				[EVENTS_TABLE_NAME]: {
+					Keys: idsChunk.map((id) => ({ Id: { S: id } })),
+					ConsistentRead: true,
 				},
 			},
 		});
+		const response = await dynamoDbClient.send(batchGet);
+		originalEvents.push(...(response.Responses?.[EVENTS_TABLE_NAME] || []));
+	}
 
-		await dynamoDbClient.send(updateCommand);
-		console.log('Done'); // eslint-disable-line no-console
+	for (const eventsChunk of chunkArray(originalEvents, 25)) {
+		// BatchWrite limit: 25 items
+		const batchWrite = new BatchWriteItemCommand({
+			RequestItems: {
+				[OLD_EVENTS_TABLE_NAME]: eventsChunk.map((event) => ({
+					PutRequest: { Item: event },
+				})),
+			},
+		});
+		await dynamoDbClient.send(batchWrite);
+	}
+
+	for (const idsChunk of chunkArray(eventIds, 25)) {
+		// BatchWrite limit: 25 items
+		const batchDelete = new BatchWriteItemCommand({
+			RequestItems: {
+				[EVENTS_TABLE_NAME]: idsChunk.map((id) => ({
+					DeleteRequest: { Key: { Id: { S: id } } },
+				})),
+			},
+		});
+		await dynamoDbClient.send(batchDelete);
 	}
 }
 
@@ -322,7 +345,7 @@ async function importEventsToDynamoDb(
 					const dynamoDbItem = meetupEventToDynamoDbItem(event);
 
 					const putParams = {
-						TableName: process.env.EVENTS_TABLE_NAME,
+						TableName: EVENTS_TABLE_NAME,
 						Item: dynamoDbItem,
 					} satisfies PutItemCommandInput;
 					const putCommand = new PutItemCommand(putParams);

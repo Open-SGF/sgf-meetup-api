@@ -26,6 +26,7 @@ const AWS_REGION = 'us-east-2';
 
 const NODE_ENV = process.env.BUILD_ENV ?? 'development';
 const EVENTS_TABLE_NAME = 'Events';
+const OLD_EVENTS_TABLE_NAME = 'OldEvents';
 const IMPORTER_LOG_TABLE_NAME = 'ImporterLog';
 const EVENTS_ID_INDEX_NAME = 'EventsById';
 const EVENTS_GROUP_INDEX_NAME = 'EventsByGroupIndex';
@@ -67,7 +68,16 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			removalPolicy: RemovalPolicy.RETAIN,
 		});
 
-		eventsTable.addGlobalSecondaryIndex({
+		const oldEventsTable = new Table(this, OLD_EVENTS_TABLE_NAME, {
+			partitionKey: {
+				name: 'Id',
+				type: AttributeType.STRING,
+			},
+			tableName: OLD_EVENTS_TABLE_NAME,
+			removalPolicy: RemovalPolicy.RETAIN,
+		});
+
+		const eventTablesIndex = {
 			indexName: EVENTS_GROUP_INDEX_NAME,
 			partitionKey: {
 				name: 'MeetupGroupUrlName',
@@ -77,7 +87,10 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 				name: 'EventDateTime',
 				type: AttributeType.STRING,
 			},
-		});
+		};
+
+		eventsTable.addGlobalSecondaryIndex(eventTablesIndex);
+		oldEventsTable.addGlobalSecondaryIndex(eventTablesIndex);
 
 		const importerLogTable = new Table(this, IMPORTER_LOG_TABLE_NAME, {
 			partitionKey: {
@@ -131,6 +144,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			environment: {
 				NODE_ENV,
 				EVENTS_TABLE_NAME,
+				OLD_EVENTS_TABLE_NAME,
 				IMPORTER_LOG_TABLE_NAME,
 				MEETUP_GROUP_NAMES,
 				GET_MEETUP_TOKEN_FUNCTION_NAME,
@@ -143,6 +157,7 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 			environment: {
 				NODE_ENV,
 				EVENTS_TABLE_NAME,
+				OLD_EVENTS_TABLE_NAME,
 				EVENTS_GROUP_INDEX_NAME,
 				EVENTS_ID_INDEX_NAME,
 				API_KEYS,
@@ -210,6 +225,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 		getMeetupTokenLambda.grantInvoke(importerLambda);
 		eventsTable.grantReadWriteData(getEventsLambda);
 		eventsTable.grantReadWriteData(importerLambda);
+		oldEventsTable.grantReadWriteData(getEventsLambda);
+		oldEventsTable.grantReadWriteData(importerLambda);
 		importerLogTable.grantReadWriteData(importerLambda);
 
 		const importScheduleRule = new Rule(this, 'importerEventBridgeRule', {
