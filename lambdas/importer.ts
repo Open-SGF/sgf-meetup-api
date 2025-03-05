@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import {
 	AttributeValue,
@@ -9,6 +9,8 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import * as lambda from '@aws-sdk/client-lambda';
 import { v4 as uuid } from 'uuid';
+
+dotenv.config({ override: true });
 
 import {
 	MeetupEvent,

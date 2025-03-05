@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
 import type {
 	APIGatewayEvent,
 	APIGatewayProxyEventQueryStringParameters,
@@ -13,6 +13,8 @@ import {
 	meetupEventFromDynamoDbItem,
 } from './types/MeetupFutureEventsPayload';
 import { parseDateString } from './lib/util';
+
+dotenv.config({ override: true });
 
 const EVENTS_TABLE_NAME = process.env.EVENTS_TABLE_NAME;
 const EVENTS_GROUP_INDEX_NAME = process.env.EVENTS_GROUP_INDEX_NAME;
