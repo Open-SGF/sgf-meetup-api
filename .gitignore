@@ -18,3 +18,5 @@ cdk.out
 # IDEs
 .idea
 .vscode
+
+.env

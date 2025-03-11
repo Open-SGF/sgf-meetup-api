@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/jsii-runtime-go"
-	"sgf-meetup-api/infra"
+	"sgf-meetup-api/src/infra"
 )
 
 func main() {
@@ -11,8 +11,8 @@ func main() {
 
 	app := awscdk.NewApp(nil)
 
-	infra.NewStack(app, "InfraStack", &infra.AppStackProps{
-		awscdk.StackProps{
+	infra.NewStack(app, "SgfMeetupApiGo", &infra.AppStackProps{
+		StackProps: awscdk.StackProps{
 			Env: env(),
 		},
 	})
