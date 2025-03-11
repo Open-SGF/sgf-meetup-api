@@ -11,7 +11,7 @@ import (
 )
 
 func Import(ctx context.Context, config Config) error {
-	token, err := getToken(ctx, config.GetTokenFunctionName)
+	token, err := callGetTokenLambda(ctx, config.GetTokenFunctionName)
 
 	if err != nil {
 		return err
@@ -22,15 +22,13 @@ func Import(ctx context.Context, config Config) error {
 	return nil
 }
 
-func getToken(ctx context.Context, functionName string) (string, error) {
+func callGetTokenLambda(ctx context.Context, functionName string) (string, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
-	lambdaClient := lambda.NewFromConfig(cfg)
-
-	result, err := lambdaClient.Invoke(context.TODO(), &lambda.InvokeInput{
+	result, err := lambda.NewFromConfig(cfg).Invoke(ctx, &lambda.InvokeInput{
 		FunctionName: aws.String(functionName),
 	})
 
@@ -42,7 +40,6 @@ func getToken(ctx context.Context, functionName string) (string, error) {
 		return "", fmt.Errorf("Lambda execution error: %s", *result.FunctionError)
 	}
 
-	// Parse response
 	var response struct {
 		Token string `json:"token"`
 	}
