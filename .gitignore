@@ -11,6 +11,10 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Node
+node_modules
+npm-debug.log
+
 # CDK asset staging directory
 .cdk.staging
 cdk.out
@@ -18,5 +22,6 @@ cdk.out
 # IDEs
 .idea
 .vscode
+
 
 .env
