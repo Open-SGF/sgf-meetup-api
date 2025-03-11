@@ -32,6 +32,8 @@ func loadConfig() *importer.Config {
 
 	v.SetDefault("meetup_group_names", []string{})
 
+	v.AutomaticEnv()
+
 	v.SetConfigName(".env")
 	v.SetConfigType("env")
 	v.AddConfigPath(".")
@@ -42,8 +44,6 @@ func loadConfig() *importer.Config {
 			log.Printf("Warning: error reading .env file: %v", err)
 		}
 	}
-
-	v.AutomaticEnv()
 
 	var cfg importer.Config
 	if err := v.Unmarshal(&cfg); err != nil {
