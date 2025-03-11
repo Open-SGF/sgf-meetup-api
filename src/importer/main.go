@@ -8,29 +8,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"log"
-	"os"
 )
 
-const functionNameEnvVar = "GET_MEETUP_TOKEN_FUNCTION_NAME"
-
 func Import(ctx context.Context, config Config) error {
-	token, err := getToken(ctx)
+	token, err := getToken(ctx, config.GetTokenFunctionName)
 
 	if err != nil {
 		return err
 	}
 
-	log.Println(token)
+	log.Println("token", token)
 
 	return nil
 }
 
-func getToken(ctx context.Context) (string, error) {
-	lambdaName := os.Getenv(functionNameEnvVar)
-	if lambdaName == "" {
-		return "", fmt.Errorf("%s environment variable not set", functionNameEnvVar)
-	}
-
+func getToken(ctx context.Context, functionName string) (string, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to load AWS config: %w", err)
@@ -39,7 +31,7 @@ func getToken(ctx context.Context) (string, error) {
 	lambdaClient := lambda.NewFromConfig(cfg)
 
 	result, err := lambdaClient.Invoke(context.TODO(), &lambda.InvokeInput{
-		FunctionName: aws.String(lambdaName),
+		FunctionName: aws.String(functionName),
 	})
 
 	if err != nil {

@@ -5,12 +5,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "cdk": "cdk",
-    "synth": "cdk synth"
+    "synth": "rimraf ./cdk.out && cdk synth"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "aws-cdk": "^2.1003.0"
+    "aws-cdk": "^2.1003.0",
+    "rimraf": "^6.0.1"
   }
 }
