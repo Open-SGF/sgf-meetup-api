@@ -8,9 +8,12 @@ services:
     working_dir: '/home/dynamodblocal'
     command: '-jar DynamoDBLocal.jar -sharedDb -dbPath ./data'
     volumes:
-      - './docker/dynamodb:/home/dynamodblocal/data'
+      - 'dynamodb:/home/dynamodblocal/data'
     networks:
       - sgf-meetup-api
+
+volumes:
+  dynamodb:
 
 networks:
   sgf-meetup-api:

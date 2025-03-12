@@ -2,9 +2,10 @@ package infra
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
-	"sgf-meetup-api/src/infra/custom_constructs"
+	"sgf-meetup-api/src/infra/customconstructs"
 )
 
 type AppStackProps struct {
@@ -18,15 +19,55 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	custom_constructs.NewGoLambdaFunction(stack, "importer", &custom_constructs.GoLambdaFunctionProps{
+	eventsTable := awsdynamodb.NewTable(stack, jsii.String("MeetupEvents"), &awsdynamodb.TableProps{
+		PartitionKey: &awsdynamodb.Attribute{
+			Name: jsii.String("Id"),
+			Type: awsdynamodb.AttributeType_STRING,
+		},
+		TableName:     jsii.String("MeetupEvents"),
+		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
+	})
+
+	eventsTableIndex := &awsdynamodb.GlobalSecondaryIndexProps{
+		IndexName: jsii.String("EventsByGroupIndex"),
+		PartitionKey: &awsdynamodb.Attribute{
+			Name: jsii.String("MeetupGroupUrlName"),
+			Type: awsdynamodb.AttributeType_STRING,
+		},
+		SortKey: &awsdynamodb.Attribute{
+			Name: jsii.String("EventDateTime"),
+			Type: awsdynamodb.AttributeType_STRING,
+		},
+	}
+
+	eventsTable.AddGlobalSecondaryIndex(eventsTableIndex)
+
+	importerLogsTable := awsdynamodb.NewTable(stack, jsii.String("ImporterLog"), &awsdynamodb.TableProps{
+		PartitionKey: &awsdynamodb.Attribute{
+			Name: jsii.String("Id"),
+			Type: awsdynamodb.AttributeType_STRING,
+		},
+		SortKey: &awsdynamodb.Attribute{
+			Name: jsii.String("StartedAt"),
+			Type: awsdynamodb.AttributeType_STRING,
+		},
+		TableName:     jsii.String("ImporterLog"),
+		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
+	})
+
+	customconstructs.NewGoLambdaFunction(stack, jsii.String("importer"), &customconstructs.GoLambdaFunctionProps{
 		CodePath: jsii.String("./cmd/importer"),
+		Environment: &map[string]*string{
+			"EVENTS_TABLE_NAME":       eventsTable.TableName(),
+			"IMPORTER_LOG_TABLE_NAME": importerLogsTable.TableName(),
+		},
 	})
 
-	custom_constructs.NewGoLambdaFunction(stack, "get_token", &custom_constructs.GoLambdaFunctionProps{
-		CodePath: jsii.String("./cmd/get_token"),
+	customconstructs.NewGoLambdaFunction(stack, jsii.String("meetuptoken"), &customconstructs.GoLambdaFunctionProps{
+		CodePath: jsii.String("./cmd/meetuptoken"),
 	})
 
-	custom_constructs.NewGoLambdaFunction(stack, "api", &custom_constructs.GoLambdaFunctionProps{
+	customconstructs.NewGoLambdaFunction(stack, jsii.String("api"), &customconstructs.GoLambdaFunctionProps{
 		CodePath: jsii.String("./cmd/api"),
 	})
 

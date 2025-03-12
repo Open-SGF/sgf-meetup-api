@@ -1,4 +1,4 @@
-package custom_constructs
+package customconstructs
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
@@ -23,7 +23,7 @@ type GoLambdaFunctionProps struct {
 
 func NewGoLambdaFunction(
 	scope constructs.Construct,
-	id string,
+	id *string,
 	props *GoLambdaFunctionProps,
 ) *GoLambdaFunction {
 	if props == nil {
@@ -33,30 +33,28 @@ func NewGoLambdaFunction(
 		panic("CodePath is required for GoLambdaFunction")
 	}
 
-	construct := constructs.NewConstruct(scope, &id)
+	construct := constructs.NewConstruct(scope, id)
 
 	memory := float64(128)
 	timeout := float64(60)
 	handler := "main"
 
-	if props != nil {
-		if props.MemorySize != nil {
-			memory = *props.MemorySize
-		}
-		if props.Timeout != nil {
-			timeout = *props.Timeout
-		}
-		if props.Handler != nil {
-			handler = *props.Handler
-		}
+	if props.MemorySize != nil {
+		memory = *props.MemorySize
+	}
+	if props.Timeout != nil {
+		timeout = *props.Timeout
+	}
+	if props.Handler != nil {
+		handler = *props.Handler
 	}
 
-	functionName := id
-	if props != nil && props.FunctionName != nil {
+	functionName := *id
+	if props.FunctionName != nil {
 		functionName = *props.FunctionName
 	} else {
 		if stack, ok := scope.(awscdk.Stack); ok {
-			functionName = *stack.StackName() + "-" + id
+			functionName = *stack.StackName() + "-" + *id
 		}
 	}
 
@@ -71,7 +69,7 @@ func NewGoLambdaFunction(
 				Command: jsii.Strings(
 					"bash", "-c",
 					"go build -o /asset-output/main "+*props.CodePath+"/main.go && "+
-						"if [ -f "+*props.CodePath+"/.env ]; then cp "+*props.CodePath+"/.env /asset-output/; fi",
+						"if [ -f .env ]; then cp .env /asset-output/; fi",
 				),
 				Volumes: &[]*awscdk.DockerVolume{
 					{
@@ -84,11 +82,11 @@ func NewGoLambdaFunction(
 		Handler: jsii.String(handler),
 	}
 
-	if props != nil && props.Environment != nil {
+	if props.Environment != nil {
 		functionProps.Environment = props.Environment
 	}
 
-	lambdaFunction := awslambda.NewFunction(construct, jsii.String("Lambda"), functionProps)
+	lambdaFunction := awslambda.NewFunction(construct, id, functionProps)
 
 	goLambda := &GoLambdaFunction{
 		Function: lambdaFunction,
