@@ -24,15 +24,18 @@ func main() {
 func handleRequest(ctx context.Context, event json.RawMessage) error {
 	err := importer.Import(ctx, *config)
 
+	log.Println(config)
+
 	return err
 }
 
 func loadConfig() *importer.Config {
 	v := viper.New()
 
+	v.SetDefault("get_token_function_name", "")
+	v.SetDefault("events_table_name", "")
+	v.SetDefault("importer_log_table_name", "")
 	v.SetDefault("meetup_group_names", []string{})
-
-	v.AutomaticEnv()
 
 	v.SetConfigName(".env")
 	v.SetConfigType("env")
@@ -44,6 +47,8 @@ func loadConfig() *importer.Config {
 			log.Printf("Warning: error reading .env file: %v", err)
 		}
 	}
+
+	v.AutomaticEnv()
 
 	var cfg importer.Config
 	if err := v.Unmarshal(&cfg); err != nil {
