@@ -12,37 +12,38 @@ type AppStackProps struct {
 	awscdk.StackProps
 }
 
-func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscdk.Stack {
-	var sprops awscdk.StackProps
-	if props != nil {
-		sprops = props.StackProps
-	}
-	stack := awscdk.NewStack(scope, &id, &sprops)
+type DynamoDbProps struct {
+	*awsdynamodb.TableProps
+	GlobalSecondaryIndexes []*awsdynamodb.GlobalSecondaryIndexProps
+}
 
-	eventsTable := awsdynamodb.NewTable(stack, jsii.String("MeetupEvents"), &awsdynamodb.TableProps{
+var EventsTableProps = DynamoDbProps{
+	TableProps: &awsdynamodb.TableProps{
+		TableName: jsii.String("MeetupEvents"),
 		PartitionKey: &awsdynamodb.Attribute{
 			Name: jsii.String("Id"),
 			Type: awsdynamodb.AttributeType_STRING,
 		},
-		TableName:     jsii.String("MeetupEvents"),
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
-	})
-
-	eventsTableIndex := &awsdynamodb.GlobalSecondaryIndexProps{
-		IndexName: jsii.String("EventsByGroupIndex"),
-		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("MeetupGroupUrlName"),
-			Type: awsdynamodb.AttributeType_STRING,
+	},
+	GlobalSecondaryIndexes: []*awsdynamodb.GlobalSecondaryIndexProps{
+		{
+			IndexName: jsii.String("EventsByGroupIndex"),
+			PartitionKey: &awsdynamodb.Attribute{
+				Name: jsii.String("MeetupGroupUrlName"),
+				Type: awsdynamodb.AttributeType_STRING,
+			},
+			SortKey: &awsdynamodb.Attribute{
+				Name: jsii.String("EventDateTime"),
+				Type: awsdynamodb.AttributeType_STRING,
+			},
 		},
-		SortKey: &awsdynamodb.Attribute{
-			Name: jsii.String("EventDateTime"),
-			Type: awsdynamodb.AttributeType_STRING,
-		},
-	}
+	},
+}
 
-	eventsTable.AddGlobalSecondaryIndex(eventsTableIndex)
-
-	importerLogsTable := awsdynamodb.NewTable(stack, jsii.String("ImporterLog"), &awsdynamodb.TableProps{
+var ImportLogsTableProps = DynamoDbProps{
+	TableProps: &awsdynamodb.TableProps{
+		TableName: jsii.String("ImporterLog"),
 		PartitionKey: &awsdynamodb.Attribute{
 			Name: jsii.String("Id"),
 			Type: awsdynamodb.AttributeType_STRING,
@@ -51,15 +52,30 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 			Name: jsii.String("StartedAt"),
 			Type: awsdynamodb.AttributeType_STRING,
 		},
-		TableName:     jsii.String("ImporterLog"),
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
-	})
+	},
+}
+
+func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscdk.Stack {
+	var sprops awscdk.StackProps
+	if props != nil {
+		sprops = props.StackProps
+	}
+	stack := awscdk.NewStack(scope, &id, &sprops)
+
+	eventsTable := awsdynamodb.NewTable(stack, EventsTableProps.TableName, EventsTableProps.TableProps)
+
+	for _, gsi := range EventsTableProps.GlobalSecondaryIndexes {
+		eventsTable.AddGlobalSecondaryIndex(gsi)
+	}
+
+	awsdynamodb.NewTable(stack, ImportLogsTableProps.TableName, ImportLogsTableProps.TableProps)
 
 	customconstructs.NewGoLambdaFunction(stack, jsii.String("importer"), &customconstructs.GoLambdaFunctionProps{
 		CodePath: jsii.String("./cmd/importer"),
 		Environment: &map[string]*string{
-			"EVENTS_TABLE_NAME":       eventsTable.TableName(),
-			"IMPORTER_LOG_TABLE_NAME": importerLogsTable.TableName(),
+			"EVENTS_TABLE_NAME":       EventsTableProps.TableName,
+			"IMPORTER_LOG_TABLE_NAME": ImportLogsTableProps.TableName,
 		},
 	})
 
