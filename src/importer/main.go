@@ -37,7 +37,7 @@ func callGetTokenLambda(ctx context.Context, functionName string) (string, error
 	}
 
 	if result.FunctionError != nil {
-		return "", fmt.Errorf("Lambda execution error: %s", *result.FunctionError)
+		return "", fmt.Errorf("lambda execution error: %s", *result.FunctionError)
 	}
 
 	var response struct {
