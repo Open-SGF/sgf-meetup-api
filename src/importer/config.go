@@ -8,23 +8,23 @@ import (
 )
 
 const (
-	getTokenFunctionNameKey = "GET_TOKEN_FUNCTION_NAME"
-	eventsTableNameKey      = "EVENTS_TABLE_NAME"
-	importerLogTableNameKey = "IMPORTER_LOG_TABLE_NAME"
-	meetupGroupNamesKey     = "MEETUP_GROUP_NAMES"
+	meetupTokenFunctionNameKey = "MEETUP_TOKEN_FUNCTION_NAME"
+	eventsTableNameKey         = "EVENTS_TABLE_NAME"
+	importerLogTableNameKey    = "IMPORTER_LOG_TABLE_NAME"
+	meetupGroupNamesKey        = "MEETUP_GROUP_NAMES"
 )
 
 type Config struct {
-	GetTokenFunctionName string   `mapstructure:"get_token_function_name"`
-	EventsTableName      string   `mapstructure:"events_table_name"`
-	ImporterLogTableName string   `mapstructure:"importer_log_table_name"`
-	MeetupGroupNames     []string `mapstructure:"meetup_group_names"`
+	MeetupTokenFunctionName string   `mapstructure:"meetup_token_function_name"`
+	EventsTableName         string   `mapstructure:"events_table_name"`
+	ImporterLogTableName    string   `mapstructure:"importer_log_table_name"`
+	MeetupGroupNames        []string `mapstructure:"meetup_group_names"`
 }
 
 func LoadConfig() *Config {
 	v := viper.New()
 
-	v.SetDefault(strings.ToLower(getTokenFunctionNameKey), "")
+	v.SetDefault(strings.ToLower(meetupTokenFunctionNameKey), "")
 	v.SetDefault(strings.ToLower(eventsTableNameKey), "")
 	v.SetDefault(strings.ToLower(importerLogTableNameKey), "")
 	v.SetDefault(strings.ToLower(meetupGroupNamesKey), []string{})
@@ -55,8 +55,8 @@ func LoadConfig() *Config {
 func validateConfig(cfg *Config) {
 	var missing []string
 
-	if cfg.GetTokenFunctionName == "" {
-		missing = append(missing, getTokenFunctionNameKey)
+	if cfg.MeetupTokenFunctionName == "" {
+		missing = append(missing, meetupTokenFunctionNameKey)
 	}
 	if cfg.EventsTableName == "" {
 		missing = append(missing, eventsTableNameKey)

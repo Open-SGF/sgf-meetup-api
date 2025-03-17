@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/lambda"
+	"log"
 	"sgf-meetup-api/src/importer"
 )
 
@@ -14,6 +15,7 @@ func init() {
 }
 
 func main() {
+	log.Println(config)
 	lambda.Start(handleRequest)
 }
 
