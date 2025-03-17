@@ -11,7 +11,7 @@ import (
 )
 
 func Import(ctx context.Context, config Config) error {
-	token, err := callGetTokenLambda(ctx, config.GetTokenFunctionName)
+	token, err := callGetTokenLambda(ctx, config.MeetupTokenFunctionName)
 
 	if err != nil {
 		return err

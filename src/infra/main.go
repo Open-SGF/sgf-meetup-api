@@ -56,6 +56,8 @@ var ImportLogsTableProps = DynamoDbProps{
 	},
 }
 
+var MeetupTokenFunctionName = jsii.String("meetuptoken")
+
 func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscdk.Stack {
 	var sprops awscdk.StackProps
 	if props != nil {
@@ -71,16 +73,18 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 
 	awsdynamodb.NewTable(stack, ImportLogsTableProps.TableName, ImportLogsTableProps.TableProps)
 
+	customconstructs.NewGoLambdaFunction(stack, jsii.String("meetuptoken"), &customconstructs.GoLambdaFunctionProps{
+		CodePath:     jsii.String("./cmd/meetuptoken"),
+		FunctionName: MeetupTokenFunctionName,
+	})
+
 	customconstructs.NewGoLambdaFunction(stack, jsii.String("importer"), &customconstructs.GoLambdaFunctionProps{
 		CodePath: jsii.String("./cmd/importer"),
 		Environment: &map[string]*string{
-			"EVENTS_TABLE_NAME":       EventsTableProps.TableName,
-			"IMPORTER_LOG_TABLE_NAME": ImportLogsTableProps.TableName,
+			"EVENTS_TABLE_NAME":          EventsTableProps.TableName,
+			"IMPORTER_LOG_TABLE_NAME":    ImportLogsTableProps.TableName,
+			"MEETUP_TOKEN_FUNCTION_NAME": MeetupTokenFunctionName,
 		},
-	})
-
-	customconstructs.NewGoLambdaFunction(stack, jsii.String("meetuptoken"), &customconstructs.GoLambdaFunctionProps{
-		CodePath: jsii.String("./cmd/meetuptoken"),
 	})
 
 	customconstructs.NewGoLambdaFunction(stack, jsii.String("api"), &customconstructs.GoLambdaFunctionProps{
