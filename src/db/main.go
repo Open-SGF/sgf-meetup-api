@@ -9,10 +9,10 @@ import (
 )
 
 type Options struct {
-	Endpoint     string
-	Region       string
-	ClientKey    string
-	ClientSecret string
+	Endpoint        string
+	Region          string
+	AccessKey       string
+	SecretAccessKey string
 }
 
 func New(ctx context.Context, options *Options) (*dynamodb.Client, error) {
@@ -27,11 +27,11 @@ func New(ctx context.Context, options *Options) (*dynamodb.Client, error) {
 		cfgOpts = append(cfgOpts, config.WithRegion(options.Region))
 	}
 
-	if options.ClientKey != "" && options.ClientSecret != "" {
+	if options.AccessKey != "" && options.SecretAccessKey != "" {
 		cfgOpts = append(cfgOpts, config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
-				options.ClientKey,
-				options.ClientSecret,
+				options.AccessKey,
+				options.SecretAccessKey,
 				"",
 			),
 		))

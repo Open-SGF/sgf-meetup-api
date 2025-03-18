@@ -16,7 +16,7 @@ import (
 
 type Config struct {
 	DynamoDbEndpoint   string `mapstructure:"dynamodb_endpoint"`
-	Region             string `mapstructure:"region"`
+	AwsRegion          string `mapstructure:"aws_region"`
 	AwsAccessKey       string `mapstructure:"aws_access_key"`
 	AwsSecretAccessKey string `mapstructure:"aws_secret_access_key"`
 }
@@ -30,10 +30,10 @@ func init() {
 func main() {
 	ctx := context.Background()
 	client, err := db.New(ctx, &db.Options{
-		Endpoint:     config.DynamoDbEndpoint,
-		Region:       config.Region,
-		ClientKey:    config.AwsAccessKey,
-		ClientSecret: config.AwsSecretAccessKey,
+		Endpoint:        config.DynamoDbEndpoint,
+		Region:          config.AwsRegion,
+		AccessKey:       config.AwsAccessKey,
+		SecretAccessKey: config.AwsSecretAccessKey,
 	})
 
 	if err != nil {
@@ -206,7 +206,7 @@ func loadConfig() *Config {
 	v := viper.New()
 
 	v.SetDefault("dynamodb_endpoint", "")
-	v.SetDefault("region", "us-east-2")
+	v.SetDefault("aws_region", "us-east-2")
 	v.SetDefault("aws_access_key", "")
 	v.SetDefault("aws_secret_access_key", "")
 
@@ -239,8 +239,8 @@ func validateConfig(cfg *Config) {
 	if cfg.DynamoDbEndpoint == "" {
 		missing = append(missing, "DYNAMODB_ENDPOINT")
 	}
-	if cfg.Region == "" {
-		missing = append(missing, "REGION")
+	if cfg.AwsRegion == "" {
+		missing = append(missing, "AWS_REGION")
 	}
 	if cfg.AwsAccessKey == "" {
 		missing = append(missing, "AWS_ACCESS_KEY")
