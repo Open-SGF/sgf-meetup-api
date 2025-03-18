@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"net/url"
+	"sgf-meetup-api/src/constants"
 	"strings"
 	"time"
 )
@@ -40,7 +41,7 @@ func GetToken(ctx context.Context, config *Config, clientId string) (string, err
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 	// Required by Meetup
-	req.Header.Add("User-Agent", "curl/8.7.1 ")
+	req.Header.Add("User-Agent", constants.UserAgent)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

@@ -12,6 +12,7 @@ const (
 	eventsTableNameKey         = "EVENTS_TABLE_NAME"
 	importerLogTableNameKey    = "IMPORTER_LOG_TABLE_NAME"
 	meetupGroupNamesKey        = "MEETUP_GROUP_NAMES"
+	meetupApiUrlKey            = "MEETUP_API_URL"
 )
 
 type Config struct {
@@ -19,6 +20,11 @@ type Config struct {
 	EventsTableName         string   `mapstructure:"events_table_name"`
 	ImporterLogTableName    string   `mapstructure:"importer_log_table_name"`
 	MeetupGroupNames        []string `mapstructure:"meetup_group_names"`
+	MeetupApiUrl            string   `mapstructure:"meetup_api_url"`
+	DynamoDbEndpoint        string   `mapstructure:"dynamodb_endpoint"`
+	AwsRegion               string   `mapstructure:"aws_region"`
+	AwsAccessKey            string   `mapstructure:"aws_access_key"`
+	AwsSecretAccessKey      string   `mapstructure:"aws_secret_access_key"`
 }
 
 func LoadConfig() *Config {
@@ -28,6 +34,7 @@ func LoadConfig() *Config {
 	v.SetDefault(strings.ToLower(eventsTableNameKey), "")
 	v.SetDefault(strings.ToLower(importerLogTableNameKey), "")
 	v.SetDefault(strings.ToLower(meetupGroupNamesKey), []string{})
+	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql")
 
 	v.SetConfigName(".env")
 	v.SetConfigType("env")
