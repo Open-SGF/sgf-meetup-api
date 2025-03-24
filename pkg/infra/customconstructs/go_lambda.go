@@ -65,7 +65,7 @@ func NewGoLambdaFunction(
 		Timeout:      awscdk.Duration_Seconds(jsii.Number(timeout)),
 		Code: awslambda.AssetCode_FromAsset(jsii.String("."), &awss3assets.AssetOptions{
 			Bundling: &awscdk.BundlingOptions{
-				Image: awscdk.DockerImage_FromBuild(jsii.String("./src/infra"), nil),
+				Image: awscdk.DockerImage_FromBuild(jsii.String("./pkg/infra"), nil),
 				Command: jsii.Strings(
 					"bash", "-c",
 					"go build -o /asset-output/main "+*props.CodePath+"/main.go && "+

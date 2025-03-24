@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/spf13/viper"
 	"log"
-	"sgf-meetup-api/src/db"
-	"sgf-meetup-api/src/infra"
+	"sgf-meetup-api/pkg/db"
+	"sgf-meetup-api/pkg/infra"
 	"strings"
 )
 

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/lambda"
 	"log"
-	"sgf-meetup-api/src/importer"
+	"sgf-meetup-api/pkg/importer"
 )
 
 var config *importer.Config

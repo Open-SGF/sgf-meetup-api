@@ -8,14 +8,12 @@ jobs:
         name: Lint & Typecheck PR
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: 18.18.0
-            - run: npm ci
-            - name: 'CDK Synth'
-              run: npm run synth
-            - name: 'Lint'
-              run: npm run lint
-            - name: 'Typecheck'
-              run: npm run build
+          - uses: actions/checkout@v4
+          - uses: actions/setup-go@v5
+            with:
+              go-version: 1.24
+          - name: golangci-lint
+            uses: golangci/golangci-lint-action@v6
+            with:
+              version: v1.64
+              args: cmd/... pkg/...
