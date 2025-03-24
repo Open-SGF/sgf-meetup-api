@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/aws/aws-lambda-go/lambda"
-	"sgf-meetup-api/src/meetuptoken"
+	"sgf-meetup-api/pkg/meetuptoken"
 )
 
 var config *meetuptoken.Config

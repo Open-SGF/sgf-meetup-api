@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sgf-meetup-api/src/constants"
-	"sgf-meetup-api/src/models"
+	"sgf-meetup-api/pkg/constants"
+	"sgf-meetup-api/pkg/models"
 	"strings"
 )
 

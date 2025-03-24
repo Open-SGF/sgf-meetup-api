@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"log"
-	"sgf-meetup-api/src/db"
+	"sgf-meetup-api/pkg/db"
 )
 
 func Import(ctx context.Context, config Config) error {
@@ -18,7 +18,7 @@ func Import(ctx context.Context, config Config) error {
 		return err
 	}
 
-	db, err := db.New(ctx, &db.Options{
+	_, err = db.New(ctx, &db.Options{
 		Endpoint:        config.DynamoDbEndpoint,
 		Region:          config.AwsRegion,
 		AccessKey:       config.AwsAccessKey,
@@ -29,9 +29,9 @@ func Import(ctx context.Context, config Config) error {
 		return err
 	}
 
-	client := NewMeetupClient(ctx, config.MeetupApiUrl, token)
+	NewMeetupClient(ctx, config.MeetupApiUrl, token)
 
-	client.GetFutureEvents()
+	//client.GetFutureEvents()
 
 	log.Println("token", token)
 

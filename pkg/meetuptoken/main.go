@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"net/url"
-	"sgf-meetup-api/src/constants"
+	"sgf-meetup-api/pkg/constants"
 	"strings"
 	"time"
 )

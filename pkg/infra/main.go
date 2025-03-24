@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
-	"sgf-meetup-api/src/infra/customconstructs"
+	"sgf-meetup-api/pkg/infra/customconstructs"
 )
 
 type AppStackProps struct {

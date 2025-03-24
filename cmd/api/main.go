@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
-	"sgf-meetup-api/src/api"
+	"sgf-meetup-api/pkg/api"
 )
 
 var ginLambda *ginadapter.GinLambda
