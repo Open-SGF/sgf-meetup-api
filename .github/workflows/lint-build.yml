@@ -1,4 +1,4 @@
-name: "Lint PR"
+name: "Lint & Build PR"
 on:
   pull_request:
     branches:
@@ -18,7 +18,7 @@ jobs:
           version: v1.64
           args: cmd/... pkg/...
   build:
-    name: Lint
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
