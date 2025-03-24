@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sgf-meetup-api/pkg/constants"
 	"sgf-meetup-api/pkg/models"
 	"strings"
 )
@@ -135,7 +134,7 @@ func (client *MeetupClient) MakeGraphQlRequest(query string, variables map[strin
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("User-Agent", constants.UserAgent)
+	req.Header.Add("User-Agent", "")
 	req.Header.Add("Authorization", "Bearer "+client.token)
 
 	httpClient := &http.Client{}

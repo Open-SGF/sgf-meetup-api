@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sgf-meetup-api/pkg/constants"
 	"strings"
 )
+
+const userAgent = "curl/8.7.1"
 
 type Proxy struct {
 	url  string
@@ -57,7 +58,7 @@ func (p *Proxy) HandleRequest(ctx context.Context, req Request) (*Response, erro
 
 	meetupReq.Header.Add("Content-Type", "application/json")
 	meetupReq.Header.Add("Accept", "application/json")
-	meetupReq.Header.Add("User-Agent", constants.UserAgent)
+	meetupReq.Header.Add("User-Agent", userAgent)
 	meetupReq.Header.Add("Authorization", "Bearer "+token)
 
 	httpClient := &http.Client{}
