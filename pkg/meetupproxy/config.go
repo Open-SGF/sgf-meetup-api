@@ -1,4 +1,4 @@
-package meetuptoken
+package meetupproxy
 
 import (
 	"encoding/base64"
@@ -15,17 +15,19 @@ const (
 	meetupClientKeyKey        = "MEETUP_CLIENT_KEY"
 	meetupSigningKeyIdKey     = "MEETUP_SIGNING_KEY_ID"
 	meetupAuthUrlKey          = "MEETUP_AUTH_URL"
+	meetupApiUrlKey           = "MEETUP_API_URL"
 )
 
 type Config struct {
 	MeetupPrivateKey   []byte `mapstructure:"meetup_private_key"`
-	MeetupUserId       string `mapstructure:"meetup_user_id"`
+	MeetupUserID       string `mapstructure:"meetup_user_id"`
 	MeetupClientKey    string `mapstructure:"meetup_client_key"`
-	MeetupSigningKeyId string `mapstructure:"meetup_signing_key_id"`
-	MeetupAuthUrl      string `mapstructure:"meetup_auth_url"`
+	MeetupSigningKeyID string `mapstructure:"meetup_signing_key_id"`
+	MeetupAuthURL      string `mapstructure:"meetup_auth_url"`
+	MeetupAPIURL       string `mapstructure:"meetup_api_url"`
 }
 
-func LoadConfigFromEnvFile(path, filename string) *Config {
+func NewConfigFromEnvFile(path, filename string) *Config {
 	v := viper.New()
 
 	v.SetDefault(strings.ToLower(meetupPrivateKeyBase64Key), "")
@@ -34,6 +36,7 @@ func LoadConfigFromEnvFile(path, filename string) *Config {
 	v.SetDefault(strings.ToLower(meetupClientKeyKey), "")
 	v.SetDefault(strings.ToLower(meetupSigningKeyIdKey), "")
 	v.SetDefault(strings.ToLower(meetupAuthUrlKey), "https://secure.meetup.com/oauth2/access")
+	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql")
 
 	v.SetConfigName(filename)
 	v.SetConfigType("env")
@@ -64,8 +67,8 @@ func LoadConfigFromEnvFile(path, filename string) *Config {
 	return &cfg
 }
 
-func LoadConfig() *Config {
-	return LoadConfigFromEnvFile(".", ".env")
+func NewConfig() *Config {
+	return NewConfigFromEnvFile(".", ".env")
 }
 
 func validateConfig(cfg *Config) {
@@ -73,17 +76,14 @@ func validateConfig(cfg *Config) {
 	if len(cfg.MeetupPrivateKey) == 0 {
 		missing = append(missing, meetupPrivateKeyBase64Key)
 	}
-	if cfg.MeetupUserId == "" {
+	if cfg.MeetupUserID == "" {
 		missing = append(missing, meetupUserIdKey)
 	}
 	if cfg.MeetupClientKey == "" {
 		missing = append(missing, meetupClientKeyKey)
 	}
-	if cfg.MeetupSigningKeyId == "" {
+	if cfg.MeetupSigningKeyID == "" {
 		missing = append(missing, meetupSigningKeyIdKey)
-	}
-	if cfg.MeetupAuthUrl == "" {
-		missing = append(missing, meetupAuthUrlKey)
 	}
 
 	if len(missing) > 0 {
