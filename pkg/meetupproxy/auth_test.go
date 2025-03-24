@@ -45,6 +45,39 @@ func TestGetAccessToken_InitialFetch(t *testing.T) {
 	}
 }
 
+func TestAuthRequest_ValidUserAgent(t *testing.T) {
+	var capturedUserAgent string
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedUserAgent = r.UserAgent()
+		_ = json.NewEncoder(w).Encode(authToken{
+			AccessToken: "test",
+			ExpiresIn:   300,
+		})
+	}))
+	defer ts.Close()
+
+	privateKey, _ := generatePrivateKey()
+	ah := NewAuthHandler(AuthHandlerConfig{
+		url:        ts.URL,
+		privateKey: privateKey,
+	})
+
+	_, err := ah.GetAccessToken(context.Background())
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if capturedUserAgent == "" {
+		t.Fatal("User-Agent header missing from request")
+	}
+
+	if capturedUserAgent != userAgent {
+		t.Fatalf("Expected User-Agent %q, got %q",
+			userAgent, capturedUserAgent)
+	}
+}
+
 func TestGetAccessToken_ExpiredToken(t *testing.T) {
 	callCount := 0
 	var mu sync.Mutex

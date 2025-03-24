@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"sgf-meetup-api/pkg/constants"
 	"strings"
 	"sync"
 	"time"
@@ -98,7 +97,7 @@ func (ah *authHandler) getNewAccessToken(ctx context.Context) (*authToken, error
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 	// Required by Meetup
-	req.Header.Add("User-Agent", constants.UserAgent)
+	req.Header.Add("User-Agent", userAgent)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
