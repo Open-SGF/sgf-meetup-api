@@ -11,7 +11,13 @@ import (
 var config *importer.Config
 
 func init() {
-	config = importer.LoadConfig()
+	cfg, err := importer.NewConfig()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	config = cfg
 }
 
 func main() {

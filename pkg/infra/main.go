@@ -83,7 +83,7 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		Environment: &map[string]*string{
 			"EVENTS_TABLE_NAME":          EventsTableProps.TableName,
 			"IMPORTER_LOG_TABLE_NAME":    ImportLogsTableProps.TableName,
-			"MEETUP_TOKEN_FUNCTION_NAME": MeetupFunctionName,
+			"MEETUP_PROXY_FUNCTION_NAME": MeetupFunctionName,
 		},
 	})
 

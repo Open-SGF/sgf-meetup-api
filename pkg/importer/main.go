@@ -7,33 +7,31 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
-	"log"
-	"sgf-meetup-api/pkg/db"
 )
 
 func Import(ctx context.Context, config Config) error {
-	token, err := callGetTokenLambda(ctx, config.MeetupTokenFunctionName)
+	//token, err := callGetTokenLambda(ctx, config.MeetupProxyFunctionName)
 
-	if err != nil {
-		return err
-	}
+	//if err != nil {
+	//	return err
+	//}
 
-	_, err = db.New(ctx, &db.Options{
-		Endpoint:        config.DynamoDbEndpoint,
-		Region:          config.AwsRegion,
-		AccessKey:       config.AwsAccessKey,
-		SecretAccessKey: config.AwsSecretAccessKey,
-	})
+	//_, err = db.New(ctx, &db.Options{
+	//	Endpoint:        config.DynamoDbEndpoint,
+	//	Region:          config.AwsRegion,
+	//	AccessKey:       config.AwsAccessKey,
+	//	SecretAccessKey: config.AwsSecretAccessKey,
+	//})
 
-	if err != nil {
-		return err
-	}
+	//if err != nil {
+	//	return err
+	//}
 
-	NewMeetupClient(ctx, config.MeetupApiUrl, token)
+	//NewMeetupClient(ctx, config.MeetupApiUrl, token)
 
 	//client.GetFutureEvents()
 
-	log.Println("token", token)
+	//log.Println("token", token)
 
 	return nil
 }
