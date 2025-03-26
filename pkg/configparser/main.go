@@ -3,26 +3,25 @@ package configparser
 import (
 	"errors"
 	"github.com/spf13/viper"
-	"log"
 )
 
 type ParseOptions struct {
 	EnvFilename string
 	EnvFilepath string
-	Key         []string
+	Keys        []string
 	SetDefaults func(v *viper.Viper)
 }
 
 func Parse[T any](options ParseOptions) (*T, error) {
 	v := viper.New()
 
-	for _, key := range options.Key {
+	for _, key := range options.Keys {
 		v.SetDefault(key, "")
 	}
 
 	v.SetConfigName(options.EnvFilename)
 	v.SetConfigType("env")
-	v.AddConfigPath(options.EnvFilename)
+	v.AddConfigPath(options.EnvFilepath)
 
 	if err := v.ReadInConfig(); err != nil {
 		var configFileNotFoundError viper.ConfigFileNotFoundError
@@ -37,7 +36,6 @@ func Parse[T any](options ParseOptions) (*T, error) {
 
 	var cfg T
 	if err := v.Unmarshal(&cfg); err != nil {
-		log.Printf("Unable to decode into struct: %v", err)
 		return nil, err
 	}
 

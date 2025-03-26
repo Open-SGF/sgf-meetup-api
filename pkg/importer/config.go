@@ -1,69 +1,69 @@
 package importer
 
 import (
-	"errors"
+	"fmt"
 	"github.com/spf13/viper"
-	"log"
+	"sgf-meetup-api/pkg/configparser"
 	"strings"
 )
 
 const (
-	meetupTokenFunctionNameKey = "MEETUP_TOKEN_FUNCTION_NAME"
-	eventsTableNameKey         = "EVENTS_TABLE_NAME"
-	importerLogTableNameKey    = "IMPORTER_LOG_TABLE_NAME"
-	meetupGroupNamesKey        = "MEETUP_GROUP_NAMES"
-	meetupApiUrlKey            = "MEETUP_API_URL"
+	meetupProxyFunctionName = "MEETUP_PROXY_FUNCTION_NAME"
+	eventsTableNameKey      = "EVENTS_TABLE_NAME"
+	importerLogTableNameKey = "IMPORTER_LOG_TABLE_NAME"
+	meetupGroupNamesKey     = "MEETUP_GROUP_NAMES"
 )
 
+var keys = []string{
+	strings.ToLower(meetupProxyFunctionName),
+	strings.ToLower(eventsTableNameKey),
+	strings.ToLower(importerLogTableNameKey),
+	strings.ToLower(meetupGroupNamesKey),
+}
+
 type Config struct {
-	MeetupTokenFunctionName string   `mapstructure:"meetup_token_function_name"`
+	MeetupProxyFunctionName string   `mapstructure:"meetup_proxy_function_name"`
 	EventsTableName         string   `mapstructure:"events_table_name"`
 	ImporterLogTableName    string   `mapstructure:"importer_log_table_name"`
 	MeetupGroupNames        []string `mapstructure:"meetup_group_names"`
-	MeetupApiUrl            string   `mapstructure:"meetup_api_url"`
-	DynamoDbEndpoint        string   `mapstructure:"dynamodb_endpoint"`
-	AwsRegion               string   `mapstructure:"aws_region"`
-	AwsAccessKey            string   `mapstructure:"aws_access_key"`
-	AwsSecretAccessKey      string   `mapstructure:"aws_secret_access_key"`
+	//DynamoDbEndpoint        string   `mapstructure:"dynamodb_endpoint"`
+	//AwsRegion               string   `mapstructure:"aws_region"`
+	//AwsAccessKey            string   `mapstructure:"aws_access_key"`
+	//AwsSecretAccessKey      string   `mapstructure:"aws_secret_access_key"`
 }
 
-func LoadConfig() *Config {
-	v := viper.New()
+func NewConfig() (*Config, error) {
+	return NewConfigFromEnvFile(".", ".env")
+}
 
-	v.SetDefault(strings.ToLower(meetupTokenFunctionNameKey), "")
-	v.SetDefault(strings.ToLower(eventsTableNameKey), "")
-	v.SetDefault(strings.ToLower(importerLogTableNameKey), "")
+func NewConfigFromEnvFile(path, filename string) (*Config, error) {
+	config, err := configparser.Parse[Config](configparser.ParseOptions{
+		EnvFilepath: path,
+		EnvFilename: filename,
+		Keys:        keys,
+		SetDefaults: setDefaults,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = validateConfig(config); err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+func setDefaults(v *viper.Viper) {
 	v.SetDefault(strings.ToLower(meetupGroupNamesKey), []string{})
-	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql")
-
-	v.SetConfigName(".env")
-	v.SetConfigType("env")
-	v.AddConfigPath(".")
-
-	if err := v.ReadInConfig(); err != nil {
-		var configFileNotFoundError viper.ConfigFileNotFoundError
-		if !errors.As(err, &configFileNotFoundError) {
-			log.Printf("Warning: error reading .env file: %v", err)
-		}
-	}
-
-	v.AutomaticEnv()
-
-	var cfg Config
-	if err := v.Unmarshal(&cfg); err != nil {
-		log.Printf("Unable to decode into struct: %v", err)
-	}
-
-	validateConfig(&cfg)
-
-	return &cfg
 }
 
-func validateConfig(cfg *Config) {
+func validateConfig(cfg *Config) error {
 	var missing []string
 
-	if cfg.MeetupTokenFunctionName == "" {
-		missing = append(missing, meetupTokenFunctionNameKey)
+	if cfg.MeetupProxyFunctionName == "" {
+		missing = append(missing, meetupProxyFunctionName)
 	}
 	if cfg.EventsTableName == "" {
 		missing = append(missing, eventsTableNameKey)
@@ -73,6 +73,8 @@ func validateConfig(cfg *Config) {
 	}
 
 	if len(missing) > 0 {
-		log.Fatalf("Missing required env vars: %v", strings.Join(missing, ", "))
+		return fmt.Errorf("missing required env vars: %v", strings.Join(missing, ", "))
 	}
+
+	return nil
 }

@@ -75,7 +75,7 @@ func TestProxy_HandleRequest_InvalidJSONResponse(t *testing.T) {
 	}
 
 	if !strings.Contains(err.Error(), "invalid character") {
-		t.Errorf("Expected JSON error, got %v", err)
+		t.Fatalf("Expected JSON error, got %v", err)
 	}
 }
 
@@ -131,6 +131,6 @@ func TestHandleRequest_Timeout(t *testing.T) {
 	})
 
 	if !errors.Is(err, context.DeadlineExceeded) {
-		t.Errorf("Expected context deadline exceeded, got: %v", err)
+		t.Fatalf("Expected context deadline exceeded, got: %v", err)
 	}
 }

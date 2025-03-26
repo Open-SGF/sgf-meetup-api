@@ -45,7 +45,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 	config, err := configparser.Parse[Config](configparser.ParseOptions{
 		EnvFilepath: path,
 		EnvFilename: filename,
-		Key:         keys,
+		Keys:        keys,
 		SetDefaults: setDefaults,
 	})
 
