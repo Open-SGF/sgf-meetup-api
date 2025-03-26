@@ -2,9 +2,9 @@ package meetupproxy
 
 import (
 	"encoding/base64"
-	"errors"
+	"fmt"
 	"github.com/spf13/viper"
-	"log"
+	"sgf-meetup-api/pkg/configparser"
 	"strings"
 )
 
@@ -18,6 +18,16 @@ const (
 	meetupApiUrlKey           = "MEETUP_API_URL"
 )
 
+var keys = []string{
+	strings.ToLower(meetupPrivateKeyBase64Key),
+	strings.ToLower(meetupPrivateKeyKey),
+	strings.ToLower(meetupUserIdKey),
+	strings.ToLower(meetupClientKeyKey),
+	strings.ToLower(meetupSigningKeyIdKey),
+	strings.ToLower(meetupAuthUrlKey),
+	strings.ToLower(meetupApiUrlKey),
+}
+
 type Config struct {
 	MeetupPrivateKey   []byte `mapstructure:"meetup_private_key"`
 	MeetupUserID       string `mapstructure:"meetup_user_id"`
@@ -27,51 +37,41 @@ type Config struct {
 	MeetupAPIURL       string `mapstructure:"meetup_api_url"`
 }
 
-func NewConfigFromEnvFile(path, filename string) *Config {
-	v := viper.New()
+func NewConfig() (*Config, error) {
+	return NewConfigFromEnvFile(".", ".env")
+}
 
-	v.SetDefault(strings.ToLower(meetupPrivateKeyBase64Key), "")
-	v.SetDefault(strings.ToLower(meetupPrivateKeyKey), "")
-	v.SetDefault(strings.ToLower(meetupUserIdKey), "")
-	v.SetDefault(strings.ToLower(meetupClientKeyKey), "")
-	v.SetDefault(strings.ToLower(meetupSigningKeyIdKey), "")
-	v.SetDefault(strings.ToLower(meetupAuthUrlKey), "https://secure.meetup.com/oauth2/access")
-	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql")
+func NewConfigFromEnvFile(path, filename string) (*Config, error) {
+	config, err := configparser.Parse[Config](configparser.ParseOptions{
+		EnvFilepath: path,
+		EnvFilename: filename,
+		Key:         keys,
+		SetDefaults: setDefaults,
+	})
 
-	v.SetConfigName(filename)
-	v.SetConfigType("env")
-	v.AddConfigPath(path)
-
-	if err := v.ReadInConfig(); err != nil {
-		var configFileNotFoundError viper.ConfigFileNotFoundError
-		if !errors.As(err, &configFileNotFoundError) {
-			log.Printf("Warning: error reading .env file: %v", err)
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	v.AutomaticEnv()
+	if err = validateConfig(config); err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+func setDefaults(v *viper.Viper) {
+	v.SetDefault(strings.ToLower(meetupAuthUrlKey), "https://secure.meetup.com/oauth2/access")
+	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql")
 
 	meetupPrivateKeyBase64 := v.Get(strings.ToLower(meetupPrivateKeyBase64Key)).(string)
 	meetupPrivateKey, err := base64.StdEncoding.DecodeString(meetupPrivateKeyBase64)
 	if err == nil {
 		v.SetDefault(strings.ToLower(meetupPrivateKeyKey), meetupPrivateKey)
 	}
-
-	var cfg Config
-	if err := v.Unmarshal(&cfg); err != nil {
-		log.Printf("Unable to decode into struct: %v", err)
-	}
-
-	validateConfig(&cfg)
-
-	return &cfg
 }
 
-func NewConfig() *Config {
-	return NewConfigFromEnvFile(".", ".env")
-}
-
-func validateConfig(cfg *Config) {
+func validateConfig(cfg *Config) error {
 	var missing []string
 	if len(cfg.MeetupPrivateKey) == 0 {
 		missing = append(missing, meetupPrivateKeyBase64Key)
@@ -87,6 +87,8 @@ func validateConfig(cfg *Config) {
 	}
 
 	if len(missing) > 0 {
-		log.Fatalf("Missing required env vars: %v", strings.Join(missing, ", "))
+		return fmt.Errorf("missing required env vars: %v", strings.Join(missing, ", "))
 	}
+
+	return nil
 }
