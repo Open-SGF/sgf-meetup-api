@@ -9,21 +9,23 @@ import (
 )
 
 type Service struct {
-	eventsTable string
-	groupNames  []string
-	dbOptions   db.Options
+	proxyFunctionName string
+	eventsTable       string
+	groupNames        []string
+	dbOptions         db.Options
 }
 
-func New(eventsTable string, groupNames []string, dbOptions db.Options) *Service {
+func New(proxyFunctionName, eventsTable string, groupNames []string, dbOptions db.Options) *Service {
 	return &Service{
-		eventsTable: eventsTable,
-		groupNames:  groupNames,
-		dbOptions:   dbOptions,
+		proxyFunctionName: proxyFunctionName,
+		eventsTable:       eventsTable,
+		groupNames:        groupNames,
+		dbOptions:         dbOptions,
 	}
 }
 
 func NewFromConfig(c *Config) *Service {
-	return New(c.EventsTableName, c.MeetupGroupNames, db.Options{
+	return New(c.MeetupProxyFunctionName, c.EventsTableName, c.MeetupGroupNames, db.Options{
 		Endpoint:        c.DynamoDbEndpoint,
 		Region:          c.AwsRegion,
 		AccessKey:       c.AwsAccessKey,
