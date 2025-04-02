@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
 	"github.com/aws/aws-lambda-go/lambda"
 	"log"
 	"sgf-meetup-api/pkg/importer"
@@ -23,10 +21,4 @@ func init() {
 func main() {
 	service := importer.NewFromConfig(config)
 	lambda.Start(service.Import)
-}
-
-func handleRequest(ctx context.Context, event json.RawMessage) error {
-	err := importer.Import(ctx, *config)
-
-	return err
 }
