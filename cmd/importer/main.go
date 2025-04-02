@@ -21,8 +21,8 @@ func init() {
 }
 
 func main() {
-	log.Println(config)
-	lambda.Start(handleRequest)
+	service := importer.NewFromConfig(config)
+	lambda.Start(service.Import)
 }
 
 func handleRequest(ctx context.Context, event json.RawMessage) error {

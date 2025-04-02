@@ -8,28 +8,33 @@ import (
 )
 
 const (
-	meetupProxyFunctionName = "MEETUP_PROXY_FUNCTION_NAME"
-	eventsTableNameKey      = "EVENTS_TABLE_NAME"
-	importerLogTableNameKey = "IMPORTER_LOG_TABLE_NAME"
-	meetupGroupNamesKey     = "MEETUP_GROUP_NAMES"
+	meetupProxyFunctionNameKey = "MEETUP_PROXY_FUNCTION_NAME"
+	eventsTableNameKey         = "EVENTS_TABLE_NAME"
+	meetupGroupNamesKey        = "MEETUP_GROUP_NAMES"
+	dynamoDbEndpoint           = "DYNAMODB_ENDPOINT"
+	awsRegion                  = "AWS_REGION"
+	awsAccessKey               = "AWS_ACCESS_KEY"
+	awsSecretAccessKey         = "AWS_SECRET_ACCESS_KEY"
 )
 
 var keys = []string{
-	strings.ToLower(meetupProxyFunctionName),
+	strings.ToLower(meetupProxyFunctionNameKey),
 	strings.ToLower(eventsTableNameKey),
-	strings.ToLower(importerLogTableNameKey),
 	strings.ToLower(meetupGroupNamesKey),
+	strings.ToLower(dynamoDbEndpoint),
+	strings.ToLower(awsRegion),
+	strings.ToLower(awsAccessKey),
+	strings.ToLower(awsSecretAccessKey),
 }
 
 type Config struct {
 	MeetupProxyFunctionName string   `mapstructure:"meetup_proxy_function_name"`
 	EventsTableName         string   `mapstructure:"events_table_name"`
-	ImporterLogTableName    string   `mapstructure:"importer_log_table_name"`
 	MeetupGroupNames        []string `mapstructure:"meetup_group_names"`
-	//DynamoDbEndpoint        string   `mapstructure:"dynamodb_endpoint"`
-	//AwsRegion               string   `mapstructure:"aws_region"`
-	//AwsAccessKey            string   `mapstructure:"aws_access_key"`
-	//AwsSecretAccessKey      string   `mapstructure:"aws_secret_access_key"`
+	DynamoDbEndpoint        string   `mapstructure:"dynamodb_endpoint"`
+	AwsRegion               string   `mapstructure:"aws_region"`
+	AwsAccessKey            string   `mapstructure:"aws_access_key"`
+	AwsSecretAccessKey      string   `mapstructure:"aws_secret_access_key"`
 }
 
 func NewConfig() (*Config, error) {
@@ -57,19 +62,17 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 
 func setDefaults(v *viper.Viper) {
 	v.SetDefault(strings.ToLower(meetupGroupNamesKey), []string{})
+	v.SetDefault(strings.ToLower(awsRegion), "us-east-2")
 }
 
 func validateConfig(cfg *Config) error {
 	var missing []string
 
 	if cfg.MeetupProxyFunctionName == "" {
-		missing = append(missing, meetupProxyFunctionName)
+		missing = append(missing, meetupProxyFunctionNameKey)
 	}
 	if cfg.EventsTableName == "" {
 		missing = append(missing, eventsTableNameKey)
-	}
-	if cfg.ImporterLogTableName == "" {
-		missing = append(missing, importerLogTableNameKey)
 	}
 
 	if len(missing) > 0 {
