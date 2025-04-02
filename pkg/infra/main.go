@@ -41,21 +41,6 @@ var EventsTableProps = DynamoDbProps{
 	},
 }
 
-var ImportLogsTableProps = DynamoDbProps{
-	TableProps: &awsdynamodb.TableProps{
-		TableName: jsii.String("ImporterLog"),
-		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("Id"),
-			Type: awsdynamodb.AttributeType_STRING,
-		},
-		SortKey: &awsdynamodb.Attribute{
-			Name: jsii.String("StartedAt"),
-			Type: awsdynamodb.AttributeType_STRING,
-		},
-		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
-	},
-}
-
 var MeetupFunctionName = jsii.String("meetupproxy")
 
 func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscdk.Stack {
@@ -71,8 +56,6 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		eventsTable.AddGlobalSecondaryIndex(gsi)
 	}
 
-	awsdynamodb.NewTable(stack, ImportLogsTableProps.TableName, ImportLogsTableProps.TableProps)
-
 	customconstructs.NewGoLambdaFunction(stack, MeetupFunctionName, &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/meetupproxy"),
 		FunctionName: MeetupFunctionName,
@@ -82,7 +65,6 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		CodePath: jsii.String("./cmd/importer"),
 		Environment: &map[string]*string{
 			"EVENTS_TABLE_NAME":          EventsTableProps.TableName,
-			"IMPORTER_LOG_TABLE_NAME":    ImportLogsTableProps.TableName,
 			"MEETUP_PROXY_FUNCTION_NAME": MeetupFunctionName,
 		},
 	})
