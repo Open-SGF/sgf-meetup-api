@@ -1,0 +1,32 @@
+name: "Lint & Build PR"
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  lint:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - run: go mod download
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64
+          args: cmd/... pkg/...
+      - name: go test
+        run: go test ./cmd/... ./pkg/...
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - run: npm ci
+      - run: npm run synth

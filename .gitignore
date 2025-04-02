@@ -1,11 +1,27 @@
-.idea/
-node_modules/
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Node
+node_modules
+npm-debug.log
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+# IDEs
+.idea
+.vscode
+
+
 .env
-lambdas/.env
-lambdas/meetup-private-key
-cdk.out/
-cdk.context.json
-.DS_Store
-docker/
-api-logs.txt
-.vscode/
