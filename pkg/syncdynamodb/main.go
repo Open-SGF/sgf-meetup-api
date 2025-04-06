@@ -15,7 +15,7 @@ func SyncTables(ctx context.Context, client *dynamodb.Client) error {
 	tables := []infra.DynamoDbProps{infra.EventsTableProps}
 
 	for _, tableProps := range tables {
-		tableName := *tableProps.TableProps.TableName
+		tableName := *tableProps.TableName
 
 		exists, err := tableExists(ctx, client, tableName)
 		if err != nil {
@@ -57,8 +57,8 @@ func tableExists(ctx context.Context, client *dynamodb.Client, tableName string)
 func createTable(ctx context.Context, client *dynamodb.Client, tableProps infra.DynamoDbProps) error {
 	attrMap := make(map[string]types.ScalarAttributeType)
 
-	partitionKeyName := *tableProps.TableProps.PartitionKey.Name
-	attrMap[partitionKeyName] = convertAttributeType(tableProps.TableProps.PartitionKey.Type)
+	partitionKeyName := *tableProps.PartitionKey.Name
+	attrMap[partitionKeyName] = convertAttributeType(tableProps.PartitionKey.Type)
 
 	keySchema := []types.KeySchemaElement{
 		{
@@ -67,9 +67,9 @@ func createTable(ctx context.Context, client *dynamodb.Client, tableProps infra.
 		},
 	}
 
-	if tableProps.TableProps.SortKey != nil {
-		sortKeyName := *tableProps.TableProps.SortKey.Name
-		attrMap[sortKeyName] = convertAttributeType(tableProps.TableProps.SortKey.Type)
+	if tableProps.SortKey != nil {
+		sortKeyName := *tableProps.SortKey.Name
+		attrMap[sortKeyName] = convertAttributeType(tableProps.SortKey.Type)
 
 		keySchema = append(keySchema, types.KeySchemaElement{
 			AttributeName: aws.String(sortKeyName),
@@ -124,12 +124,12 @@ func createTable(ctx context.Context, client *dynamodb.Client, tableProps infra.
 	}
 
 	input := &dynamodb.CreateTableInput{
-		TableName:            tableProps.TableProps.TableName,
+		TableName:            tableProps.TableName,
 		AttributeDefinitions: attrDefs,
 		KeySchema:            keySchema,
 		ProvisionedThroughput: &types.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Int64(floatToIntWithFallback(tableProps.TableProps.ReadCapacity, 5)),
-			WriteCapacityUnits: aws.Int64(floatToIntWithFallback(tableProps.TableProps.WriteCapacity, 5)),
+			ReadCapacityUnits:  aws.Int64(floatToIntWithFallback(tableProps.ReadCapacity, 5)),
+			WriteCapacityUnits: aws.Int64(floatToIntWithFallback(tableProps.WriteCapacity, 5)),
 		},
 	}
 
