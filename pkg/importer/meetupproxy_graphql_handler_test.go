@@ -50,7 +50,7 @@ func TestExecuteQuery_LambdaExecutionError(t *testing.T) {
 	testServer := setupMockLambdaServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Amz-Function-Error", "Unhandled")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{"error": "lambda failure"})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "lambda failure"})
 	})
 	defer testServer.Close()
 
