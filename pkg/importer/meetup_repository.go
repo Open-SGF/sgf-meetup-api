@@ -76,12 +76,14 @@ type MeetupFutureEventsResponse struct {
 					EndCursor   string `json:"endCursor"`
 					HasNextPage bool   `json:"hasNextPage"`
 				} `json:"pageInfo"`
-				Edges []struct {
-					Node models.MeetupEvent `json:"node"`
-				} `json:"edges"`
+				Edges []MeetupEdge `json:"edges"`
 			} `json:"unifiedEvents"`
 		} `json:"events"`
 	} `json:"data"`
+}
+
+type MeetupEdge struct {
+	Node models.MeetupEvent `json:"node"`
 }
 
 func (r *meetupRepository) GetEventsUntilDateForGroup(ctx context.Context, group string, beforeDate time.Time) ([]models.MeetupEvent, error) {
