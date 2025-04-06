@@ -71,7 +71,7 @@ func TestDynamoDb(t *testing.T) {
 
 	defer dbCtr.Close()
 
-	service := New("meetupproxy", *infra.EventsTableProps.TableName, []string{}, dbCtr.Options)
+	service := New(*infra.EventsTableProps.TableName, []string{}, dbCtr.Options, nil)
 
 	err = service.Import(ctx)
 
