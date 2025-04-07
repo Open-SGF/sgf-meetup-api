@@ -6,8 +6,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"log"
+	"log/slog"
 	"sgf-meetup-api/pkg/clock"
 	"sgf-meetup-api/pkg/db"
+	"sgf-meetup-api/pkg/logging"
 	"time"
 )
 
@@ -16,20 +18,32 @@ type Service struct {
 	groupNames       []string
 	dbOptions        db.Options
 	timeSource       clock.TimeSource
+	logger           *slog.Logger
 	meetupRepository MeetupRepository
 }
 
-func New(eventsTable string, groupNames []string, dbOptions db.Options, timeSource clock.TimeSource, meetupRepository MeetupRepository) *Service {
+func New(
+	eventsTable string,
+	groupNames []string,
+	dbOptions db.Options,
+	timeSource clock.TimeSource,
+	logger *slog.Logger,
+	meetupRepository MeetupRepository,
+) *Service {
 	return &Service{
 		eventsTable:      eventsTable,
 		groupNames:       groupNames,
 		dbOptions:        dbOptions,
 		timeSource:       timeSource,
+		logger:           logger,
 		meetupRepository: meetupRepository,
 	}
 }
 
 func NewFromConfig(c *Config) *Service {
+	logger := logging.DefaultLogger(c.LogLevel)
+	graphQLHandler := NewMeetupProxyGraphQLHandler(c.MeetupProxyFunctionName, logger)
+
 	return New(
 		c.EventsTableName,
 		c.MeetupGroupNames,
@@ -40,7 +54,8 @@ func NewFromConfig(c *Config) *Service {
 			SecretAccessKey: c.AwsSecretAccessKey,
 		},
 		clock.RealTimeSource(),
-		NewMeetupRepository(NewMeetupProxyGraphQLHandler(c.MeetupProxyFunctionName)),
+		logger,
+		NewMeetupRepository(graphQLHandler, logger),
 	)
 }
 

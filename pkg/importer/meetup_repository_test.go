@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
+	"log/slog"
+	"sgf-meetup-api/pkg/logging"
 	"sgf-meetup-api/pkg/models"
 	"testing"
 	"time"
@@ -20,7 +22,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 			{24 * time.Hour, 48 * time.Hour},
 		})
 
-		repo := NewMeetupRepository(mock)
+		repo := NewMeetupRepository(mock, slog.New(logging.NewMockHandler()))
 		beforeDate := now.Add(72 * time.Hour)
 
 		events, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", beforeDate)
@@ -44,7 +46,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 			{72 * time.Hour, 96 * time.Hour},
 		})
 
-		repo := NewMeetupRepository(mock)
+		repo := NewMeetupRepository(mock, slog.New(logging.NewMockHandler()))
 		beforeDate := now.Add(60 * time.Hour)
 
 		events, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", beforeDate)
@@ -68,7 +70,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 			{60 * time.Hour, 72 * time.Hour},
 		})
 
-		repo := NewMeetupRepository(mock)
+		repo := NewMeetupRepository(mock, slog.New(logging.NewMockHandler()))
 		beforeDate := now.Add(100 * time.Hour)
 
 		events, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", beforeDate)
@@ -95,7 +97,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 			},
 		}
 
-		repo := NewMeetupRepository(failingMock)
+		repo := NewMeetupRepository(failingMock, slog.New(logging.NewMockHandler()))
 		_, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", now)
 
 		if err == nil {

@@ -3,8 +3,10 @@ package importer
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sgf-meetup-api/pkg/logging"
 	"testing"
 )
 
@@ -33,7 +35,7 @@ func TestExecuteQuery_Success(t *testing.T) {
 	})
 	defer testServer.Close()
 
-	handler := NewMeetupProxyGraphQLHandler("test-function")
+	handler := NewMeetupProxyGraphQLHandler("test-function", slog.New(logging.NewMockHandler()))
 
 	result, err := handler.ExecuteQuery(context.Background(), "query {}", nil)
 	if err != nil {
@@ -54,7 +56,7 @@ func TestExecuteQuery_LambdaExecutionError(t *testing.T) {
 	})
 	defer testServer.Close()
 
-	handler := NewMeetupProxyGraphQLHandler("test-function")
+	handler := NewMeetupProxyGraphQLHandler("test-function", slog.New(logging.NewMockHandler()))
 
 	_, err := handler.ExecuteQuery(context.Background(), "query {}", nil)
 	if err == nil {
@@ -73,7 +75,7 @@ func TestExecuteQuery_LambdaInvokeError(t *testing.T) {
 	})
 	defer testServer.Close()
 
-	handler := NewMeetupProxyGraphQLHandler("test-function")
+	handler := NewMeetupProxyGraphQLHandler("test-function", slog.New(logging.NewMockHandler()))
 
 	_, err := handler.ExecuteQuery(context.Background(), "query {}", nil)
 	if err == nil {
@@ -82,7 +84,7 @@ func TestExecuteQuery_LambdaInvokeError(t *testing.T) {
 }
 
 func TestExecuteQuery_MarshalError(t *testing.T) {
-	handler := NewMeetupProxyGraphQLHandler("test-function")
+	handler := NewMeetupProxyGraphQLHandler("test-function", slog.New(logging.NewMockHandler()))
 
 	invalidVariables := map[string]any{
 		"channel": make(chan int), // Channels can't be JSON marshaled

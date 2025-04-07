@@ -3,12 +3,14 @@ package importer
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"sgf-meetup-api/pkg/models"
 	"time"
 )
 
 type meetupRepository struct {
 	handler GraphQLHandler
+	logger  *slog.Logger
 }
 
 type MeetupRepository interface {
@@ -19,9 +21,10 @@ type GraphQLHandler interface {
 	ExecuteQuery(ctx context.Context, query string, variables map[string]any) ([]byte, error)
 }
 
-func NewMeetupRepository(handler GraphQLHandler) MeetupRepository {
+func NewMeetupRepository(handler GraphQLHandler, logger *slog.Logger) MeetupRepository {
 	return &meetupRepository{
 		handler: handler,
+		logger:  logger,
 	}
 }
 
