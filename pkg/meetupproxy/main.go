@@ -82,6 +82,7 @@ func (p *Proxy) HandleRequest(ctx context.Context, req Request) (*Response, erro
 	defer func() { _ = meetupResp.Body.Close() }()
 
 	if meetupResp.StatusCode != http.StatusOK {
+		p.logger.Error("Error fetching data from meetup", "statusCode", meetupResp.StatusCode)
 		return nil, fmt.Errorf("expected status code 200, got %v", meetupResp.StatusCode)
 	}
 
