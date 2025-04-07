@@ -7,15 +7,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"log/slog"
 )
 
 type meetupProxyGraphQLHandler struct {
 	proxyFunctionName string
+	logger            *slog.Logger
 }
 
-func NewMeetupProxyGraphQLHandler(proxyFunctionName string) GraphQLHandler {
+func NewMeetupProxyGraphQLHandler(proxyFunctionName string, logger *slog.Logger) GraphQLHandler {
 	return &meetupProxyGraphQLHandler{
 		proxyFunctionName: proxyFunctionName,
+		logger:            logger,
 	}
 }
 
@@ -34,17 +37,17 @@ func (m *meetupProxyGraphQLHandler) ExecuteQuery(ctx context.Context, query stri
 		return nil, err
 	}
 
-	return callLambda(ctx, m.proxyFunctionName, requestBytes)
+	return m.callLambda(ctx, requestBytes)
 }
 
-func callLambda(ctx context.Context, functionName string, payload []byte) ([]byte, error) {
+func (m *meetupProxyGraphQLHandler) callLambda(ctx context.Context, payload []byte) ([]byte, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	result, err := lambda.NewFromConfig(cfg).Invoke(ctx, &lambda.InvokeInput{
-		FunctionName: aws.String(functionName),
+		FunctionName: aws.String(m.proxyFunctionName),
 		Payload:      payload,
 	})
 
