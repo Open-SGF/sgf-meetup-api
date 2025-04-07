@@ -4,11 +4,14 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/spf13/viper"
+	"log/slog"
 	"sgf-meetup-api/pkg/configparser"
 	"strings"
 )
 
 const (
+	logLevelKey               = "LOG_LEVEL"
+	sentryDsnKey              = "SENTRY_DSN"
 	meetupPrivateKeyBase64Key = "MEETUP_PRIVATE_KEY_BASE64"
 	meetupPrivateKeyKey       = "MEETUP_PRIVATE_KEY"
 	meetupUserIdKey           = "MEETUP_USER_ID"
@@ -19,6 +22,8 @@ const (
 )
 
 var keys = []string{
+	strings.ToLower(logLevelKey),
+	strings.ToLower(sentryDsnKey),
 	strings.ToLower(meetupPrivateKeyBase64Key),
 	strings.ToLower(meetupPrivateKeyKey),
 	strings.ToLower(meetupUserIdKey),
@@ -29,12 +34,14 @@ var keys = []string{
 }
 
 type Config struct {
-	MeetupPrivateKey   []byte `mapstructure:"meetup_private_key"`
-	MeetupUserID       string `mapstructure:"meetup_user_id"`
-	MeetupClientKey    string `mapstructure:"meetup_client_key"`
-	MeetupSigningKeyID string `mapstructure:"meetup_signing_key_id"`
-	MeetupAuthURL      string `mapstructure:"meetup_auth_url"`
-	MeetupAPIURL       string `mapstructure:"meetup_api_url"`
+	LogLevel           slog.Level `mapstructure:"log_level"`
+	SentryDsn          string     `mapstructure:"sentry_dsn"`
+	MeetupPrivateKey   []byte     `mapstructure:"meetup_private_key"`
+	MeetupUserID       string     `mapstructure:"meetup_user_id"`
+	MeetupClientKey    string     `mapstructure:"meetup_client_key"`
+	MeetupSigningKeyID string     `mapstructure:"meetup_signing_key_id"`
+	MeetupAuthURL      string     `mapstructure:"meetup_auth_url"`
+	MeetupAPIURL       string     `mapstructure:"meetup_api_url"`
 }
 
 func NewConfig() (*Config, error) {
@@ -61,6 +68,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 }
 
 func setDefaults(v *viper.Viper) {
+	configparser.ParseLogLevelFromKey(v, strings.ToLower(logLevelKey), slog.LevelInfo)
 	v.SetDefault(strings.ToLower(meetupAuthUrlKey), "https://secure.meetup.com/oauth2/access")
 	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql")
 

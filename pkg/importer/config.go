@@ -3,11 +3,14 @@ package importer
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"log/slog"
 	"sgf-meetup-api/pkg/configparser"
 	"strings"
 )
 
 const (
+	logLevelKey                = "LOG_LEVEL"
+	sentryDsnKey               = "SENTRY_DSN"
 	meetupProxyFunctionNameKey = "MEETUP_PROXY_FUNCTION_NAME"
 	eventsTableNameKey         = "EVENTS_TABLE_NAME"
 	meetupGroupNamesKey        = "MEETUP_GROUP_NAMES"
@@ -18,6 +21,8 @@ const (
 )
 
 var keys = []string{
+	strings.ToLower(logLevelKey),
+	strings.ToLower(sentryDsnKey),
 	strings.ToLower(meetupProxyFunctionNameKey),
 	strings.ToLower(eventsTableNameKey),
 	strings.ToLower(meetupGroupNamesKey),
@@ -28,13 +33,15 @@ var keys = []string{
 }
 
 type Config struct {
-	MeetupProxyFunctionName string   `mapstructure:"meetup_proxy_function_name"`
-	EventsTableName         string   `mapstructure:"events_table_name"`
-	MeetupGroupNames        []string `mapstructure:"meetup_group_names"`
-	DynamoDbEndpoint        string   `mapstructure:"dynamodb_endpoint"`
-	AwsRegion               string   `mapstructure:"aws_region"`
-	AwsAccessKey            string   `mapstructure:"aws_access_key"`
-	AwsSecretAccessKey      string   `mapstructure:"aws_secret_access_key"`
+	LogLevel                slog.Level `mapstructure:"log_level"`
+	SentryDsn               string     `mapstructure:"sentry_dsn"`
+	MeetupProxyFunctionName string     `mapstructure:"meetup_proxy_function_name"`
+	EventsTableName         string     `mapstructure:"events_table_name"`
+	MeetupGroupNames        []string   `mapstructure:"meetup_group_names"`
+	DynamoDbEndpoint        string     `mapstructure:"dynamodb_endpoint"`
+	AwsRegion               string     `mapstructure:"aws_region"`
+	AwsAccessKey            string     `mapstructure:"aws_access_key"`
+	AwsSecretAccessKey      string     `mapstructure:"aws_secret_access_key"`
 }
 
 func NewConfig() (*Config, error) {
@@ -61,6 +68,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 }
 
 func setDefaults(v *viper.Viper) {
+	configparser.ParseLogLevelFromKey(v, strings.ToLower(logLevelKey), slog.LevelInfo)
 	v.SetDefault(strings.ToLower(meetupGroupNamesKey), []string{})
 	v.SetDefault(strings.ToLower(awsRegion), "us-east-2")
 }
