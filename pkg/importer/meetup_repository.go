@@ -8,17 +8,17 @@ import (
 	"time"
 )
 
-type meetupRepository struct {
-	handler GraphQLHandler
-	logger  *slog.Logger
-}
-
 type MeetupRepository interface {
 	GetEventsUntilDateForGroup(ctx context.Context, group string, beforeDate time.Time) ([]models.MeetupEvent, error)
 }
 
 type GraphQLHandler interface {
 	ExecuteQuery(ctx context.Context, query string, variables map[string]any) ([]byte, error)
+}
+
+type meetupRepository struct {
+	handler GraphQLHandler
+	logger  *slog.Logger
 }
 
 func NewMeetupRepository(handler GraphQLHandler, logger *slog.Logger) MeetupRepository {

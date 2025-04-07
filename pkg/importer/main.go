@@ -3,58 +3,60 @@ package importer
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"log"
 	"log/slog"
 	"sgf-meetup-api/pkg/clock"
 	"sgf-meetup-api/pkg/db"
+	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/logging"
 	"time"
 )
 
 type Service struct {
-	eventsTable      string
-	groupNames       []string
-	dbOptions        db.Options
-	timeSource       clock.TimeSource
-	logger           *slog.Logger
-	meetupRepository MeetupRepository
+	groupNames  []string
+	timeSource  clock.TimeSource
+	logger      *slog.Logger
+	eventDBRepo EventDBRepository
+	meetupRepo  MeetupRepository
 }
 
 func New(
-	eventsTable string,
 	groupNames []string,
-	dbOptions db.Options,
 	timeSource clock.TimeSource,
 	logger *slog.Logger,
-	meetupRepository MeetupRepository,
+	eventDBRepo EventDBRepository,
+	meetupRepo MeetupRepository,
 ) *Service {
 	return &Service{
-		eventsTable:      eventsTable,
-		groupNames:       groupNames,
-		dbOptions:        dbOptions,
-		timeSource:       timeSource,
-		logger:           logger,
-		meetupRepository: meetupRepository,
+		groupNames:  groupNames,
+		timeSource:  timeSource,
+		logger:      logger,
+		eventDBRepo: eventDBRepo,
+		meetupRepo:  meetupRepo,
 	}
 }
 
 func NewFromConfig(c *Config) *Service {
 	logger := logging.DefaultLogger(c.LogLevel)
-	graphQLHandler := NewMeetupProxyGraphQLHandler(c.MeetupProxyFunctionName, logger)
-
-	return New(
-		c.EventsTableName,
-		c.MeetupGroupNames,
+	graphQLHandler := NewMeetupProxyGraphQLHandler(*infra.MeetupProxyFunctionName, logger)
+	timeSource := clock.RealTimeSource()
+	eventDBRepo := NewEventDBRepository(
+		*infra.EventsTableProps.TableName,
+		*infra.GroupUrlNameDateTimeIndex.IndexName,
 		db.Options{
 			Endpoint:        c.DynamoDbEndpoint,
 			Region:          c.AwsRegion,
 			AccessKey:       c.AwsAccessKey,
 			SecretAccessKey: c.AwsSecretAccessKey,
 		},
-		clock.RealTimeSource(),
+		timeSource,
 		logger,
+	)
+
+	return New(
+		c.MeetupGroupNames,
+		timeSource,
+		logger,
+		eventDBRepo,
 		NewMeetupRepository(graphQLHandler, logger),
 	)
 }
@@ -66,30 +68,24 @@ func (s *Service) Import(ctx context.Context) error {
 		err := s.importForGroup(ctx, group, sixMonthsFromNow)
 
 		if err != nil {
-			log.Println("")
+			s.logger.Error("error fetching events for group", "group", group)
+		} else {
+			s.logger.Info("successfully imported events for group", "group", group)
 		}
 	}
-
-	db, err := db.New(ctx, &s.dbOptions)
-
-	if err != nil {
-		return err
-	}
-
-	result, err := db.Scan(ctx, &dynamodb.ScanInput{
-		TableName: aws.String(s.eventsTable),
-	})
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(result.Items)
 
 	return nil
 }
 
 func (s *Service) importForGroup(ctx context.Context, group string, beforeDate time.Time) error {
-	//events, err := s.meetupRepository.GetEventsUntilDateForGroup(ctx, group, beforeDate)
+	savedEvents, err := s.eventDBRepo.GetUpcomingEventsForGroup(ctx, group)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(savedEvents)
+
+	//events, err := s.meetupRepo.GetEventsUntilDateForGroup(ctx, group, beforeDate)
 	return nil
 }

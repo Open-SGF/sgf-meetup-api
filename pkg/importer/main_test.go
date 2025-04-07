@@ -12,6 +12,7 @@ import (
 	"sgf-meetup-api/pkg/logging"
 	"sgf-meetup-api/pkg/syncdynamodb"
 	"testing"
+	"time"
 )
 
 type dbContainer struct {
@@ -51,7 +52,7 @@ func createDb(ctx context.Context) (*dbContainer, error) {
 		return nil, err
 	}
 
-	if err = syncdynamodb.SyncTables(ctx, db); err != nil {
+	if err = syncdynamodb.SyncTables(ctx, db, slog.New(logging.NewMockHandler())); err != nil {
 		return nil, err
 	}
 
@@ -74,19 +75,29 @@ func TestDynamoDb(t *testing.T) {
 
 	defer dbCtr.Close()
 
-	service := New(
+	timeSource := clock.MockTimeSource(time.Now())
+	logger := slog.New(logging.NewMockHandler())
+
+	eventsDBRepo := NewEventDBRepository(
 		*infra.EventsTableProps.TableName,
-		[]string{},
+		*infra.GroupUrlNameDateTimeIndex.IndexName,
 		dbCtr.Options,
+		timeSource,
+		logger,
+	)
+
+	service := New(
+		[]string{},
 		clock.RealTimeSource(),
-		slog.New(logging.NewMockHandler()),
+		logger,
+		eventsDBRepo,
 		nil,
 	)
 
 	err = service.Import(ctx)
 
 	if err != nil {
-		log.Fatalf("err creating container: %v", err)
+		t.Fatalf("err creating container: %v", err)
 	}
 
 	log.Println(dbCtr.Endpoint)

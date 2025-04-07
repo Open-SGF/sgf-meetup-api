@@ -17,31 +17,47 @@ type DynamoDbProps struct {
 	GlobalSecondaryIndexes []*awsdynamodb.GlobalSecondaryIndexProps
 }
 
+var GroupUrlNameDateTimeIndex = awsdynamodb.GlobalSecondaryIndexProps{
+	IndexName: jsii.String("GroupUrlnameDateTimeIndex"),
+	PartitionKey: &awsdynamodb.Attribute{
+		Name: jsii.String("group.urlname"),
+		Type: awsdynamodb.AttributeType_STRING,
+	},
+	SortKey: &awsdynamodb.Attribute{
+		Name: jsii.String("dateTime"),
+		Type: awsdynamodb.AttributeType_STRING,
+	},
+}
+
 var EventsTableProps = DynamoDbProps{
 	TableProps: &awsdynamodb.TableProps{
 		TableName: jsii.String("MeetupEvents"),
 		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("Id"),
+			Name: jsii.String("id"),
 			Type: awsdynamodb.AttributeType_STRING,
 		},
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 	},
 	GlobalSecondaryIndexes: []*awsdynamodb.GlobalSecondaryIndexProps{
-		{
-			IndexName: jsii.String("EventsByGroupIndex"),
-			PartitionKey: &awsdynamodb.Attribute{
-				Name: jsii.String("MeetupGroupUrlName"),
-				Type: awsdynamodb.AttributeType_STRING,
-			},
-			SortKey: &awsdynamodb.Attribute{
-				Name: jsii.String("EventDateTime"),
-				Type: awsdynamodb.AttributeType_STRING,
-			},
-		},
+		&GroupUrlNameDateTimeIndex,
 	},
 }
 
-var MeetupFunctionName = jsii.String("meetupproxy")
+var ArchivedEventsTableProps = DynamoDbProps{
+	TableProps: &awsdynamodb.TableProps{
+		TableName: jsii.String("MeetupArchivedEvents"),
+		PartitionKey: &awsdynamodb.Attribute{
+			Name: jsii.String("id"),
+			Type: awsdynamodb.AttributeType_STRING,
+		},
+		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
+	},
+	GlobalSecondaryIndexes: []*awsdynamodb.GlobalSecondaryIndexProps{
+		&GroupUrlNameDateTimeIndex,
+	},
+}
+
+var MeetupProxyFunctionName = jsii.String("meetupproxy")
 
 func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscdk.Stack {
 	var sprops awscdk.StackProps
@@ -56,17 +72,19 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		eventsTable.AddGlobalSecondaryIndex(gsi)
 	}
 
-	customconstructs.NewGoLambdaFunction(stack, MeetupFunctionName, &customconstructs.GoLambdaFunctionProps{
+	archivedEventsTable := awsdynamodb.NewTable(stack, ArchivedEventsTableProps.TableName, ArchivedEventsTableProps.TableProps)
+
+	for _, gsi := range ArchivedEventsTableProps.GlobalSecondaryIndexes {
+		archivedEventsTable.AddGlobalSecondaryIndex(gsi)
+	}
+
+	customconstructs.NewGoLambdaFunction(stack, MeetupProxyFunctionName, &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/meetupproxy"),
-		FunctionName: MeetupFunctionName,
+		FunctionName: MeetupProxyFunctionName,
 	})
 
 	customconstructs.NewGoLambdaFunction(stack, jsii.String("importer"), &customconstructs.GoLambdaFunctionProps{
 		CodePath: jsii.String("./cmd/importer"),
-		Environment: &map[string]*string{
-			"EVENTS_TABLE_NAME":          EventsTableProps.TableName,
-			"MEETUP_PROXY_FUNCTION_NAME": MeetupFunctionName,
-		},
 	})
 
 	customconstructs.NewGoLambdaFunction(stack, jsii.String("api"), &customconstructs.GoLambdaFunctionProps{
