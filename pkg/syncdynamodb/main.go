@@ -7,23 +7,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"log"
+	"log/slog"
 	"sgf-meetup-api/pkg/infra"
 )
 
-func SyncTables(ctx context.Context, client *dynamodb.Client) error {
-	tables := []infra.DynamoDbProps{infra.EventsTableProps}
+func SyncTables(ctx context.Context, client *dynamodb.Client, logger *slog.Logger) error {
+	tables := []infra.DynamoDbProps{infra.EventsTableProps, infra.ArchivedEventsTableProps}
 
 	for _, tableProps := range tables {
 		tableName := *tableProps.TableName
 
-		exists, err := tableExists(ctx, client, tableName)
+		exists, err := tableExists(ctx, client, logger, tableName)
 		if err != nil {
 			return err
 		}
 
 		if exists {
-			log.Printf("Table already exists: %s", tableName)
+			logger.Info("Table already exists", "tableName", tableName)
 			continue
 		}
 
@@ -31,14 +31,14 @@ func SyncTables(ctx context.Context, client *dynamodb.Client) error {
 			return err
 		}
 
-		log.Printf("Created table: %s", tableName)
+		logger.Info("Created table", "tableName", tableName)
 	}
 
 	return nil
 }
 
-func tableExists(ctx context.Context, client *dynamodb.Client, tableName string) (bool, error) {
-	log.Println("checking table", tableName)
+func tableExists(ctx context.Context, client *dynamodb.Client, logger *slog.Logger, tableName string) (bool, error) {
+	logger.Info("checking table", "tableName", tableName)
 	_, err := client.DescribeTable(ctx, &dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
 	})

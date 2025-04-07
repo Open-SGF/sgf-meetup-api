@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sgf-meetup-api/pkg/db"
+	"sgf-meetup-api/pkg/logging"
 	"sgf-meetup-api/pkg/syncdynamodb"
 )
 
@@ -32,7 +33,7 @@ func main() {
 		log.Fatalf("Failed to create DynamoDB client: %v", err)
 	}
 
-	if err := syncdynamodb.SyncTables(ctx, client); err != nil {
+	if err := syncdynamodb.SyncTables(ctx, client, logging.DefaultLogger(config.LogLevel)); err != nil {
 		log.Fatalf("Failed to sync database: %v", err)
 	}
 }
