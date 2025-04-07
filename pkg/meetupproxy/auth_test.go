@@ -8,9 +8,11 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"sgf-meetup-api/pkg/logging"
 	"strings"
 	"sync"
 	"testing"
@@ -33,7 +35,7 @@ func TestGetAccessToken_InitialFetch(t *testing.T) {
 	ah := NewAuthHandler(AuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
-	})
+	}, slog.New(logging.NewMockHandler()))
 
 	token, err := ah.GetAccessToken(context.Background())
 	if err != nil {
@@ -61,7 +63,7 @@ func TestAuthRequest_ValidUserAgent(t *testing.T) {
 	ah := NewAuthHandler(AuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
-	})
+	}, slog.New(logging.NewMockHandler()))
 
 	_, err := ah.GetAccessToken(context.Background())
 	if err != nil {
@@ -97,7 +99,7 @@ func TestGetAccessToken_ExpiredToken(t *testing.T) {
 	ah := NewAuthHandler(AuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
-	})
+	}, slog.New(logging.NewMockHandler()))
 
 	token, err := ah.GetAccessToken(context.Background())
 
@@ -128,7 +130,7 @@ func TestGetNewAccessToken_HTTPErrorHandling(t *testing.T) {
 	ah := NewAuthHandler(AuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
-	})
+	}, slog.New(logging.NewMockHandler()))
 
 	_, err := ah.GetAccessToken(context.Background())
 	if err == nil || !strings.Contains(err.Error(), "invalid status code") {
@@ -269,7 +271,7 @@ func TestGetAccessToken_ConcurrentRequests(t *testing.T) {
 	ah := NewAuthHandler(AuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
-	})
+	}, slog.New(logging.NewMockHandler()))
 
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {

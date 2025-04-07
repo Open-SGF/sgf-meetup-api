@@ -4,27 +4,38 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"sgf-meetup-api/pkg/logging"
 	"strings"
 )
 
 const userAgent = "curl/8.7.1"
 
 type Proxy struct {
-	url  string
-	auth AuthHandler
+	url    string
+	logger *slog.Logger
+	auth   AuthHandler
 }
 
-func New(url string, auth AuthHandler) *Proxy {
+func New(url string, logger *slog.Logger, auth AuthHandler) *Proxy {
 	return &Proxy{
-		url:  url,
-		auth: auth,
+		url:    url,
+		logger: logger,
+		auth:   auth,
 	}
 }
 
 func NewFromConfig(config *Config) *Proxy {
-	auth := NewAuthHandlerFromConfig(config)
-	return New(config.MeetupAPIURL, auth)
+	logger := logging.DefaultLogger(config.LogLevel)
+	auth := NewAuthHandler(AuthHandlerConfig{
+		url:          config.MeetupAuthURL,
+		userID:       config.MeetupUserID,
+		clientKey:    config.MeetupClientKey,
+		signingKeyID: config.MeetupSigningKeyID,
+		privateKey:   config.MeetupPrivateKey,
+	}, logger)
+	return New(config.MeetupAPIURL, logger, auth)
 }
 
 type Request struct {
@@ -61,7 +72,7 @@ func (p *Proxy) HandleRequest(ctx context.Context, req Request) (*Response, erro
 	meetupReq.Header.Add("User-Agent", userAgent)
 	meetupReq.Header.Add("Authorization", "Bearer "+token)
 
-	httpClient := &http.Client{}
+	httpClient := &http.Client{Transport: logging.NewHttpLoggingTransport(p.logger)}
 	meetupResp, err := httpClient.Do(meetupReq)
 
 	if err != nil {
