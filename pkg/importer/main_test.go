@@ -5,6 +5,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	tcdynamodb "github.com/testcontainers/testcontainers-go/modules/dynamodb"
 	"log"
+	"sgf-meetup-api/pkg/clock"
 	"sgf-meetup-api/pkg/db"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/syncdynamodb"
@@ -71,7 +72,7 @@ func TestDynamoDb(t *testing.T) {
 
 	defer dbCtr.Close()
 
-	service := New(*infra.EventsTableProps.TableName, []string{}, dbCtr.Options, nil)
+	service := New(*infra.EventsTableProps.TableName, []string{}, dbCtr.Options, clock.RealTimeSource(), nil)
 
 	err = service.Import(ctx)
 

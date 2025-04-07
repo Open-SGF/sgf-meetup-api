@@ -14,6 +14,7 @@ require (
 	github.com/aws/jsii-runtime-go v1.106.0
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.2
 	github.com/brianvoe/gofakeit/v7 v7.2.1
+	github.com/getsentry/sentry-go v0.31.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
