@@ -17,7 +17,7 @@ func (r realTimeSource) Now() time.Time {
 	return time.Now()
 }
 
-func NewReal() TimeSource {
+func RealTimeSource() TimeSource {
 	return &realTimeSource{}
 }
 
@@ -33,6 +33,6 @@ func (f *mockTimeSource) SetTime(t time.Time) {
 	f.frozenTime = t
 }
 
-func NewMock(initialTime time.Time) TimeControl {
+func MockTimeSource(initialTime time.Time) TimeControl {
 	return &mockTimeSource{frozenTime: initialTime}
 }
