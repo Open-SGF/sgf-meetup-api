@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
+	"sgf-meetup-api/pkg/logging"
 	"strings"
 	"sync"
 	"time"
@@ -21,6 +23,7 @@ type authHandler struct {
 	lock   sync.Mutex
 	token  *authToken
 	config AuthHandlerConfig
+	logger *slog.Logger
 }
 
 type AuthHandlerConfig struct {
@@ -31,20 +34,11 @@ type AuthHandlerConfig struct {
 	privateKey   []byte
 }
 
-func NewAuthHandler(c AuthHandlerConfig) AuthHandler {
+func NewAuthHandler(c AuthHandlerConfig, logger *slog.Logger) AuthHandler {
 	return &authHandler{
 		config: c,
+		logger: logger,
 	}
-}
-
-func NewAuthHandlerFromConfig(config *Config) AuthHandler {
-	return NewAuthHandler(AuthHandlerConfig{
-		url:          config.MeetupAuthURL,
-		userID:       config.MeetupUserID,
-		clientKey:    config.MeetupClientKey,
-		signingKeyID: config.MeetupSigningKeyID,
-		privateKey:   config.MeetupPrivateKey,
-	})
 }
 
 type authToken struct {
@@ -60,9 +54,11 @@ func (ah *authHandler) GetAccessToken(ctx context.Context) (string, error) {
 	defer ah.lock.Unlock()
 
 	if ah.token == nil || ah.token.isExpiring(time.Now()) {
+		ah.logger.Info("fetching new access token from meetup")
 		newToken, err := ah.getNewAccessToken(ctx)
 
 		if err != nil {
+			ah.logger.Error("Error fetching token", "err", err)
 			return "", err
 		}
 
@@ -99,7 +95,7 @@ func (ah *authHandler) getNewAccessToken(ctx context.Context) (*authToken, error
 	// Required by Meetup
 	req.Header.Add("User-Agent", userAgent)
 
-	client := &http.Client{}
+	client := &http.Client{Transport: logging.NewHttpLoggingTransport(ah.logger)}
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -109,7 +105,7 @@ func (ah *authHandler) getNewAccessToken(ctx context.Context) (*authToken, error
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("invalid status code when fetching token")
+		return nil, fmt.Errorf("invalid status code when fetching token: %v", resp.StatusCode)
 	}
 
 	token, err := parseAuthToken(resp.Body)

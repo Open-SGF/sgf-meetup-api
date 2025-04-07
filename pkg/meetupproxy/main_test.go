@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sgf-meetup-api/pkg/logging"
 	"strings"
 	"testing"
 	"time"
@@ -32,7 +34,7 @@ func TestProxy_HandleRequest_Success(t *testing.T) {
 
 	defer ts.Close()
 
-	proxy := New(ts.URL, &mockAuth{token: "valid-token"})
+	proxy := New(ts.URL, slog.New(logging.NewMockHandler()), &mockAuth{token: "valid-token"})
 
 	resp, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
@@ -46,7 +48,7 @@ func TestProxy_HandleRequest_Success(t *testing.T) {
 
 func TestProxy_HandleRequest_AuthFailure(t *testing.T) {
 	auth := &mockAuth{err: fmt.Errorf("auth error")}
-	proxy := New("https://testurl", auth)
+	proxy := New("https://testurl", slog.New(logging.NewMockHandler()), auth)
 
 	_, err := proxy.HandleRequest(context.Background(), Request{})
 
@@ -66,7 +68,7 @@ func TestProxy_HandleRequest_InvalidJSONResponse(t *testing.T) {
 
 	defer ts.Close()
 
-	proxy := New(ts.URL, &mockAuth{token: "valid"})
+	proxy := New(ts.URL, slog.New(logging.NewMockHandler()), &mockAuth{token: "valid"})
 
 	_, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
@@ -99,7 +101,7 @@ func TestProxy_HandleRequest_InvalidStatus(t *testing.T) {
 
 			defer ts.Close()
 
-			proxy := New(ts.URL, &mockAuth{token: "valid"})
+			proxy := New(ts.URL, slog.New(logging.NewMockHandler()), &mockAuth{token: "valid"})
 
 			_, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
@@ -124,7 +126,7 @@ func TestHandleRequest_Timeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
-	proxy := New(ts.URL, &mockAuth{token: "valid-token"})
+	proxy := New(ts.URL, slog.New(logging.NewMockHandler()), &mockAuth{token: "valid-token"})
 
 	_, err := proxy.HandleRequest(ctx, Request{
 		Query: "query() {}",
