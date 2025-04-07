@@ -95,13 +95,15 @@ func TestProxy_HandleRequest_InvalidStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			handler := logging.NewMockHandler()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tt.statusCode)
 			}))
 
 			defer ts.Close()
 
-			proxy := New(ts.URL, slog.New(logging.NewMockHandler()), &mockAuth{token: "valid"})
+			proxy := New(ts.URL, slog.New(handler), &mockAuth{token: "valid"})
 
 			_, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
@@ -111,6 +113,11 @@ func TestProxy_HandleRequest_InvalidStatus(t *testing.T) {
 
 			if !strings.Contains(err.Error(), fmt.Sprintf("expected status code 200, got %v", tt.statusCode)) {
 				t.Errorf("Expected status code error, got %v", err)
+			}
+
+			errorEntries := handler.Entries(slog.LevelError)
+			if len(errorEntries) != 1 {
+				t.Errorf("Expected 1 error log entry got %v", len(errorEntries))
 			}
 		})
 	}
