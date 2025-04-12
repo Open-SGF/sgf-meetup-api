@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"sgf-meetup-api/pkg/logging"
+	"sgf-meetup-api/pkg/shared/logging"
 	"strings"
 	"sync"
 	"testing"

@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"log"
-	"sgf-meetup-api/pkg/db"
-	"sgf-meetup-api/pkg/logging"
+	"sgf-meetup-api/pkg/shared/db"
+	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/syncdynamodb"
 )
 

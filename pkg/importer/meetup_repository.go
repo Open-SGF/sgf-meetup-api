@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"sgf-meetup-api/pkg/models"
+	"sgf-meetup-api/pkg/shared/models"
 	"time"
 )
 
