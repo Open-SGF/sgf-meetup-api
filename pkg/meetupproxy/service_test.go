@@ -34,7 +34,7 @@ func TestProxy_HandleRequest_Success(t *testing.T) {
 
 	defer ts.Close()
 
-	proxy := New(ts.URL, slog.New(logging.NewMockHandler()), &mockAuth{token: "valid-token"})
+	proxy := NewService(ServiceConfig{ts.URL}, &http.Client{}, &mockAuth{token: "valid-token"}, logging.NewMockLogger())
 
 	resp, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
@@ -48,7 +48,7 @@ func TestProxy_HandleRequest_Success(t *testing.T) {
 
 func TestProxy_HandleRequest_AuthFailure(t *testing.T) {
 	auth := &mockAuth{err: fmt.Errorf("auth error")}
-	proxy := New("https://testurl", slog.New(logging.NewMockHandler()), auth)
+	proxy := NewService(ServiceConfig{"https://testurl"}, &http.Client{}, auth, logging.NewMockLogger())
 
 	_, err := proxy.HandleRequest(context.Background(), Request{})
 
@@ -68,7 +68,7 @@ func TestProxy_HandleRequest_InvalidJSONResponse(t *testing.T) {
 
 	defer ts.Close()
 
-	proxy := New(ts.URL, slog.New(logging.NewMockHandler()), &mockAuth{token: "valid"})
+	proxy := NewService(ServiceConfig{ts.URL}, &http.Client{}, &mockAuth{token: "valid"}, logging.NewMockLogger())
 
 	_, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
@@ -103,7 +103,7 @@ func TestProxy_HandleRequest_InvalidStatus(t *testing.T) {
 
 			defer ts.Close()
 
-			proxy := New(ts.URL, slog.New(handler), &mockAuth{token: "valid"})
+			proxy := NewService(ServiceConfig{ts.URL}, &http.Client{}, &mockAuth{token: "valid"}, slog.New(handler))
 
 			_, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
@@ -133,7 +133,7 @@ func TestHandleRequest_Timeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
-	proxy := New(ts.URL, slog.New(logging.NewMockHandler()), &mockAuth{token: "valid-token"})
+	proxy := NewService(ServiceConfig{ts.URL}, &http.Client{}, &mockAuth{token: "valid-token"}, logging.NewMockLogger())
 
 	_, err := proxy.HandleRequest(ctx, Request{
 		Query: "query() {}",

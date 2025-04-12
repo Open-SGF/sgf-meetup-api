@@ -60,7 +60,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 		return nil, err
 	}
 
-	if err = validateConfig(config); err != nil {
+	if err = config.validate(); err != nil {
 		return nil, err
 	}
 
@@ -79,7 +79,7 @@ func setDefaults(v *viper.Viper) {
 	}
 }
 
-func validateConfig(cfg *Config) error {
+func (cfg *Config) validate() error {
 	var missing []string
 	if len(cfg.MeetupPrivateKey) == 0 {
 		missing = append(missing, meetupPrivateKeyBase64Key)
@@ -99,4 +99,8 @@ func validateConfig(cfg *Config) error {
 	}
 
 	return nil
+}
+
+func getLogLevel(cfg *Config) slog.Level {
+	return cfg.LogLevel
 }

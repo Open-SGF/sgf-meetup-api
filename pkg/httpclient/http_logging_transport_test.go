@@ -1,15 +1,16 @@
-package logging
+package httpclient
 
 import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sgf-meetup-api/pkg/logging"
 	"testing"
 	"time"
 )
 
 func TestHttpLoggingTransport_SuccessfulRequest(t *testing.T) {
-	mockHandler := NewMockHandler()
+	mockHandler := logging.NewMockHandler()
 	transport := NewHttpLoggingTransport(slog.New(mockHandler))
 	client := &http.Client{Transport: transport}
 
@@ -55,7 +56,7 @@ func TestHttpLoggingTransport_SuccessfulRequest(t *testing.T) {
 }
 
 func TestHttpLoggingTransport_FailedRequest(t *testing.T) {
-	mockHandler := NewMockHandler()
+	mockHandler := logging.NewMockHandler()
 	transport := NewHttpLoggingTransport(slog.New(mockHandler))
 	client := &http.Client{Transport: transport}
 

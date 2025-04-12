@@ -20,6 +20,10 @@ type MockLogEntry struct {
 	Grouping []string
 }
 
+func NewMockLogger() *slog.Logger {
+	return slog.New(NewMockHandler())
+}
+
 func NewMockHandler() *MockHandler {
 	entries := make([]MockLogEntry, 0)
 	attrs := make([]slog.Attr, 0)
