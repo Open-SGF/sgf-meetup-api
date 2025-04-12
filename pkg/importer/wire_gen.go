@@ -9,10 +9,10 @@ package importer
 import (
 	"context"
 	"github.com/google/wire"
-	"sgf-meetup-api/pkg/clock"
-	"sgf-meetup-api/pkg/db"
-	"sgf-meetup-api/pkg/httpclient"
-	"sgf-meetup-api/pkg/logging"
+	"sgf-meetup-api/pkg/shared/clock"
+	"sgf-meetup-api/pkg/shared/db"
+	"sgf-meetup-api/pkg/shared/httpclient"
+	"sgf-meetup-api/pkg/shared/logging"
 )
 
 // Injectors from wire.go:

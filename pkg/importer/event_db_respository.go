@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"log/slog"
-	"sgf-meetup-api/pkg/clock"
-	"sgf-meetup-api/pkg/models"
+	"sgf-meetup-api/pkg/shared/clock"
+	"sgf-meetup-api/pkg/shared/models"
 	"time"
 )
 

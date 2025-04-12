@@ -3,7 +3,7 @@ package syncdynamodb
 import (
 	"github.com/spf13/viper"
 	"log/slog"
-	"sgf-meetup-api/pkg/configparser"
+	"sgf-meetup-api/pkg/shared/configparser"
 	"strings"
 )
 

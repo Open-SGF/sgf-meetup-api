@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"sgf-meetup-api/pkg/clock"
+	"sgf-meetup-api/pkg/shared/clock"
 	"time"
 )
 

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"sgf-meetup-api/pkg/logging"
+	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 )
 

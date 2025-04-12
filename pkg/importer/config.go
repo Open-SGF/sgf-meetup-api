@@ -3,9 +3,9 @@ package importer
 import (
 	"github.com/spf13/viper"
 	"log/slog"
-	"sgf-meetup-api/pkg/configparser"
-	"sgf-meetup-api/pkg/db"
 	"sgf-meetup-api/pkg/infra"
+	"sgf-meetup-api/pkg/shared/configparser"
+	"sgf-meetup-api/pkg/shared/db"
 	"strings"
 )
 

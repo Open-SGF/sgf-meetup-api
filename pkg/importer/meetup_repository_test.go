@@ -7,8 +7,8 @@ import (
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 	"log/slog"
-	"sgf-meetup-api/pkg/logging"
-	"sgf-meetup-api/pkg/models"
+	"sgf-meetup-api/pkg/shared/logging"
+	"sgf-meetup-api/pkg/shared/models"
 	"testing"
 	"time"
 )
