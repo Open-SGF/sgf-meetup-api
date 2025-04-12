@@ -29,7 +29,7 @@ func TestDynamoDb(t *testing.T) {
 	eventsDBRepo := NewEventDBRepository(
 		EventDBRepositoryConfig{
 			*infra.EventsTableProps.TableName,
-			*infra.GroupUrlNameDateTimeIndex.IndexName,
+			*infra.GroupIdDateTimeIndex.IndexName,
 		},
 		testDB.DB,
 		timeSource,

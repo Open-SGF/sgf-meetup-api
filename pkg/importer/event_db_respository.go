@@ -49,7 +49,7 @@ func (er *eventDBRepository) GetUpcomingEventsForGroup(ctx context.Context, grou
 
 	var allEvents []models.MeetupEvent
 
-	keyCond := expression.Key("group.name").
+	keyCond := expression.Key("groupId").
 		Equal(expression.Value(group)).
 		And(expression.Key("dateTime").
 			GreaterThan(expression.Value(now)))

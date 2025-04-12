@@ -2,11 +2,13 @@ package db
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"log/slog"
+	"net/url"
+	"strings"
 )
 
 type Config struct {
@@ -42,11 +44,24 @@ func New(ctx context.Context, options Config, logger *slog.Logger) (*dynamodb.Cl
 	}
 
 	if options.Endpoint != "" {
-		clientOpts = append(clientOpts, func(o *dynamodb.Options) {
-			o.BaseEndpoint = aws.String(options.Endpoint)
-			o.EndpointOptions.DisableHTTPS = true
-		})
+		clientOpts = append(clientOpts, dynamodb.WithEndpointResolverV2(options))
 	}
 
 	return dynamodb.NewFromConfig(cfg, clientOpts...), nil
+}
+
+func (c Config) ResolveEndpoint(ctx context.Context, params dynamodb.EndpointParameters) (smithyendpoints.Endpoint, error) {
+	scheme, rest := splitURL(c.Endpoint)
+
+	return smithyendpoints.Endpoint{
+		URI: url.URL{Host: rest, Scheme: scheme},
+	}, nil
+}
+
+func splitURL(url string) (scheme, rest string) {
+	parts := strings.SplitN(url, "://", 2)
+	if len(parts) < 2 {
+		return "", url
+	}
+	return parts[0], parts[1]
 }
