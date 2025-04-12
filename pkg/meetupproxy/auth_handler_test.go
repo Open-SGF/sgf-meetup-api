@@ -8,9 +8,10 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"sgf-meetup-api/pkg/shared/logging"
 	"strings"
 	"sync"
@@ -20,7 +21,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func TestGetAccessToken_InitialFetch(t *testing.T) {
+func TestAuthHandler_GetAccessToken_InitialFetch(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(authToken{
 			AccessToken: "test-token",
@@ -37,16 +38,13 @@ func TestGetAccessToken_InitialFetch(t *testing.T) {
 	}, &http.Client{}, logging.NewMockLogger())
 
 	token, err := ah.GetAccessToken(context.Background())
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
 
-	if token != "test-token" {
-		t.Fatalf("Expected test-token, got %s", token)
-	}
+	require.NoError(t, err)
+
+	assert.Equal(t, "test-token", token)
 }
 
-func TestAuthRequest_ValidUserAgent(t *testing.T) {
+func TestAuthHandler_GetAccessToken_ValidUserAgent(t *testing.T) {
 	var capturedUserAgent string
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -65,21 +63,14 @@ func TestAuthRequest_ValidUserAgent(t *testing.T) {
 	}, &http.Client{}, logging.NewMockLogger())
 
 	_, err := ah.GetAccessToken(context.Background())
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
 
-	if capturedUserAgent == "" {
-		t.Fatal("User-Agent header missing from request")
-	}
+	require.NoError(t, err)
 
-	if capturedUserAgent != userAgent {
-		t.Fatalf("Expected User-Agent %q, got %q",
-			userAgent, capturedUserAgent)
-	}
+	assert.NotEmpty(t, capturedUserAgent)
+	assert.Equal(t, userAgent, capturedUserAgent)
 }
 
-func TestGetAccessToken_ExpiredToken(t *testing.T) {
+func TestAuthHandler_GetAccessToken_ExpiredToken(t *testing.T) {
 	callCount := 0
 	var mu sync.Mutex
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -102,24 +93,18 @@ func TestGetAccessToken_ExpiredToken(t *testing.T) {
 
 	token, err := ah.GetAccessToken(context.Background())
 
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 
 	time.Sleep(10 * time.Millisecond)
 
 	newToken, err := ah.GetAccessToken(context.Background())
 
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 
-	if token == newToken {
-		t.Fatalf("Expected newToken to be different from original token")
-	}
+	assert.NotEqual(t, token, newToken)
 }
 
-func TestGetNewAccessToken_HTTPErrorHandling(t *testing.T) {
+func TestAuthHandler_GetAccessTokenn_HTTPErrorHandling(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
@@ -132,12 +117,47 @@ func TestGetNewAccessToken_HTTPErrorHandling(t *testing.T) {
 	}, &http.Client{}, logging.NewMockLogger())
 
 	_, err := ah.GetAccessToken(context.Background())
-	if err == nil || !strings.Contains(err.Error(), "invalid status code") {
-		t.Fatalf("Expected status code error, got: %v", err)
-	}
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "invalid status code")
 }
 
-func TestCreateSignedJWT_ValidClaims(t *testing.T) {
+func TestAuthHandler_GetAccessToken_ConcurrentRequests(t *testing.T) {
+	var callCount int
+	var mu sync.Mutex
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		callCount++
+		mu.Unlock()
+
+		_ = json.NewEncoder(w).Encode(authToken{
+			AccessToken: fmt.Sprintf("token-%d", callCount),
+			ExpiresIn:   3600,
+			TokenType:   "Bearer",
+		})
+	}))
+	defer ts.Close()
+
+	privateKey, _ := generatePrivateKey()
+	ah := NewAuthHandler(AuthHandlerConfig{
+		url:        ts.URL,
+		privateKey: privateKey,
+	}, &http.Client{}, logging.NewMockLogger())
+
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, _ = ah.GetAccessToken(context.Background())
+		}()
+	}
+	wg.Wait()
+
+	assert.Equal(t, 1, callCount)
+}
+
+func TestAuthHandler_createSignedJWT_ValidClaims(t *testing.T) {
 	privateKey, _ := rsa.GenerateKey(rand.Reader, 2048)
 	privateKeyBytes, _ := privateKeyToBytes(privateKey)
 	ah := &authHandler{
@@ -150,30 +170,19 @@ func TestCreateSignedJWT_ValidClaims(t *testing.T) {
 	}
 
 	tokenString, err := ah.createSignedJWT()
-	if err != nil {
-		t.Fatalf("JWT creation failed: %v", err)
-	}
+
+	require.NoError(t, err)
 
 	token, _ := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		return &privateKey.PublicKey, nil
 	})
 
 	claims := token.Claims.(jwt.MapClaims)
-	if claims["iss"] != "test-client" {
-		t.Fatalf("Invalid issuer claim: %v", claims["iss"])
-	}
 
-	if claims["sub"] != "user1" {
-		t.Fatalf("Invalid subject claim: %v", claims["sub"])
-	}
-
-	if reflect.DeepEqual(claims["aud"], []string{"api.meetup.com"}) {
-		t.Fatalf("Invalid audience claim: %v", claims["aud"])
-	}
-
-	if token.Header["kid"] != "key1" {
-		t.Fatalf("Invalid kid header: %v", token.Header["kid"])
-	}
+	assert.Equal(t, "test-client", claims["iss"])
+	assert.Equal(t, "user1", claims["sub"])
+	assert.ElementsMatch(t, []string{"api.meetup.com"}, claims["aud"])
+	assert.Equal(t, "key1", token.Header["kid"])
 }
 
 func TestParseAuthToken(t *testing.T) {
@@ -184,14 +193,11 @@ func TestParseAuthToken(t *testing.T) {
 	}`
 
 	token, err := parseAuthToken(strings.NewReader(jsonResponse))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+
+	require.NoError(t, err)
 
 	expectedExpiry := time.Now().Add(300 * time.Second)
-	if token.ExpiresAt.Before(expectedExpiry.Add(-5*time.Second)) || token.ExpiresAt.After(expectedExpiry.Add(5*time.Second)) {
-		t.Errorf("ExpiresAt not within expected range: %v", token.ExpiresAt)
-	}
+	assert.WithinRange(t, token.ExpiresAt, expectedExpiry.Add(-5*time.Second), expectedExpiry.Add(5*time.Second))
 }
 
 func TestIsExpiring(t *testing.T) {
@@ -241,49 +247,8 @@ func TestIsExpiring(t *testing.T) {
 				ExpiresAt: tt.expiresAt,
 			}
 
-			if actual := token.isExpiring(tt.checkTime); actual != tt.expected {
-				t.Errorf("For expiresAt %v and checkTime %v\nExpected %v, got %v",
-					token.ExpiresAt, tt.checkTime, tt.expected, actual)
-			}
+			assert.Equal(t, tt.expected, token.isExpiring(tt.checkTime))
 		})
-	}
-}
-
-func TestGetAccessToken_ConcurrentRequests(t *testing.T) {
-	var callCount int
-	var mu sync.Mutex
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		mu.Lock()
-		callCount++
-		mu.Unlock()
-
-		_ = json.NewEncoder(w).Encode(authToken{
-			AccessToken: fmt.Sprintf("token-%d", callCount),
-			ExpiresIn:   3600,
-			TokenType:   "Bearer",
-		})
-	}))
-	defer ts.Close()
-
-	privateKey, _ := generatePrivateKey()
-	ah := NewAuthHandler(AuthHandlerConfig{
-		url:        ts.URL,
-		privateKey: privateKey,
-	}, &http.Client{}, logging.NewMockLogger())
-
-	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			_, _ = ah.GetAccessToken(context.Background())
-		}()
-	}
-	wg.Wait()
-
-	if callCount != 1 {
-		t.Fatalf("Expected 1 token fetch, got %d", callCount)
 	}
 }
 
