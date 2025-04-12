@@ -19,6 +19,6 @@ func init() {
 }
 
 func main() {
-	p := meetupproxy.NewFromConfig(config)
+	p := meetupproxy.InitService(config)
 	lambda.Start(p.HandleRequest)
 }

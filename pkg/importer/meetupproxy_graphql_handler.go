@@ -10,15 +10,25 @@ import (
 	"log/slog"
 )
 
-type meetupProxyGraphQLHandler struct {
-	proxyFunctionName string
-	logger            *slog.Logger
+type MeetupProxyGraphQLHandlerConfig struct {
+	ProxyFunctionName string
 }
 
-func NewMeetupProxyGraphQLHandler(proxyFunctionName string, logger *slog.Logger) GraphQLHandler {
+func NewMeetupProxyGraphQLHandlerConfig(config *Config) MeetupProxyGraphQLHandlerConfig {
+	return MeetupProxyGraphQLHandlerConfig{
+		ProxyFunctionName: config.ProxyFunctionName,
+	}
+}
+
+type meetupProxyGraphQLHandler struct {
+	config MeetupProxyGraphQLHandlerConfig
+	logger *slog.Logger
+}
+
+func NewMeetupProxyGraphQLHandler(config MeetupProxyGraphQLHandlerConfig, logger *slog.Logger) GraphQLHandler {
 	return &meetupProxyGraphQLHandler{
-		proxyFunctionName: proxyFunctionName,
-		logger:            logger,
+		config: config,
+		logger: logger,
 	}
 }
 
@@ -47,7 +57,7 @@ func (m *meetupProxyGraphQLHandler) callLambda(ctx context.Context, payload []by
 	}
 
 	result, err := lambda.NewFromConfig(cfg).Invoke(ctx, &lambda.InvokeInput{
-		FunctionName: aws.String(m.proxyFunctionName),
+		FunctionName: aws.String(m.config.ProxyFunctionName),
 		Payload:      payload,
 	})
 

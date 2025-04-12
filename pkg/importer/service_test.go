@@ -2,6 +2,7 @@ package importer
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/testcontainers/testcontainers-go"
 	tcdynamodb "github.com/testcontainers/testcontainers-go/modules/dynamodb"
 	"log"
@@ -16,7 +17,7 @@ import (
 )
 
 type dbContainer struct {
-	db.Options
+	db            *dynamodb.Client
 	testContainer *tcdynamodb.DynamoDBContainer
 }
 
@@ -39,14 +40,14 @@ func createDb(ctx context.Context) (*dbContainer, error) {
 		return nil, err
 	}
 
-	dbOptions := db.Options{
+	dbOptions := db.Config{
 		Endpoint:        "http://" + connectionString,
 		Region:          "us-east-2",
 		SecretAccessKey: "test",
 		AccessKey:       "test",
 	}
 
-	db, err := db.New(ctx, &dbOptions)
+	db, err := db.New(ctx, dbOptions)
 
 	if err != nil {
 		return nil, err
@@ -57,7 +58,7 @@ func createDb(ctx context.Context) (*dbContainer, error) {
 	}
 
 	containerDetails := dbContainer{
-		Options:       dbOptions,
+		db:            db,
 		testContainer: ctr,
 	}
 
@@ -79,15 +80,17 @@ func TestDynamoDb(t *testing.T) {
 	logger := slog.New(logging.NewMockHandler())
 
 	eventsDBRepo := NewEventDBRepository(
-		*infra.EventsTableProps.TableName,
-		*infra.GroupUrlNameDateTimeIndex.IndexName,
-		dbCtr.Options,
+		EventDBRepositoryConfig{
+			*infra.EventsTableProps.TableName,
+			*infra.GroupUrlNameDateTimeIndex.IndexName,
+		},
+		dbCtr.db,
 		timeSource,
 		logger,
 	)
 
-	service := New(
-		[]string{},
+	service := NewService(
+		ServiceConfig{},
 		clock.RealTimeSource(),
 		logger,
 		eventsDBRepo,
@@ -99,6 +102,4 @@ func TestDynamoDb(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err creating container: %v", err)
 	}
-
-	log.Println(dbCtr.Endpoint)
 }

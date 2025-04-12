@@ -22,7 +22,7 @@ func init() {
 
 func main() {
 	ctx := context.Background()
-	client, err := db.New(ctx, &db.Options{
+	client, err := db.New(ctx, db.Config{
 		Endpoint:        config.DynamoDbEndpoint,
 		Region:          config.AwsRegion,
 		AccessKey:       config.AwsAccessKey,
