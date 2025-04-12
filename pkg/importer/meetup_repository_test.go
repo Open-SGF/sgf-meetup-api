@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/shared/models"
 	"testing"
@@ -26,17 +28,9 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 
 		events, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", beforeDate)
 
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if len(events) != 2 {
-			t.Errorf("expected 2 events, got %d", len(events))
-		}
-
-		if mock.callCount != 1 {
-			t.Errorf("expected 1 API call, got %d", mock.callCount)
-		}
+		require.NoError(t, err)
+		assert.Len(t, events, 2)
+		assert.Equal(t, mock.callCount, 1)
 	})
 
 	t.Run("multiple pages until exceeding cutoff", func(t *testing.T) {
@@ -50,17 +44,9 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 
 		events, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", beforeDate)
 
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if len(events) != 4 {
-			t.Errorf("expected 4 events, got %d", len(events))
-		}
-
-		if mock.callCount != 2 {
-			t.Errorf("expected 2 API calls, got %d", mock.callCount)
-		}
+		require.NoError(t, err)
+		assert.Len(t, events, 4)
+		assert.Equal(t, mock.callCount, 2)
 	})
 
 	t.Run("process all pages when no dates exceed", func(t *testing.T) {
@@ -74,17 +60,9 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 
 		events, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", beforeDate)
 
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if len(events) != 4 {
-			t.Errorf("expected 4 events, got %d", len(events))
-		}
-
-		if mock.callCount != 2 {
-			t.Errorf("expected 2 API calls, got %d", mock.callCount)
-		}
+		require.NoError(t, err)
+		assert.Len(t, events, 4)
+		assert.Equal(t, mock.callCount, 2)
 	})
 
 	t.Run("propagate errors from handler", func(t *testing.T) {
@@ -99,13 +77,8 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 		repo := NewMeetupRepository(failingMock, logging.NewMockLogger())
 		_, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", now)
 
-		if err == nil {
-			t.Fatal("expected error but got nil")
-		}
-
-		if failingMock.callCount != 1 {
-			t.Errorf("expected 1 API call attempt, got %d", failingMock.callCount)
-		}
+		assert.Error(t, err)
+		assert.Equal(t, failingMock.callCount, 1)
 	})
 }
 

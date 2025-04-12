@@ -1,6 +1,8 @@
 package httpclient
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -23,37 +25,33 @@ func TestHttpLoggingTransport_SuccessfulRequest(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", ts.URL, nil)
 	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatalf("Unexpected error making request: %v", err)
-	}
+
+	require.NoError(t, err)
+
 	defer func() { _ = resp.Body.Close() }()
 
 	infoEntries := mockHandler.Entries(slog.LevelInfo)
-	if len(infoEntries) != 1 {
-		t.Fatalf("Expected 1 info log entry, got %d", len(infoEntries))
-	}
+
+	require.Len(t, infoEntries, 1)
 
 	entry := infoEntries[0]
-	if entry.Message != "request completed" {
-		t.Errorf("Unexpected message: %q", entry.Message)
-	}
+
+	assert.Equal(t, "request completed", entry.Message)
 
 	expectedAttrs := map[string]any{
 		"http_client.method":         "GET",
 		"http_client.url":            ts.URL,
-		"http_client.status_code":    int64(200),
+		"http_client.status_code":    200,
 		"http_client.content_length": "1234",
 	}
 
 	for k, v := range expectedAttrs {
-		if entry.Attrs[k] != v {
-			t.Errorf("Attribute mismatch for %q: expected %v, got %v", k, v, entry.Attrs[k])
-		}
+		assert.Contains(t, entry.Attrs, k)
+		assert.EqualValues(t, v, entry.Attrs[k])
 	}
 
-	if _, ok := entry.Attrs["http_client.duration"].(time.Duration); !ok {
-		t.Error("Missing or invalid duration attribute")
-	}
+	assert.Contains(t, entry.Attrs, "http_client.duration")
+	assert.IsType(t, time.Duration(0), entry.Attrs["http_client.duration"])
 }
 
 func TestHttpLoggingTransport_FailedRequest(t *testing.T) {
@@ -66,29 +64,23 @@ func TestHttpLoggingTransport_FailedRequest(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", ts.URL, nil)
 	_, err := client.Do(req)
-	if err == nil {
-		t.Fatal("Expected error from closed server, got nil")
-	}
+
+	require.Error(t, err)
 
 	errorEntries := mockHandler.Entries(slog.LevelError)
-	if len(errorEntries) != 1 {
-		t.Fatalf("Expected 1 error log entry, got %d", len(errorEntries))
-	}
+
+	require.Len(t, errorEntries, 1)
 
 	entry := errorEntries[0]
-	if entry.Message != "request failed" {
-		t.Errorf("Unexpected message: %q", entry.Message)
-	}
 
-	if _, ok := entry.Attrs["http_client.method"].(string); !ok {
-		t.Error("Missing method in error log")
-	}
+	assert.Equal(t, "request failed", entry.Message)
+	assert.Contains(t, entry.Attrs, "http_client.method")
+	assert.IsType(t, "", entry.Attrs["http_client.method"])
+	assert.Contains(t, entry.Attrs, "http_client.url")
+	assert.IsType(t, "", entry.Attrs["http_client.url"])
 
-	if _, ok := entry.Attrs["http_client.url"].(string); !ok {
-		t.Error("Missing URL in error log")
-	}
-
+	assert.Contains(t, entry.Attrs, "http_client.error")
 	if _, ok := entry.Attrs["http_client.error"].(error); !ok {
-		t.Error("Missing error in error log")
+		assert.Fail(t, "Missing error in error log")
 	}
 }

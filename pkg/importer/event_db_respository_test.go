@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/clock"
@@ -62,11 +63,11 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 
 		result, err := repo.GetUpcomingEventsForGroup(ctx, "test-group")
 		require.NoError(t, err)
-		require.Len(t, result, 2)
+		assert.Len(t, result, 2)
 
 		for _, event := range result {
-			require.Equal(t, "test-group", event.GroupId)
-			require.True(t, event.DateTime.After(mockNow))
+			assert.Equal(t, "test-group", event.GroupId)
+			assert.True(t, event.DateTime.After(mockNow))
 		}
 	})
 
@@ -86,7 +87,7 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 
 		result, err := repo.GetUpcomingEventsForGroup(ctx, "test-group")
 		require.NoError(t, err)
-		require.Len(t, result, 15)
+		assert.Len(t, result, 15)
 	})
 
 	t.Run("excludes events from other groups", func(t *testing.T) {
@@ -102,7 +103,7 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 
 		result, err := repo.GetUpcomingEventsForGroup(ctx, "test-group")
 		require.NoError(t, err)
-		require.Len(t, result, 1)
+		assert.Len(t, result, 1)
 	})
 }
 

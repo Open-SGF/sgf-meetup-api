@@ -3,13 +3,13 @@ package meetupproxy
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"sgf-meetup-api/pkg/shared/logging"
-	"strings"
 	"testing"
 	"time"
 )
@@ -23,7 +23,7 @@ func (m *mockAuth) GetAccessToken(ctx context.Context) (string, error) {
 	return m.token, m.err
 }
 
-func TestProxy_HandleRequest_Success(t *testing.T) {
+func TestService_HandleRequest_Success(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer valid-token" {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -38,30 +38,23 @@ func TestProxy_HandleRequest_Success(t *testing.T) {
 
 	resp, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
-	if (*resp)["data"] != "success" {
-		t.Errorf("Expected 'success' data, got %v", resp)
-	}
+	require.NoError(t, err)
+
+	assert.Equal(t, "success", (*resp)["data"])
 }
 
-func TestProxy_HandleRequest_AuthFailure(t *testing.T) {
+func TestService_HandleRequest_AuthFailure(t *testing.T) {
 	auth := &mockAuth{err: fmt.Errorf("auth error")}
 	proxy := NewService(ServiceConfig{"https://testurl"}, &http.Client{}, auth, logging.NewMockLogger())
 
 	_, err := proxy.HandleRequest(context.Background(), Request{})
 
-	if err == nil {
-		t.Fatalf("expected err but got nil")
-	}
+	require.Error(t, err)
 
-	if !strings.Contains(err.Error(), "auth error") {
-		t.Fatalf("Expected auth err, got %v", err)
-	}
+	assert.ErrorContains(t, err, "auth error")
 }
 
-func TestProxy_HandleRequest_InvalidJSONResponse(t *testing.T) {
+func TestService_HandleRequest_InvalidJSONResponse(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("{invalid json}"))
 	}))
@@ -72,16 +65,12 @@ func TestProxy_HandleRequest_InvalidJSONResponse(t *testing.T) {
 
 	_, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
-	if err == nil {
-		t.Fatalf("expected err but got nil")
-	}
+	require.Error(t, err)
 
-	if !strings.Contains(err.Error(), "invalid character") {
-		t.Fatalf("Expected JSON error, got %v", err)
-	}
+	assert.ErrorContains(t, err, "invalid character")
 }
 
-func TestProxy_HandleRequest_InvalidStatus(t *testing.T) {
+func TestService_HandleRequest_InvalidStatus(t *testing.T) {
 	tests := []struct {
 		name       string
 		statusCode int
@@ -107,23 +96,16 @@ func TestProxy_HandleRequest_InvalidStatus(t *testing.T) {
 
 			_, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
-			if err == nil {
-				t.Fatalf("expected err but got nil")
-			}
+			require.Error(t, err)
 
-			if !strings.Contains(err.Error(), fmt.Sprintf("expected status code 200, got %v", tt.statusCode)) {
-				t.Errorf("Expected status code error, got %v", err)
-			}
+			assert.ErrorContains(t, err, fmt.Sprintf("expected status code 200, got %v", tt.statusCode))
 
-			errorEntries := handler.Entries(slog.LevelError)
-			if len(errorEntries) != 1 {
-				t.Errorf("Expected 1 error log entry got %v", len(errorEntries))
-			}
+			assert.Len(t, handler.Entries(slog.LevelError), 1)
 		})
 	}
 }
 
-func TestHandleRequest_Timeout(t *testing.T) {
+func TestService_HandleRequest_Timeout(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(200 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
@@ -139,7 +121,5 @@ func TestHandleRequest_Timeout(t *testing.T) {
 		Query: "query() {}",
 	})
 
-	if !errors.Is(err, context.DeadlineExceeded) {
-		t.Fatalf("Expected context deadline exceeded, got: %v", err)
-	}
+	assert.ErrorIs(t, err, context.DeadlineExceeded)
 }

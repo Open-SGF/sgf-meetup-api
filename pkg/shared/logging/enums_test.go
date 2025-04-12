@@ -1,8 +1,8 @@
 package logging
 
 import (
+	"github.com/stretchr/testify/assert"
 	"log/slog"
-	"strings"
 	"testing"
 )
 
@@ -19,9 +19,7 @@ func TestLogTypeToString(t *testing.T) {
 		t.Run(tc.expected+" to string", func(t *testing.T) {
 			actual := tc.input.String()
 
-			if actual != tc.expected {
-				t.Errorf("Expected %v, got %v", tc.expected, actual)
-			}
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
@@ -45,22 +43,13 @@ func TestParseLogType(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			lvl, err := ParseLogType(tc.input)
+			logType, err := ParseLogType(tc.input)
 
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("Expected error but got none")
-				}
-				if !strings.Contains(err.Error(), tc.input) {
-					t.Errorf("Error message %q should contain input %q", err.Error(), tc.input)
-				}
+				assert.ErrorContains(t, err, tc.input)
 			} else {
-				if err != nil {
-					t.Fatalf("Unexpected error: %v", err)
-				}
-				if lvl != tc.expectedType {
-					t.Errorf("Expected level %v, got %v", tc.expectedType, lvl)
-				}
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedType, logType)
 			}
 		})
 	}
@@ -89,19 +78,10 @@ func TestParseLogLevel(t *testing.T) {
 			lvl, err := ParseLogLevel(tc.input)
 
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("Expected error but got none")
-				}
-				if !strings.Contains(err.Error(), tc.input) {
-					t.Errorf("Error message %q should contain input %q", err.Error(), tc.input)
-				}
+				assert.ErrorContains(t, err, tc.input)
 			} else {
-				if err != nil {
-					t.Fatalf("Unexpected error: %v", err)
-				}
-				if lvl != tc.expectedLvl {
-					t.Errorf("Expected level %v, got %v", tc.expectedLvl, lvl)
-				}
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedLvl, lvl)
 			}
 		})
 	}

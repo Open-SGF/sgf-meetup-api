@@ -2,6 +2,8 @@ package logging
 
 import (
 	"errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"log/slog"
 	"sync"
 	"testing"
@@ -40,22 +42,17 @@ func TestCaptureErrorHandler(t *testing.T) {
 
 		logger.Error("message", "error", testErr)
 
-		if len(mockErrorLogger.errors) != 1 || !errors.Is(testErr, mockErrorLogger.errors[0]) {
-			t.Errorf("Expected captured error %v, got %v", testErr, mockErrorLogger.errors)
-		}
+		require.Len(t, mockErrorLogger.errors, 1)
+		assert.ErrorIs(t, testErr, mockErrorLogger.errors[0])
 
-		if len(mockErrorLogger.breadcrumbs) != 1 {
-			t.Fatal("Expected one breadcrumb")
-		}
+		require.Len(t, mockErrorLogger.breadcrumbs, 1)
 
 		bc := mockErrorLogger.breadcrumbs[0]
-		if bc.msg != "message" || bc.level != slog.LevelError {
-			t.Error("Incorrect breadcrumb message or level")
-		}
 
-		if mockHandler.Entries(slog.LevelError)[0].Message != "message" {
-			t.Error("Original handler didn't receive message")
-		}
+		assert.Equal(t, "message", bc.msg)
+		assert.Equal(t, slog.LevelError, bc.level)
+
+		assert.Equal(t, "message", mockHandler.Entries(slog.LevelError)[0].Message)
 	})
 
 	t.Run("creates error from message when no error attribute", func(t *testing.T) {
@@ -65,9 +62,8 @@ func TestCaptureErrorHandler(t *testing.T) {
 
 		logger.Error("message")
 
-		if len(mockErrorLogger.errors) != 1 || mockErrorLogger.errors[0].Error() != "message" {
-			t.Error("Should create error from message")
-		}
+		require.Len(t, mockErrorLogger.errors, 1)
+		assert.Equal(t, "message", mockErrorLogger.errors[0].Error())
 	})
 
 	t.Run("captures errors in nested groups", func(t *testing.T) {
@@ -78,9 +74,8 @@ func TestCaptureErrorHandler(t *testing.T) {
 
 		logger.Info("message", "error", nestedErr)
 
-		if len(mockErrorLogger.errors) != 1 || !errors.Is(nestedErr, mockErrorLogger.errors[0]) {
-			t.Error("Should capture error from nested group")
-		}
+		require.Len(t, mockErrorLogger.errors, 1)
+		assert.ErrorIs(t, nestedErr, mockErrorLogger.errors[0])
 	})
 
 	t.Run("captures breadcrumbs for non-error levels", func(t *testing.T) {
@@ -91,9 +86,7 @@ func TestCaptureErrorHandler(t *testing.T) {
 		logger.Info("info message")
 		logger.Warn("warn message")
 
-		if len(mockErrorLogger.breadcrumbs) != 2 {
-			t.Error("Should capture breadcrumbs for all levels")
-		}
+		require.Len(t, mockErrorLogger.breadcrumbs, 2)
 	})
 
 	t.Run("withattrs preserves error capturing", func(t *testing.T) {
@@ -105,8 +98,6 @@ func TestCaptureErrorHandler(t *testing.T) {
 
 		logger.Error("message", "error", testErr)
 
-		if len(mockErrorLogger.errors) != 1 {
-			t.Error("WithAttrs should preserve error capturing")
-		}
+		require.Len(t, mockErrorLogger.errors, 1)
 	})
 }

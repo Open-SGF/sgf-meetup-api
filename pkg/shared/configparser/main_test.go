@@ -2,6 +2,8 @@ package configparser
 
 import (
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -28,16 +30,11 @@ func TestParse_ValidEnvFile(t *testing.T) {
 	}
 
 	cfg, err := Parse[Config](opts)
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
 
-	if cfg.Host != "localhost" {
-		t.Errorf("Expected Host 'localhost', got '%s'", cfg.Host)
-	}
-	if cfg.Port != 5432 {
-		t.Errorf("Expected Port 5432, got %d", cfg.Port)
-	}
+	require.NoError(t, err)
+
+	assert.Equal(t, "localhost", cfg.Host)
+	assert.Equal(t, 5432, cfg.Port)
 }
 
 func TestParse_EnvVarOverridesConfigFile(t *testing.T) {
@@ -59,36 +56,30 @@ func TestParse_EnvVarOverridesConfigFile(t *testing.T) {
 	}
 
 	cfg, err := Parse[Config](opts)
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	if cfg.APIKey != "env_key" {
-		t.Errorf("Expected API_KEY 'env_key', got '%s'", cfg.APIKey)
-	}
+	require.NoError(t, err)
+
+	assert.Equal(t, "env_key", cfg.APIKey)
 }
 
 func TestParse_MissingConfigFileWithDefaults(t *testing.T) {
 	type Config struct {
-		LogLevel string `mapstructure:"LOG_LEVEL"`
+		LogLevel string `mapstructure:"log_level"`
 	}
 
 	opts := ParseOptions{
 		EnvFilename: "missing.env",
 		EnvFilepath: t.TempDir(),
 		SetDefaults: func(v *viper.Viper) {
-			v.SetDefault("LOG_LEVEL", "info")
+			v.SetDefault("log_level", "info")
 		},
 	}
 
 	cfg, err := Parse[Config](opts)
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	if cfg.LogLevel != "info" {
-		t.Errorf("Expected LogLevel 'info', got '%s'", cfg.LogLevel)
-	}
+	require.NoError(t, err)
+
+	assert.Equal(t, "info", cfg.LogLevel)
 }
 
 func TestParse_InvalidConfigFile(t *testing.T) {
@@ -109,29 +100,25 @@ func TestParse_InvalidConfigFile(t *testing.T) {
 	}
 
 	_, err := Parse[Config](opts)
-	if err == nil {
-		t.Error("Expected error for invalid config file, got nil")
-	}
+
+	require.Error(t, err)
 }
 
 func TestParse_EmptyKeysInitialization(t *testing.T) {
 	type Config struct {
-		FeatureFlag string `mapstructure:"FEATURE_FLAG"`
+		FeatureFlag string `mapstructure:"feature_flag"`
 	}
 
 	opts := ParseOptions{
-		Keys:        []string{"FEATURE_FLAG"},
+		Keys:        []string{"feature_flag"},
 		SetDefaults: func(v *viper.Viper) {},
 	}
 
 	cfg, err := Parse[Config](opts)
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	if cfg.FeatureFlag != "" {
-		t.Errorf("Expected empty FeatureFlag, got '%s'", cfg.FeatureFlag)
-	}
+	require.NoError(t, err)
+
+	assert.Equal(t, "", cfg.FeatureFlag)
 }
 
 func TestParseFromKey_LogLevel(t *testing.T) {
@@ -155,15 +142,10 @@ func TestParseFromKey_LogLevel(t *testing.T) {
 
 			ParseFromKey(v, key, logging.ParseLogLevel, tc.fallbackLvl)
 
-			raw := v.Get(key)
-			level, ok := raw.(slog.Level)
-			if !ok {
-				t.Fatalf("Type assertion failed for value: %v (%T)", raw, raw)
-			}
+			value := v.Get(key)
 
-			if level != tc.expectedLvl {
-				t.Fatalf("Expected level %v, got %v", tc.expectedLvl, level)
-			}
+			assert.IsType(t, slog.LevelInfo, value)
+			assert.Equal(t, value, tc.expectedLvl)
 		})
 	}
 }
