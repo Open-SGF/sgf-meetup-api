@@ -6,6 +6,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	tcdynamodb "github.com/testcontainers/testcontainers-go/modules/dynamodb"
 	"log"
+	"log/slog"
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
@@ -21,7 +22,12 @@ func (ctr *TestDB) Close() {
 }
 
 func NewTestDB(ctx context.Context) (*TestDB, error) {
-	ctr, err := tcdynamodb.Run(ctx, "amazon/dynamodb-local:2.2.1")
+	ctr, err := tcdynamodb.Run(
+		ctx,
+		"amazon/dynamodb-local:2.6.0",
+		tcdynamodb.WithSharedDB(),
+		tcdynamodb.WithDisableTelemetry(),
+	)
 
 	if err != nil {
 		return nil, err
@@ -40,13 +46,15 @@ func NewTestDB(ctx context.Context) (*TestDB, error) {
 		AccessKey:       "test",
 	}
 
-	db, err := New(ctx, dbOptions)
+	logger := logging.DefaultLogger(logging.Config{Level: slog.LevelError, Type: logging.LogTypeText})
+
+	db, err := New(ctx, dbOptions, logger)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if err = SyncTables(ctx, db, logging.NewMockLogger()); err != nil {
+	if err = SyncTables(ctx, db, logger); err != nil {
 		return nil, err
 	}
 

@@ -17,10 +17,10 @@ type DynamoDbProps struct {
 	GlobalSecondaryIndexes []*awsdynamodb.GlobalSecondaryIndexProps
 }
 
-var GroupUrlNameDateTimeIndex = awsdynamodb.GlobalSecondaryIndexProps{
-	IndexName: jsii.String("GroupUrlnameDateTimeIndex"),
+var GroupIdDateTimeIndex = awsdynamodb.GlobalSecondaryIndexProps{
+	IndexName: jsii.String("GroupIdDateTimeIndex"),
 	PartitionKey: &awsdynamodb.Attribute{
-		Name: jsii.String("group.urlname"),
+		Name: jsii.String("groupId"),
 		Type: awsdynamodb.AttributeType_STRING,
 	},
 	SortKey: &awsdynamodb.Attribute{
@@ -39,7 +39,7 @@ var EventsTableProps = DynamoDbProps{
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 	},
 	GlobalSecondaryIndexes: []*awsdynamodb.GlobalSecondaryIndexProps{
-		&GroupUrlNameDateTimeIndex,
+		&GroupIdDateTimeIndex,
 	},
 }
 
@@ -53,7 +53,7 @@ var ArchivedEventsTableProps = DynamoDbProps{
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 	},
 	GlobalSecondaryIndexes: []*awsdynamodb.GlobalSecondaryIndexProps{
-		&GroupUrlNameDateTimeIndex,
+		&GroupIdDateTimeIndex,
 	},
 }
 

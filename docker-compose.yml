@@ -1,7 +1,7 @@
 # From https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.DownloadingAndRunning.html
 services:
   dynamodb-local:
-    image: 'amazon/dynamodb-local:latest'
+    image: 'amazon/dynamodb-local:2.6.0'
     ports:
       - '${DYNAMODB_PORT:-8000}:8000'
     working_dir: '/home/dynamodblocal'

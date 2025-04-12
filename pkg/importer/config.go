@@ -64,7 +64,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 
 	config.ProxyFunctionName = *infra.MeetupProxyFunctionName
 	config.EventsTableName = *infra.EventsTableProps.TableName
-	config.GroupUrlNameDateTimeIndexName = *infra.GroupUrlNameDateTimeIndex.IndexName
+	config.GroupUrlNameDateTimeIndexName = *infra.GroupIdDateTimeIndex.IndexName
 
 	return config, nil
 }
