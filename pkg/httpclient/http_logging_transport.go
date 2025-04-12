@@ -1,23 +1,26 @@
-package logging
+package httpclient
 
 import (
 	"log/slog"
 	"net/http"
+	"sgf-meetup-api/pkg/clock"
 	"time"
 )
 
-func NewHttpLoggingTransport(logger *slog.Logger) http.RoundTripper {
+func NewHttpLoggingTransport(timeSource clock.TimeSource, logger *slog.Logger) http.RoundTripper {
 	return &httpLoggingTransport{
-		logger: logger.WithGroup("http_client"),
+		timeSource: timeSource,
+		logger:     logger.WithGroup("http_client"),
 	}
 }
 
 type httpLoggingTransport struct {
-	logger *slog.Logger
+	timeSource clock.TimeSource
+	logger     *slog.Logger
 }
 
 func (h httpLoggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	start := time.Now()
+	start := h.timeSource.Now()
 	resp, err := http.DefaultTransport.RoundTrip(req)
 	if err != nil {
 		h.logger.ErrorContext(

@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"sgf-meetup-api/pkg/logging"
 	"strings"
 	"sync"
 	"time"
@@ -17,13 +16,6 @@ import (
 
 type AuthHandler interface {
 	GetAccessToken(ctx context.Context) (string, error)
-}
-
-type authHandler struct {
-	lock   sync.Mutex
-	token  *authToken
-	config AuthHandlerConfig
-	logger *slog.Logger
 }
 
 type AuthHandlerConfig struct {
@@ -34,10 +26,29 @@ type AuthHandlerConfig struct {
 	privateKey   []byte
 }
 
-func NewAuthHandler(c AuthHandlerConfig, logger *slog.Logger) AuthHandler {
+func NewAuthHandlerConfig(config *Config) AuthHandlerConfig {
+	return AuthHandlerConfig{
+		url:          config.MeetupAuthURL,
+		userID:       config.MeetupUserID,
+		clientKey:    config.MeetupClientKey,
+		signingKeyID: config.MeetupSigningKeyID,
+		privateKey:   config.MeetupPrivateKey,
+	}
+}
+
+type authHandler struct {
+	lock       sync.Mutex
+	token      *authToken
+	config     AuthHandlerConfig
+	httpClient *http.Client
+	logger     *slog.Logger
+}
+
+func NewAuthHandler(config AuthHandlerConfig, httpClient *http.Client, logger *slog.Logger) AuthHandler {
 	return &authHandler{
-		config: c,
-		logger: logger,
+		config:     config,
+		httpClient: httpClient,
+		logger:     logger,
 	}
 }
 
@@ -95,8 +106,7 @@ func (ah *authHandler) getNewAccessToken(ctx context.Context) (*authToken, error
 	// Required by Meetup
 	req.Header.Add("User-Agent", userAgent)
 
-	client := &http.Client{Transport: logging.NewHttpLoggingTransport(ah.logger)}
-	resp, err := client.Do(req)
+	resp, err := ah.httpClient.Do(req)
 
 	if err != nil {
 		return nil, err
