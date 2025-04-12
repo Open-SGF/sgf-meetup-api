@@ -18,36 +18,36 @@ type Config struct {
 	SecretAccessKey string
 }
 
-func New(ctx context.Context, options Config, logger *slog.Logger) (*dynamodb.Client, error) {
+func New(ctx context.Context, cfg Config, logger *slog.Logger) (*dynamodb.Client, error) {
 	var cfgOpts []func(*config.LoadOptions) error
 	var clientOpts []func(*dynamodb.Options)
 
-	if options.Region != "" {
-		cfgOpts = append(cfgOpts, config.WithRegion(options.Region))
+	if cfg.Region != "" {
+		cfgOpts = append(cfgOpts, config.WithRegion(cfg.Region))
 	}
 
-	if options.AccessKey != "" && options.SecretAccessKey != "" {
+	if cfg.AccessKey != "" && cfg.SecretAccessKey != "" {
 		cfgOpts = append(cfgOpts, config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
-				options.AccessKey,
-				options.SecretAccessKey,
+				cfg.AccessKey,
+				cfg.SecretAccessKey,
 				"",
 			),
 		))
 	}
 
-	cfg, err := config.LoadDefaultConfig(ctx, cfgOpts...)
+	awsCfg, err := config.LoadDefaultConfig(ctx, cfgOpts...)
 
 	if err != nil {
 		logger.Error("Failed to create dynamo db instance", "err", err)
 		return nil, err
 	}
 
-	if options.Endpoint != "" {
-		clientOpts = append(clientOpts, dynamodb.WithEndpointResolverV2(options))
+	if cfg.Endpoint != "" {
+		clientOpts = append(clientOpts, dynamodb.WithEndpointResolverV2(cfg))
 	}
 
-	return dynamodb.NewFromConfig(cfg, clientOpts...), nil
+	return dynamodb.NewFromConfig(awsCfg, clientOpts...), nil
 }
 
 func (c Config) ResolveEndpoint(ctx context.Context, params dynamodb.EndpointParameters) (smithyendpoints.Endpoint, error) {
