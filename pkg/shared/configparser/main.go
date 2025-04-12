@@ -2,9 +2,7 @@ package configparser
 
 import (
 	"errors"
-	"fmt"
 	"github.com/spf13/viper"
-	"log/slog"
 	"strings"
 )
 
@@ -19,7 +17,7 @@ func Parse[T any](options ParseOptions) (*T, error) {
 	v := viper.New()
 
 	for _, key := range options.Keys {
-		v.SetDefault(key, "")
+		v.SetDefault(strings.ToLower(key), "")
 	}
 
 	v.SetConfigName(options.EnvFilename)
@@ -45,29 +43,15 @@ func Parse[T any](options ParseOptions) (*T, error) {
 	return &cfg, nil
 }
 
-func ParseLogLevelFromKey(v *viper.Viper, key string, fallback slog.Level) {
-	levelStr := v.GetString(key)
-	level, err := ParseLogLevel(levelStr)
+func ParseFromKey[T any](v *viper.Viper, key string, parser func(string) (T, error), fallback T) {
+	normalizedKey := strings.ToLower(key)
+	str := v.GetString(normalizedKey)
+	value, err := parser(str)
 
 	if err != nil {
-		v.Set(key, fallback)
+		v.Set(normalizedKey, fallback)
 		return
 	}
 
-	v.Set(key, level)
-}
-
-func ParseLogLevel(s string) (slog.Level, error) {
-	switch strings.ToUpper(strings.TrimSpace(s)) {
-	case "DEBUG":
-		return slog.LevelDebug, nil
-	case "INFO":
-		return slog.LevelInfo, nil
-	case "WARN", "WARNING":
-		return slog.LevelWarn, nil
-	case "ERROR":
-		return slog.LevelError, nil
-	default:
-		return 0, fmt.Errorf("unknown log level: %q", s)
-	}
+	v.Set(normalizedKey, value)
 }

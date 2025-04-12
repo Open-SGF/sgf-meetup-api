@@ -7,6 +7,10 @@ import (
 
 type SentryErrorLogger struct{}
 
+func NewSentryErrorLogger() *SentryErrorLogger {
+	return &SentryErrorLogger{}
+}
+
 func (s *SentryErrorLogger) CaptureError(err error) {
 	sentry.CaptureException(err)
 }

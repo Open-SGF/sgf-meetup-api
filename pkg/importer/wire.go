@@ -12,7 +12,7 @@ import (
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
-var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealTimeSource, httpclient.DefaultClient, getLogLevel)
+var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealTimeSource, httpclient.DefaultClient, getLoggingConfig)
 var DBSet = wire.NewSet(getDbConfig, db.New)
 
 func InitService(ctx context.Context, config *Config) (*Service, error) {

@@ -20,11 +20,11 @@ import (
 func InitService(ctx context.Context, config *Config) (*Service, error) {
 	serviceConfig := NewServiceConfig(config)
 	timeSource := clock.RealTimeSource()
-	level := getLogLevel(config)
-	logger := logging.DefaultLogger(level)
+	loggingConfig := getLoggingConfig(config)
+	logger := logging.DefaultLogger(loggingConfig)
 	eventDBRepositoryConfig := NewEventDBRepositoryConfig(config)
 	dbConfig := getDbConfig(config)
-	client, err := db.New(ctx, dbConfig)
+	client, err := db.New(ctx, dbConfig, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +38,6 @@ func InitService(ctx context.Context, config *Config) (*Service, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealTimeSource, httpclient.DefaultClient, getLogLevel)
+var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealTimeSource, httpclient.DefaultClient, getLoggingConfig)
 
 var DBSet = wire.NewSet(getDbConfig, db.New)
