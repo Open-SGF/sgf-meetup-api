@@ -1,4 +1,4 @@
-package syncdynamodb
+package db
 
 import (
 	"context"

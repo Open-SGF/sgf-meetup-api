@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"sgf-meetup-api/pkg/shared/db"
-	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/syncdynamodb"
 )
 
@@ -22,18 +20,14 @@ func init() {
 
 func main() {
 	ctx := context.Background()
-	client, err := db.New(ctx, db.Config{
-		Endpoint:        config.DynamoDbEndpoint,
-		Region:          config.AwsRegion,
-		AccessKey:       config.AwsAccessKey,
-		SecretAccessKey: config.AwsSecretAccessKey,
-	})
+
+	service, err := syncdynamodb.InitService(ctx, config)
 
 	if err != nil {
-		log.Fatalf("Failed to create DynamoDB client: %v", err)
+		log.Fatalf("Failed to init syncdynamdb service: %v", err)
 	}
 
-	if err := syncdynamodb.SyncTables(ctx, client, logging.DefaultLogger(config.LogLevel)); err != nil {
+	if err := service.Run(ctx); err != nil {
 		log.Fatalf("Failed to sync database: %v", err)
 	}
 }

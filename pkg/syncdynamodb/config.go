@@ -4,11 +4,14 @@ import (
 	"github.com/spf13/viper"
 	"log/slog"
 	"sgf-meetup-api/pkg/shared/configparser"
+	"sgf-meetup-api/pkg/shared/db"
+	"sgf-meetup-api/pkg/shared/logging"
 	"strings"
 )
 
 const (
 	logLevelKey        = "LOG_LEVEL"
+	logTypeKey         = "LOG_TYPE"
 	dynamoDbEndpoint   = "DYNAMODB_ENDPOINT"
 	awsRegion          = "AWS_REGION"
 	awsAccessKey       = "AWS_ACCESS_KEY"
@@ -16,19 +19,21 @@ const (
 )
 
 var keys = []string{
-	strings.ToLower(logLevelKey),
-	strings.ToLower(dynamoDbEndpoint),
-	strings.ToLower(awsRegion),
-	strings.ToLower(awsAccessKey),
-	strings.ToLower(awsSecretAccessKey),
+	logLevelKey,
+	logTypeKey,
+	dynamoDbEndpoint,
+	awsRegion,
+	awsAccessKey,
+	awsSecretAccessKey,
 }
 
 type Config struct {
-	LogLevel           slog.Level `mapstructure:"log_level"`
-	DynamoDbEndpoint   string     `mapstructure:"dynamodb_endpoint"`
-	AwsRegion          string     `mapstructure:"aws_region"`
-	AwsAccessKey       string     `mapstructure:"aws_access_key"`
-	AwsSecretAccessKey string     `mapstructure:"aws_secret_access_key"`
+	LogLevel           slog.Level      `mapstructure:"log_level"`
+	LogType            logging.LogType `mapstructure:"log_type"`
+	DynamoDbEndpoint   string          `mapstructure:"dynamodb_endpoint"`
+	AwsRegion          string          `mapstructure:"aws_region"`
+	AwsAccessKey       string          `mapstructure:"aws_access_key"`
+	AwsSecretAccessKey string          `mapstructure:"aws_secret_access_key"`
 }
 
 func NewConfig() (*Config, error) {
@@ -51,6 +56,23 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 }
 
 func setDefaults(v *viper.Viper) {
-	configparser.ParseLogLevelFromKey(v, strings.ToLower(logLevelKey), slog.LevelInfo)
+	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
+	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
 	v.SetDefault(strings.ToLower(awsRegion), "us-east-2")
+}
+
+func getLoggingConfig(config *Config) logging.Config {
+	return logging.Config{
+		Level: config.LogLevel,
+		Type:  config.LogType,
+	}
+}
+
+func getDbConfig(config *Config) db.Config {
+	return db.Config{
+		Endpoint:        config.DynamoDbEndpoint,
+		Region:          config.AwsRegion,
+		AccessKey:       config.AwsAccessKey,
+		SecretAccessKey: config.AwsSecretAccessKey,
+	}
 }

@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
+	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 )
 
@@ -134,7 +134,7 @@ func TestParse_EmptyKeysInitialization(t *testing.T) {
 	}
 }
 
-func TestParseLogLevelFromKey(t *testing.T) {
+func TestParseFromKey_LogLevel(t *testing.T) {
 	tests := []struct {
 		name        string
 		input       any
@@ -142,64 +142,27 @@ func TestParseLogLevelFromKey(t *testing.T) {
 		expectedLvl slog.Level
 	}{
 		{"correct string value", "DEBUG", slog.LevelInfo, slog.LevelDebug},
-		{"incorrect string value", "some string", slog.LevelWarn, slog.LevelWarn},
-		{"int value", 0, slog.LevelWarn, slog.LevelWarn},
-		{"nil value", nil, slog.LevelWarn, slog.LevelWarn},
+		{"incorrect string value", "invalid", slog.LevelWarn, slog.LevelWarn},
+		{"non-string value", 0, slog.LevelError, slog.LevelError},
+		{"nil value", nil, slog.LevelInfo, slog.LevelInfo},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			key := "key"
+			key := "loglevel"
 			v := viper.New()
 			v.SetDefault(key, tc.input)
 
-			ParseLogLevelFromKey(v, key, tc.fallbackLvl)
+			ParseFromKey(v, key, logging.ParseLogLevel, tc.fallbackLvl)
 
-			level := v.Get(key).(slog.Level)
+			raw := v.Get(key)
+			level, ok := raw.(slog.Level)
+			if !ok {
+				t.Fatalf("Type assertion failed for value: %v (%T)", raw, raw)
+			}
 
 			if level != tc.expectedLvl {
 				t.Fatalf("Expected level %v, got %v", tc.expectedLvl, level)
-			}
-		})
-	}
-}
-
-func TestParseLogLevel(t *testing.T) {
-	tests := []struct {
-		name        string
-		input       string
-		expectedLvl slog.Level
-		expectErr   bool
-	}{
-		{"debug lowercase", "debug", slog.LevelDebug, false},
-		{"DEBUG uppercase", "DEBUG", slog.LevelDebug, false},
-		{"info mixed case", "iNfO", slog.LevelInfo, false},
-		{"warn alias", "warn", slog.LevelWarn, false},
-		{"warning full", "WARNING", slog.LevelWarn, false},
-		{"error with spaces", "  error  ", slog.LevelError, false},
-		{"invalid level", "critical", 0, true},
-		{"empty string", "", 0, true},
-		{"numeric input", "123", 0, true},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			lvl, err := ParseLogLevel(tc.input)
-
-			if tc.expectErr {
-				if err == nil {
-					t.Fatal("Expected error but got none")
-				}
-				if !strings.Contains(err.Error(), tc.input) {
-					t.Errorf("Error message %q should contain input %q", err.Error(), tc.input)
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("Unexpected error: %v", err)
-				}
-				if lvl != tc.expectedLvl {
-					t.Errorf("Expected level %v, got %v", tc.expectedLvl, lvl)
-				}
 			}
 		})
 	}

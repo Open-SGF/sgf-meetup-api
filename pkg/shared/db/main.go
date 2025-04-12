@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"log/slog"
 )
 
 type Config struct {
@@ -15,7 +16,7 @@ type Config struct {
 	SecretAccessKey string
 }
 
-func New(ctx context.Context, options Config) (*dynamodb.Client, error) {
+func New(ctx context.Context, options Config, logger *slog.Logger) (*dynamodb.Client, error) {
 	var cfgOpts []func(*config.LoadOptions) error
 	var clientOpts []func(*dynamodb.Options)
 
@@ -36,6 +37,7 @@ func New(ctx context.Context, options Config) (*dynamodb.Client, error) {
 	cfg, err := config.LoadDefaultConfig(ctx, cfgOpts...)
 
 	if err != nil {
+		logger.Error("Failed to create dynamo db instance", "err", err)
 		return nil, err
 	}
 
