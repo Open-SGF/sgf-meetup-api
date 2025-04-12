@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sgf-meetup-api/pkg/clock"
 	"sgf-meetup-api/pkg/logging"
 	"testing"
 	"time"
@@ -11,7 +12,7 @@ import (
 
 func TestHttpLoggingTransport_SuccessfulRequest(t *testing.T) {
 	mockHandler := logging.NewMockHandler()
-	transport := NewHttpLoggingTransport(slog.New(mockHandler))
+	transport := NewHttpLoggingTransport(clock.RealTimeSource(), slog.New(mockHandler))
 	client := &http.Client{Transport: transport}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +58,7 @@ func TestHttpLoggingTransport_SuccessfulRequest(t *testing.T) {
 
 func TestHttpLoggingTransport_FailedRequest(t *testing.T) {
 	mockHandler := logging.NewMockHandler()
-	transport := NewHttpLoggingTransport(slog.New(mockHandler))
+	transport := NewHttpLoggingTransport(clock.RealTimeSource(), slog.New(mockHandler))
 	client := &http.Client{Transport: transport}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))

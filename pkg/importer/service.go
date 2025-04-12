@@ -5,29 +5,36 @@ import (
 	"fmt"
 	"log/slog"
 	"sgf-meetup-api/pkg/clock"
-	"sgf-meetup-api/pkg/db"
-	"sgf-meetup-api/pkg/infra"
-	"sgf-meetup-api/pkg/logging"
 	"time"
 )
 
+type ServiceConfig struct {
+	GroupNames []string
+}
+
+func NewServiceConfig(config *Config) ServiceConfig {
+	return ServiceConfig{
+		GroupNames: config.MeetupGroupNames,
+	}
+}
+
 type Service struct {
-	groupNames  []string
+	config      ServiceConfig
 	timeSource  clock.TimeSource
 	logger      *slog.Logger
 	eventDBRepo EventDBRepository
 	meetupRepo  MeetupRepository
 }
 
-func New(
-	groupNames []string,
+func NewService(
+	config ServiceConfig,
 	timeSource clock.TimeSource,
 	logger *slog.Logger,
 	eventDBRepo EventDBRepository,
 	meetupRepo MeetupRepository,
 ) *Service {
 	return &Service{
-		groupNames:  groupNames,
+		config:      config,
 		timeSource:  timeSource,
 		logger:      logger,
 		eventDBRepo: eventDBRepo,
@@ -35,36 +42,10 @@ func New(
 	}
 }
 
-func NewFromConfig(c *Config) *Service {
-	logger := logging.DefaultLogger(c.LogLevel)
-	graphQLHandler := NewMeetupProxyGraphQLHandler(*infra.MeetupProxyFunctionName, logger)
-	timeSource := clock.RealTimeSource()
-	eventDBRepo := NewEventDBRepository(
-		*infra.EventsTableProps.TableName,
-		*infra.GroupUrlNameDateTimeIndex.IndexName,
-		db.Options{
-			Endpoint:        c.DynamoDbEndpoint,
-			Region:          c.AwsRegion,
-			AccessKey:       c.AwsAccessKey,
-			SecretAccessKey: c.AwsSecretAccessKey,
-		},
-		timeSource,
-		logger,
-	)
-
-	return New(
-		c.MeetupGroupNames,
-		timeSource,
-		logger,
-		eventDBRepo,
-		NewMeetupRepository(graphQLHandler, logger),
-	)
-}
-
 func (s *Service) Import(ctx context.Context) error {
 	sixMonthsFromNow := s.timeSource.Now().AddDate(0, 6, 0)
 
-	for _, group := range s.groupNames {
+	for _, group := range s.config.GroupNames {
 		err := s.importForGroup(ctx, group, sixMonthsFromNow)
 
 		if err != nil {

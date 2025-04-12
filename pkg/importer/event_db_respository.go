@@ -8,9 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"log/slog"
 	"sgf-meetup-api/pkg/clock"
-	"sgf-meetup-api/pkg/db"
 	"sgf-meetup-api/pkg/models"
-	"sync"
 	"time"
 )
 
@@ -18,31 +16,35 @@ type EventDBRepository interface {
 	GetUpcomingEventsForGroup(ctx context.Context, group string) ([]models.MeetupEvent, error)
 }
 
-type eventDBRepository struct {
-	tableName      string
-	groupDateIndex string
-	dbOptions      db.Options
-	mu             sync.Mutex
-	db             *dynamodb.Client
-	timeSource     clock.TimeSource
-	logger         *slog.Logger
+type EventDBRepositoryConfig struct {
+	TableName          string
+	GroupDateIndexName string
 }
 
-func NewEventDBRepository(tableName string, groupDateIndex string, dbOptions db.Options, timeSource clock.TimeSource, logger *slog.Logger) EventDBRepository {
+func NewEventDBRepositoryConfig(config *Config) EventDBRepositoryConfig {
+	return EventDBRepositoryConfig{
+		TableName:          config.EventsTableName,
+		GroupDateIndexName: config.GroupUrlNameDateTimeIndexName,
+	}
+}
+
+type eventDBRepository struct {
+	config     EventDBRepositoryConfig
+	db         *dynamodb.Client
+	timeSource clock.TimeSource
+	logger     *slog.Logger
+}
+
+func NewEventDBRepository(config EventDBRepositoryConfig, db *dynamodb.Client, timeSource clock.TimeSource, logger *slog.Logger) EventDBRepository {
 	return &eventDBRepository{
-		tableName:      tableName,
-		groupDateIndex: groupDateIndex,
-		dbOptions:      dbOptions,
-		timeSource:     timeSource,
-		logger:         logger,
+		config:     config,
+		db:         db,
+		timeSource: timeSource,
+		logger:     logger,
 	}
 }
 
 func (er *eventDBRepository) GetUpcomingEventsForGroup(ctx context.Context, group string) ([]models.MeetupEvent, error) {
-	if err := er.initDB(ctx); err != nil {
-		return nil, err
-	}
-
 	now := er.timeSource.Now().UTC().Format(time.RFC3339)
 
 	var allEvents []models.MeetupEvent
@@ -59,8 +61,8 @@ func (er *eventDBRepository) GetUpcomingEventsForGroup(ctx context.Context, grou
 	}
 
 	paginator := dynamodb.NewQueryPaginator(er.db, &dynamodb.QueryInput{
-		TableName:                 aws.String(er.tableName),
-		IndexName:                 aws.String(er.groupDateIndex),
+		TableName:                 aws.String(er.config.TableName),
+		IndexName:                 aws.String(er.config.GroupDateIndexName),
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
@@ -80,21 +82,4 @@ func (er *eventDBRepository) GetUpcomingEventsForGroup(ctx context.Context, grou
 	}
 
 	return allEvents, nil
-}
-
-func (er *eventDBRepository) initDB(ctx context.Context) error {
-	er.mu.Lock()
-	defer er.mu.Unlock()
-
-	if er.db == nil {
-		newDb, err := db.New(ctx, &er.dbOptions)
-
-		if err != nil {
-			return err
-		}
-
-		er.db = newDb
-	}
-
-	return nil
 }

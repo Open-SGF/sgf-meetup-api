@@ -79,18 +79,18 @@ func setDefaults(v *viper.Viper) {
 	}
 }
 
-func (cfg *Config) validate() error {
+func (config *Config) validate() error {
 	var missing []string
-	if len(cfg.MeetupPrivateKey) == 0 {
+	if len(config.MeetupPrivateKey) == 0 {
 		missing = append(missing, meetupPrivateKeyBase64Key)
 	}
-	if cfg.MeetupUserID == "" {
+	if config.MeetupUserID == "" {
 		missing = append(missing, meetupUserIdKey)
 	}
-	if cfg.MeetupClientKey == "" {
+	if config.MeetupClientKey == "" {
 		missing = append(missing, meetupClientKeyKey)
 	}
-	if cfg.MeetupSigningKeyID == "" {
+	if config.MeetupSigningKeyID == "" {
 		missing = append(missing, meetupSigningKeyIdKey)
 	}
 
@@ -101,6 +101,6 @@ func (cfg *Config) validate() error {
 	return nil
 }
 
-func getLogLevel(cfg *Config) slog.Level {
-	return cfg.LogLevel
+func getLogLevel(config *Config) slog.Level {
+	return config.LogLevel
 }

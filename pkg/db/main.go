@@ -8,18 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-type Options struct {
+type Config struct {
 	Endpoint        string
 	Region          string
 	AccessKey       string
 	SecretAccessKey string
 }
 
-func New(ctx context.Context, options *Options) (*dynamodb.Client, error) {
-	if options == nil {
-		options = &Options{}
-	}
-
+func New(ctx context.Context, options Config) (*dynamodb.Client, error) {
 	var cfgOpts []func(*config.LoadOptions) error
 	var clientOpts []func(*dynamodb.Options)
 
