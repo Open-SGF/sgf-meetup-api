@@ -42,6 +42,7 @@ type Config struct {
 	AwsAccessKey                  string          `mapstructure:"aws_access_key"`
 	AwsSecretAccessKey            string          `mapstructure:"aws_secret_access_key"`
 	ProxyFunctionName             string
+	ArchivedEventsTableName       string
 	EventsTableName               string
 	GroupUrlNameDateTimeIndexName string
 }
@@ -62,6 +63,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 		return nil, err
 	}
 
+	config.ArchivedEventsTableName = *infra.ArchivedEventsTableProps.TableName
 	config.ProxyFunctionName = *infra.MeetupProxyFunctionName
 	config.EventsTableName = *infra.EventsTableProps.TableName
 	config.GroupUrlNameDateTimeIndexName = *infra.GroupIdDateTimeIndex.IndexName

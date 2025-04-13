@@ -22,7 +22,7 @@ type Service struct {
 	config      ServiceConfig
 	timeSource  clock.TimeSource
 	logger      *slog.Logger
-	eventDBRepo EventDBRepository
+	eventDBRepo EventRepository
 	meetupRepo  MeetupRepository
 }
 
@@ -30,7 +30,7 @@ func NewService(
 	config ServiceConfig,
 	timeSource clock.TimeSource,
 	logger *slog.Logger,
-	eventDBRepo EventDBRepository,
+	eventDBRepo EventRepository,
 	meetupRepo MeetupRepository,
 ) *Service {
 	return &Service{

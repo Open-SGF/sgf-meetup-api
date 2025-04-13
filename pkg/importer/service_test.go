@@ -23,12 +23,13 @@ func TestDynamoDb(t *testing.T) {
 
 	defer testDB.Close()
 
-	timeSource := clock.MockTimeSource(time.Now())
+	timeSource := clock.NewMockTimeSource(time.Now())
 	logger := slog.New(logging.NewMockHandler())
 
-	eventsDBRepo := NewEventDBRepository(
-		EventDBRepositoryConfig{
+	eventsDBRepo := NewDynamoDBEventRepository(
+		DynamoDBEventRepositoryConfig{
 			*infra.EventsTableProps.TableName,
+			*infra.ArchivedEventsTableProps.TableName,
 			*infra.GroupIdDateTimeIndex.IndexName,
 		},
 		testDB.DB,
@@ -38,7 +39,7 @@ func TestDynamoDb(t *testing.T) {
 
 	service := NewService(
 		ServiceConfig{},
-		clock.RealTimeSource(),
+		clock.NewRealTimeSource(),
 		logger,
 		eventsDBRepo,
 		nil,
