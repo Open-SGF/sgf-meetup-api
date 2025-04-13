@@ -21,29 +21,11 @@ jobs:
           version: v2.0.2
           args: cmd/... pkg/...
       - name: go test
-        run: |
-          go test -coverprofile=coverage.out ./cmd/... ./pkg/...
-          go tool cover -html=coverage.out -o coverage.html
-          go tool cover -func=coverage.out | grep total | awk '{print "TOTAL_COVERAGE=" substr($3, 1, length($3)-1)}' >> $GITHUB_ENV
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
+        run: go test -coverprofile=coverage.out ./cmd/... ./pkg/...
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          name: coverage-reports
-          path: |
-            coverage.out
-            coverage.html
-      - name: Add PR comment
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const coverage = process.env.TOTAL_COVERAGE
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `🔍 **Code Coverage Summary**\nTotal: ${coverage}%\n\n*Download full report from workflow artifacts*`
-            })
+          files: coverage.out
   build:
     name: Build
     runs-on: ubuntu-latest
