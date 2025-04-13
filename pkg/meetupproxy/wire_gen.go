@@ -17,16 +17,18 @@ import (
 
 func InitService(config *Config) *Service {
 	serviceConfig := NewServiceConfig(config)
-	timeSource := clock.RealTimeSource()
+	realTimeSource := clock.NewRealTimeSource()
 	loggingConfig := getLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
-	client := httpclient.DefaultClient(timeSource, logger)
-	authHandlerConfig := NewAuthHandlerConfig(config)
-	meetupproxyAuthHandler := NewAuthHandler(authHandlerConfig, client, logger)
-	service := NewService(serviceConfig, client, meetupproxyAuthHandler, logger)
+	client := httpclient.DefaultClient(realTimeSource, logger)
+	meetupHttpAuthHandlerConfig := NewMeetupAuthHandlerConfig(config)
+	meetupHttpAuthHandler := NewMeetupHttpAuthHandler(meetupHttpAuthHandlerConfig, client, logger)
+	service := NewService(serviceConfig, client, meetupHttpAuthHandler, logger)
 	return service
 }
 
 // wire.go:
 
-var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealTimeSource, httpclient.DefaultClient, getLoggingConfig)
+var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, getLoggingConfig)
+
+var AuthHandlerSet = wire.NewSet(wire.Bind(new(AuthHandler), new(*MeetupHttpAuthHandler)), NewMeetupAuthHandlerConfig, NewMeetupHttpAuthHandler)

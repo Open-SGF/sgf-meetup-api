@@ -23,7 +23,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 			{24 * time.Hour, 48 * time.Hour},
 		})
 
-		repo := NewMeetupRepository(mock, logging.NewMockLogger())
+		repo := NewGraphQLMeetupRepository(mock, logging.NewMockLogger())
 		beforeDate := now.Add(72 * time.Hour)
 
 		events, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", beforeDate)
@@ -39,7 +39,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 			{72 * time.Hour, 96 * time.Hour},
 		})
 
-		repo := NewMeetupRepository(mock, logging.NewMockLogger())
+		repo := NewGraphQLMeetupRepository(mock, logging.NewMockLogger())
 		beforeDate := now.Add(60 * time.Hour)
 
 		events, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", beforeDate)
@@ -55,7 +55,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 			{60 * time.Hour, 72 * time.Hour},
 		})
 
-		repo := NewMeetupRepository(mock, logging.NewMockLogger())
+		repo := NewGraphQLMeetupRepository(mock, logging.NewMockLogger())
 		beforeDate := now.Add(100 * time.Hour)
 
 		events, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", beforeDate)
@@ -74,7 +74,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 			},
 		}
 
-		repo := NewMeetupRepository(failingMock, logging.NewMockLogger())
+		repo := NewGraphQLMeetupRepository(failingMock, logging.NewMockLogger())
 		_, err := repo.GetEventsUntilDateForGroup(context.Background(), "group", now)
 
 		assert.Error(t, err)

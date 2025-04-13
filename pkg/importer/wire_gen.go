@@ -19,25 +19,31 @@ import (
 
 func InitService(ctx context.Context, config *Config) (*Service, error) {
 	serviceConfig := NewServiceConfig(config)
-	timeSource := clock.RealTimeSource()
+	realTimeSource := clock.NewRealTimeSource()
 	loggingConfig := getLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
-	eventDBRepositoryConfig := NewEventDBRepositoryConfig(config)
+	dynamoDBEventRepositoryConfig := NewDynamoDBEventRepositoryConfig(config)
 	dbConfig := getDbConfig(config)
 	client, err := db.New(ctx, dbConfig, logger)
 	if err != nil {
 		return nil, err
 	}
-	importerEventDBRepository := NewEventDBRepository(eventDBRepositoryConfig, client, timeSource, logger)
-	meetupProxyGraphQLHandlerConfig := NewMeetupProxyGraphQLHandlerConfig(config)
-	graphQLHandler := NewMeetupProxyGraphQLHandler(meetupProxyGraphQLHandlerConfig, logger)
-	importerMeetupRepository := NewMeetupRepository(graphQLHandler, logger)
-	service := NewService(serviceConfig, timeSource, logger, importerEventDBRepository, importerMeetupRepository)
+	dynamoDBEventRepository := NewDynamoDBEventRepository(dynamoDBEventRepositoryConfig, client, realTimeSource, logger)
+	lambdaProxyGraphQLHandlerConfig := NewLambdaProxyGraphQLHandlerConfig(config)
+	lambdaProxyGraphQLHandler := NewLambdaProxyGraphQLHandler(lambdaProxyGraphQLHandlerConfig, logger)
+	graphQLMeetupRepository := NewGraphQLMeetupRepository(lambdaProxyGraphQLHandler, logger)
+	service := NewService(serviceConfig, realTimeSource, logger, dynamoDBEventRepository, graphQLMeetupRepository)
 	return service, nil
 }
 
 // wire.go:
 
-var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealTimeSource, httpclient.DefaultClient, getLoggingConfig)
+var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, getLoggingConfig)
 
 var DBSet = wire.NewSet(getDbConfig, db.New)
+
+var EventRepositorySet = wire.NewSet(wire.Bind(new(EventRepository), new(*DynamoDBEventRepository)), NewDynamoDBEventRepositoryConfig, NewDynamoDBEventRepository)
+
+var GraphQLHandlerSet = wire.NewSet(wire.Bind(new(GraphQLHandler), new(*LambdaProxyGraphQLHandler)), NewLambdaProxyGraphQLHandlerConfig, NewLambdaProxyGraphQLHandler)
+
+var MeetupRepositorySet = wire.NewSet(wire.Bind(new(MeetupRepository), new(*GraphQLMeetupRepository)), NewGraphQLMeetupRepository)

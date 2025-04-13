@@ -16,13 +16,13 @@ type GraphQLHandler interface {
 	ExecuteQuery(ctx context.Context, query string, variables map[string]any) ([]byte, error)
 }
 
-type meetupRepository struct {
+type GraphQLMeetupRepository struct {
 	handler GraphQLHandler
 	logger  *slog.Logger
 }
 
-func NewMeetupRepository(handler GraphQLHandler, logger *slog.Logger) MeetupRepository {
-	return &meetupRepository{
+func NewGraphQLMeetupRepository(handler GraphQLHandler, logger *slog.Logger) *GraphQLMeetupRepository {
+	return &GraphQLMeetupRepository{
 		handler: handler,
 		logger:  logger,
 	}
@@ -89,7 +89,7 @@ type MeetupEdge struct {
 	Node models.MeetupEvent `json:"node"`
 }
 
-func (r *meetupRepository) GetEventsUntilDateForGroup(ctx context.Context, group string, beforeDate time.Time) ([]models.MeetupEvent, error) {
+func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(ctx context.Context, group string, beforeDate time.Time) ([]models.MeetupEvent, error) {
 	events := make([]models.MeetupEvent, 0)
 	cursor := ""
 	var maxFutureDate time.Time
@@ -132,7 +132,7 @@ func (r *meetupRepository) GetEventsUntilDateForGroup(ctx context.Context, group
 	return events, nil
 }
 
-func executeGraphQLQuery[T any](r *meetupRepository, ctx context.Context, query string, variables map[string]any) (*T, error) {
+func executeGraphQLQuery[T any](r *GraphQLMeetupRepository, ctx context.Context, query string, variables map[string]any) (*T, error) {
 	responseBytes, err := r.handler.ExecuteQuery(ctx, query, variables)
 
 	if err != nil {

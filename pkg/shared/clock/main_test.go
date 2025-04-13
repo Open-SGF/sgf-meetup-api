@@ -6,9 +6,14 @@ import (
 	"time"
 )
 
+func TestTimeSourceImplementations(t *testing.T) {
+	assert.Implements(t, new(TimeSource), new(RealTimeSource))
+	assert.Implements(t, new(TimeSource), new(MockTimeSource))
+}
+
 func TestMockTimeControl(t *testing.T) {
 	initial := time.Date(2025, 4, 6, 2, 0, 0, 0, time.UTC)
-	mock := MockTimeSource(initial)
+	mock := NewMockTimeSource(initial)
 
 	assert.Equal(t, initial, mock.Now())
 
@@ -19,7 +24,7 @@ func TestMockTimeControl(t *testing.T) {
 }
 
 func TestRealTimeSource(t *testing.T) {
-	clock := RealTimeSource()
+	clock := NewRealTimeSource()
 	before := time.Now()
 	now := clock.Now()
 	after := time.Now()
@@ -30,7 +35,7 @@ func TestRealTimeSource(t *testing.T) {
 
 func TestMockZeroTime(t *testing.T) {
 	zeroTime := time.Time{}
-	mock := MockTimeSource(zeroTime)
+	mock := NewMockTimeSource(zeroTime)
 
 	assert.True(t, mock.Now().IsZero())
 

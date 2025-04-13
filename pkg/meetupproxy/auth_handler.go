@@ -18,7 +18,7 @@ type AuthHandler interface {
 	GetAccessToken(ctx context.Context) (string, error)
 }
 
-type AuthHandlerConfig struct {
+type MeetupHttpAuthHandlerConfig struct {
 	url          string
 	userID       string
 	clientKey    string
@@ -26,8 +26,8 @@ type AuthHandlerConfig struct {
 	privateKey   []byte
 }
 
-func NewAuthHandlerConfig(config *Config) AuthHandlerConfig {
-	return AuthHandlerConfig{
+func NewMeetupAuthHandlerConfig(config *Config) MeetupHttpAuthHandlerConfig {
+	return MeetupHttpAuthHandlerConfig{
 		url:          config.MeetupAuthURL,
 		userID:       config.MeetupUserID,
 		clientKey:    config.MeetupClientKey,
@@ -36,16 +36,16 @@ func NewAuthHandlerConfig(config *Config) AuthHandlerConfig {
 	}
 }
 
-type authHandler struct {
+type MeetupHttpAuthHandler struct {
 	lock       sync.Mutex
 	token      *authToken
-	config     AuthHandlerConfig
+	config     MeetupHttpAuthHandlerConfig
 	httpClient *http.Client
 	logger     *slog.Logger
 }
 
-func NewAuthHandler(config AuthHandlerConfig, httpClient *http.Client, logger *slog.Logger) AuthHandler {
-	return &authHandler{
+func NewMeetupHttpAuthHandler(config MeetupHttpAuthHandlerConfig, httpClient *http.Client, logger *slog.Logger) *MeetupHttpAuthHandler {
+	return &MeetupHttpAuthHandler{
 		config:     config,
 		httpClient: httpClient,
 		logger:     logger,
@@ -60,7 +60,7 @@ type authToken struct {
 	TokenType    string `json:"token_type"`
 }
 
-func (ah *authHandler) GetAccessToken(ctx context.Context) (string, error) {
+func (ah *MeetupHttpAuthHandler) GetAccessToken(ctx context.Context) (string, error) {
 	ah.lock.Lock()
 	defer ah.lock.Unlock()
 
@@ -79,7 +79,7 @@ func (ah *authHandler) GetAccessToken(ctx context.Context) (string, error) {
 	return ah.token.AccessToken, nil
 }
 
-func (ah *authHandler) getNewAccessToken(ctx context.Context) (*authToken, error) {
+func (ah *MeetupHttpAuthHandler) getNewAccessToken(ctx context.Context) (*authToken, error) {
 	signedJwt, err := ah.createSignedJWT()
 
 	if err != nil {
@@ -118,7 +118,7 @@ func (ah *authHandler) getNewAccessToken(ctx context.Context) (*authToken, error
 		return nil, fmt.Errorf("invalid status code when fetching token: %v", resp.StatusCode)
 	}
 
-	token, err := parseAuthToken(resp.Body)
+	token, err := ah.parseAuthToken(resp.Body)
 
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (ah *authHandler) getNewAccessToken(ctx context.Context) (*authToken, error
 	return token, nil
 }
 
-func (ah *authHandler) createSignedJWT() (string, error) {
+func (ah *MeetupHttpAuthHandler) createSignedJWT() (string, error) {
 	claims := jwt.RegisteredClaims{
 		Issuer:    ah.config.clientKey,
 		Subject:   ah.config.userID,
@@ -151,7 +151,7 @@ func (t *authToken) isExpiring(offset time.Time) bool {
 	return offset.After(t.ExpiresAt.Add(-30 * time.Second))
 }
 
-func parseAuthToken(r io.Reader) (*authToken, error) {
+func (ah *MeetupHttpAuthHandler) parseAuthToken(r io.Reader) (*authToken, error) {
 	var newToken authToken
 	err := json.NewDecoder(r).Decode(&newToken)
 	if err != nil {

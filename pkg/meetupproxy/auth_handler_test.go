@@ -32,7 +32,7 @@ func TestAuthHandler_GetAccessToken_InitialFetch(t *testing.T) {
 	defer ts.Close()
 
 	privateKey, _ := generatePrivateKey()
-	ah := NewAuthHandler(AuthHandlerConfig{
+	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
@@ -57,7 +57,7 @@ func TestAuthHandler_GetAccessToken_ValidUserAgent(t *testing.T) {
 	defer ts.Close()
 
 	privateKey, _ := generatePrivateKey()
-	ah := NewAuthHandler(AuthHandlerConfig{
+	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
@@ -86,7 +86,7 @@ func TestAuthHandler_GetAccessToken_ExpiredToken(t *testing.T) {
 	defer ts.Close()
 
 	privateKey, _ := generatePrivateKey()
-	ah := NewAuthHandler(AuthHandlerConfig{
+	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
@@ -111,7 +111,7 @@ func TestAuthHandler_GetAccessTokenn_HTTPErrorHandling(t *testing.T) {
 	defer ts.Close()
 
 	privateKey, _ := generatePrivateKey()
-	ah := NewAuthHandler(AuthHandlerConfig{
+	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
@@ -139,7 +139,7 @@ func TestAuthHandler_GetAccessToken_ConcurrentRequests(t *testing.T) {
 	defer ts.Close()
 
 	privateKey, _ := generatePrivateKey()
-	ah := NewAuthHandler(AuthHandlerConfig{
+	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
 		url:        ts.URL,
 		privateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
@@ -160,8 +160,8 @@ func TestAuthHandler_GetAccessToken_ConcurrentRequests(t *testing.T) {
 func TestAuthHandler_createSignedJWT_ValidClaims(t *testing.T) {
 	privateKey, _ := rsa.GenerateKey(rand.Reader, 2048)
 	privateKeyBytes, _ := privateKeyToBytes(privateKey)
-	ah := &authHandler{
-		config: AuthHandlerConfig{
+	ah := &MeetupHttpAuthHandler{
+		config: MeetupHttpAuthHandlerConfig{
 			clientKey:    "test-client",
 			userID:       "user1",
 			signingKeyID: "key1",
@@ -185,14 +185,16 @@ func TestAuthHandler_createSignedJWT_ValidClaims(t *testing.T) {
 	assert.Equal(t, "key1", token.Header["kid"])
 }
 
-func TestParseAuthToken(t *testing.T) {
+func TestAuthHandler_TestParseAuthToken(t *testing.T) {
 	jsonResponse := `{
 		"access_token": "parsed-token",
 		"expires_in": 300,
 		"token_type": "Bearer"
 	}`
 
-	token, err := parseAuthToken(strings.NewReader(jsonResponse))
+	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{}, &http.Client{}, logging.NewMockLogger())
+
+	token, err := ah.parseAuthToken(strings.NewReader(jsonResponse))
 
 	require.NoError(t, err)
 

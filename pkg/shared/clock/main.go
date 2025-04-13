@@ -1,38 +1,38 @@
 package clock
 
-import "time"
+import (
+	"github.com/google/wire"
+	"time"
+)
 
 type TimeSource interface {
 	Now() time.Time
 }
 
-type TimeControl interface {
-	TimeSource
-	SetTime(time.Time)
+type RealTimeSource struct{}
+
+func NewRealTimeSource() *RealTimeSource {
+	return &RealTimeSource{}
 }
 
-type realTimeSource struct{}
-
-func (r realTimeSource) Now() time.Time {
+func (r RealTimeSource) Now() time.Time {
 	return time.Now()
 }
 
-func RealTimeSource() TimeSource {
-	return &realTimeSource{}
-}
-
-type mockTimeSource struct {
+type MockTimeSource struct {
 	frozenTime time.Time
 }
 
-func (f *mockTimeSource) Now() time.Time {
-	return f.frozenTime
+func NewMockTimeSource(initialTime time.Time) *MockTimeSource {
+	return &MockTimeSource{frozenTime: initialTime}
 }
 
-func (f *mockTimeSource) SetTime(t time.Time) {
-	f.frozenTime = t
+func (m *MockTimeSource) Now() time.Time {
+	return m.frozenTime
 }
 
-func MockTimeSource(initialTime time.Time) TimeControl {
-	return &mockTimeSource{frozenTime: initialTime}
+func (m *MockTimeSource) SetTime(t time.Time) {
+	m.frozenTime = t
 }
+
+var RealClockSet = wire.NewSet(wire.Bind(new(TimeSource), new(*RealTimeSource)), NewRealTimeSource)

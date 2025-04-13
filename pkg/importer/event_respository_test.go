@@ -27,11 +27,11 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 	defer testDB.Close()
 
 	mockNow := time.Date(2025, 4, 12, 10, 0, 0, 0, time.UTC)
-	timeSource := clock.MockTimeSource(mockNow)
+	timeSource := clock.NewMockTimeSource(mockNow)
 
-	repo := NewEventDBRepository(
-		EventDBRepositoryConfig{
-			TableName:          *infra.EventsTableProps.TableName,
+	repo := NewDynamoDBEventRepository(
+		DynamoDBEventRepositoryConfig{
+			EventsTableName:    *infra.EventsTableProps.TableName,
 			GroupDateIndexName: *infra.GroupIdDateTimeIndex.IndexName,
 		},
 		testDB.DB,

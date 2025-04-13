@@ -12,31 +12,35 @@ import (
 	"time"
 )
 
-type EventDBRepository interface {
+type EventRepository interface {
 	GetUpcomingEventsForGroup(ctx context.Context, group string) ([]models.MeetupEvent, error)
+	ArchiveEvents(ctx context.Context, eventIds []string) error
+	UpsertEvents(ctx context.Context, events []models.MeetupEvent) error
 }
 
-type EventDBRepositoryConfig struct {
-	TableName          string
-	GroupDateIndexName string
+type DynamoDBEventRepositoryConfig struct {
+	EventsTableName         string
+	ArchivedEventsTableName string
+	GroupDateIndexName      string
 }
 
-func NewEventDBRepositoryConfig(config *Config) EventDBRepositoryConfig {
-	return EventDBRepositoryConfig{
-		TableName:          config.EventsTableName,
-		GroupDateIndexName: config.GroupUrlNameDateTimeIndexName,
+func NewDynamoDBEventRepositoryConfig(config *Config) DynamoDBEventRepositoryConfig {
+	return DynamoDBEventRepositoryConfig{
+		EventsTableName:         config.EventsTableName,
+		ArchivedEventsTableName: config.ArchivedEventsTableName,
+		GroupDateIndexName:      config.GroupUrlNameDateTimeIndexName,
 	}
 }
 
-type eventDBRepository struct {
-	config     EventDBRepositoryConfig
+type DynamoDBEventRepository struct {
+	config     DynamoDBEventRepositoryConfig
 	db         *dynamodb.Client
 	timeSource clock.TimeSource
 	logger     *slog.Logger
 }
 
-func NewEventDBRepository(config EventDBRepositoryConfig, db *dynamodb.Client, timeSource clock.TimeSource, logger *slog.Logger) EventDBRepository {
-	return &eventDBRepository{
+func NewDynamoDBEventRepository(config DynamoDBEventRepositoryConfig, db *dynamodb.Client, timeSource clock.TimeSource, logger *slog.Logger) *DynamoDBEventRepository {
+	return &DynamoDBEventRepository{
 		config:     config,
 		db:         db,
 		timeSource: timeSource,
@@ -44,7 +48,7 @@ func NewEventDBRepository(config EventDBRepositoryConfig, db *dynamodb.Client, t
 	}
 }
 
-func (er *eventDBRepository) GetUpcomingEventsForGroup(ctx context.Context, group string) ([]models.MeetupEvent, error) {
+func (er *DynamoDBEventRepository) GetUpcomingEventsForGroup(ctx context.Context, group string) ([]models.MeetupEvent, error) {
 	now := er.timeSource.Now().UTC().Format(time.RFC3339)
 
 	var allEvents []models.MeetupEvent
@@ -61,7 +65,7 @@ func (er *eventDBRepository) GetUpcomingEventsForGroup(ctx context.Context, grou
 	}
 
 	paginator := dynamodb.NewQueryPaginator(er.db, &dynamodb.QueryInput{
-		TableName:                 aws.String(er.config.TableName),
+		TableName:                 aws.String(er.config.EventsTableName),
 		IndexName:                 aws.String(er.config.GroupDateIndexName),
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
@@ -82,4 +86,12 @@ func (er *eventDBRepository) GetUpcomingEventsForGroup(ctx context.Context, grou
 	}
 
 	return allEvents, nil
+}
+
+func (er *DynamoDBEventRepository) ArchiveEvents(ctx context.Context, eventIds []string) error {
+	panic("implement me")
+}
+
+func (er *DynamoDBEventRepository) UpsertEvents(ctx context.Context, events []models.MeetupEvent) error {
+	panic("implement me")
 }

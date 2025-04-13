@@ -10,29 +10,29 @@ import (
 	"log/slog"
 )
 
-type MeetupProxyGraphQLHandlerConfig struct {
+type LambdaProxyGraphQLHandlerConfig struct {
 	ProxyFunctionName string
 }
 
-func NewMeetupProxyGraphQLHandlerConfig(config *Config) MeetupProxyGraphQLHandlerConfig {
-	return MeetupProxyGraphQLHandlerConfig{
+func NewLambdaProxyGraphQLHandlerConfig(config *Config) LambdaProxyGraphQLHandlerConfig {
+	return LambdaProxyGraphQLHandlerConfig{
 		ProxyFunctionName: config.ProxyFunctionName,
 	}
 }
 
-type meetupProxyGraphQLHandler struct {
-	config MeetupProxyGraphQLHandlerConfig
+type LambdaProxyGraphQLHandler struct {
+	config LambdaProxyGraphQLHandlerConfig
 	logger *slog.Logger
 }
 
-func NewMeetupProxyGraphQLHandler(config MeetupProxyGraphQLHandlerConfig, logger *slog.Logger) GraphQLHandler {
-	return &meetupProxyGraphQLHandler{
+func NewLambdaProxyGraphQLHandler(config LambdaProxyGraphQLHandlerConfig, logger *slog.Logger) *LambdaProxyGraphQLHandler {
+	return &LambdaProxyGraphQLHandler{
 		config: config,
 		logger: logger,
 	}
 }
 
-func (m *meetupProxyGraphQLHandler) ExecuteQuery(ctx context.Context, query string, variables map[string]any) ([]byte, error) {
+func (m *LambdaProxyGraphQLHandler) ExecuteQuery(ctx context.Context, query string, variables map[string]any) ([]byte, error) {
 	request := struct {
 		Query     string         `json:"query"`
 		Variables map[string]any `json:"variables"`
@@ -50,7 +50,7 @@ func (m *meetupProxyGraphQLHandler) ExecuteQuery(ctx context.Context, query stri
 	return m.callLambda(ctx, requestBytes)
 }
 
-func (m *meetupProxyGraphQLHandler) callLambda(ctx context.Context, payload []byte) ([]byte, error) {
+func (m *LambdaProxyGraphQLHandler) callLambda(ctx context.Context, payload []byte) ([]byte, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, err

@@ -27,17 +27,7 @@ func DefaultLogger(config Config) *slog.Logger {
 		handler = WithErrorLogger(handler, NewSentryErrorLogger())
 	}
 
-	return NewLogger(handler)
-}
-
-func NewLogger(handler slog.Handler) *slog.Logger {
 	return slog.New(handler)
-}
-
-func NewLoggerWithErrorHandler(handler slog.Handler, errorLogger ErrorLogger) *slog.Logger {
-	handlerWithErrorLogger := WithErrorLogger(handler, errorLogger)
-
-	return NewLogger(handlerWithErrorLogger)
 }
 
 func NewJSONHandler(level slog.Level) *slog.JSONHandler {
