@@ -28,13 +28,14 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 
 	mockNow := time.Date(2025, 4, 12, 10, 0, 0, 0, time.UTC)
 	timeSource := clock.NewMockTimeSource(mockNow)
+	repoConfig := DynamoDBEventRepositoryConfig{
+		EventsTableName:    *infra.EventsTableProps.TableName,
+		GroupDateIndexName: *infra.GroupIdDateTimeIndex.IndexName,
+	}
 
 	repo := NewDynamoDBEventRepository(
-		DynamoDBEventRepositoryConfig{
-			EventsTableName:    *infra.EventsTableProps.TableName,
-			GroupDateIndexName: *infra.GroupIdDateTimeIndex.IndexName,
-		},
-		testDB.DB,
+		repoConfig,
+		testDB.Client,
 		timeSource,
 		logging.NewMockLogger(),
 	)
@@ -42,7 +43,7 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 	faker := gofakeit.New(0)
 
 	t.Run("returns empty slice when no events exist", func(t *testing.T) {
-		defer deleteAllItems(t, testDB.DB, *infra.EventsTableProps.TableName)
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
 
 		events, err := repo.GetUpcomingEventsForGroup(ctx, "test-group")
 		require.NoError(t, err)
@@ -50,7 +51,7 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 	})
 
 	t.Run("returns only future events for target group", func(t *testing.T) {
-		defer deleteAllItems(t, testDB.DB, *infra.EventsTableProps.TableName)
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
 
 		testEvents := []models.MeetupEvent{
 			createEvent(faker, "test-group", mockNow.Add(-1*time.Hour)),
@@ -59,7 +60,7 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 			createEvent(faker, "test-group", mockNow.Add(3*time.Hour)),
 		}
 
-		insertTestEvents(t, testDB.DB, *infra.EventsTableProps.TableName, testEvents)
+		insertTestEvents(t, testDB.Client, repoConfig.EventsTableName, testEvents)
 
 		result, err := repo.GetUpcomingEventsForGroup(ctx, "test-group")
 		require.NoError(t, err)
@@ -72,7 +73,7 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 	})
 
 	t.Run("handles paginated results", func(t *testing.T) {
-		defer deleteAllItems(t, testDB.DB, *infra.EventsTableProps.TableName)
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
 
 		var testEvents []models.MeetupEvent
 		for i := 0; i < 15; i++ {
@@ -83,7 +84,7 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 			))
 		}
 
-		insertTestEvents(t, testDB.DB, *infra.EventsTableProps.TableName, testEvents)
+		insertTestEvents(t, testDB.Client, repoConfig.EventsTableName, testEvents)
 
 		result, err := repo.GetUpcomingEventsForGroup(ctx, "test-group")
 		require.NoError(t, err)
@@ -91,7 +92,7 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 	})
 
 	t.Run("excludes events from other groups", func(t *testing.T) {
-		defer deleteAllItems(t, testDB.DB, *infra.EventsTableProps.TableName)
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
 
 		testEvents := []models.MeetupEvent{
 			createEvent(faker, "other-group-1", mockNow.Add(1*time.Hour)),
@@ -99,11 +100,98 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 			createEvent(faker, "test-group", mockNow.Add(3*time.Hour)),
 		}
 
-		insertTestEvents(t, testDB.DB, *infra.EventsTableProps.TableName, testEvents)
+		insertTestEvents(t, testDB.Client, repoConfig.EventsTableName, testEvents)
 
 		result, err := repo.GetUpcomingEventsForGroup(ctx, "test-group")
 		require.NoError(t, err)
 		assert.Len(t, result, 1)
+	})
+}
+
+func TestEventDBRepository_ArchiveEvents(t *testing.T) {
+	ctx := context.Background()
+	testDB, err := db.NewTestDB(ctx)
+	require.NoError(t, err)
+	defer testDB.Close()
+
+	mockNow := time.Date(2025, 4, 12, 10, 0, 0, 0, time.UTC)
+	timeSource := clock.NewMockTimeSource(mockNow)
+	repoConfig := DynamoDBEventRepositoryConfig{
+		EventsTableName:         *infra.EventsTableProps.TableName,
+		ArchivedEventsTableName: *infra.ArchivedEventsTableProps.TableName,
+		GroupDateIndexName:      *infra.GroupIdDateTimeIndex.IndexName,
+	}
+
+	repo := NewDynamoDBEventRepository(
+		repoConfig,
+		testDB.Client,
+		timeSource,
+		logging.NewMockLogger(),
+	)
+
+	faker := gofakeit.New(0)
+
+	t.Run("archives and deletes multiple events", func(t *testing.T) {
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
+		defer deleteAllItems(t, testDB.Client, repoConfig.ArchivedEventsTableName)
+
+		testEvents := []models.MeetupEvent{
+			createEvent(faker, "test-group", mockNow.Add(1*time.Hour)),
+			createEvent(faker, "test-group", mockNow.Add(2*time.Hour)),
+			createEvent(faker, "test-group", mockNow.Add(3*time.Hour)),
+		}
+		insertTestEvents(t, testDB.Client, repoConfig.EventsTableName, testEvents)
+
+		eventIDs := []string{testEvents[0].ID, testEvents[1].ID, testEvents[2].ID}
+		require.NoError(t, repo.ArchiveEvents(ctx, eventIDs))
+
+		for _, id := range eventIDs {
+			assert.False(t, checkEventExists(t, testDB.Client, repoConfig.EventsTableName, id), "event should be deleted from main table")
+			assert.True(t, checkEventExists(t, testDB.Client, repoConfig.ArchivedEventsTableName, id), "event should exist in archive table")
+		}
+	})
+
+	t.Run("handles empty input list", func(t *testing.T) {
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
+		defer deleteAllItems(t, testDB.Client, repoConfig.ArchivedEventsTableName)
+
+		require.NoError(t, repo.ArchiveEvents(ctx, []string{}))
+		require.NoError(t, repo.ArchiveEvents(ctx, nil))
+	})
+
+	t.Run("handles partial failures gracefully", func(t *testing.T) {
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
+		defer deleteAllItems(t, testDB.Client, repoConfig.ArchivedEventsTableName)
+
+		validEvent := createEvent(faker, "test-group", mockNow.Add(1*time.Hour))
+		insertTestEvents(t, testDB.Client, *infra.EventsTableProps.TableName, []models.MeetupEvent{validEvent})
+
+		err := repo.ArchiveEvents(ctx, []string{validEvent.ID, "non-existent-id"})
+		require.NoError(t, err)
+
+		assert.False(t, checkEventExists(t, testDB.Client, repoConfig.EventsTableName, validEvent.ID))
+		assert.True(t, checkEventExists(t, testDB.Client, repoConfig.ArchivedEventsTableName, validEvent.ID))
+	})
+
+	t.Run("handles large batches with chunking", func(t *testing.T) {
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
+		defer deleteAllItems(t, testDB.Client, repoConfig.ArchivedEventsTableName)
+
+		var eventIDs []string
+		var events []models.MeetupEvent
+		for i := 0; i < 30; i++ {
+			event := createEvent(faker, "test-group", mockNow.Add(time.Duration(i)*time.Hour))
+			events = append(events, event)
+			eventIDs = append(eventIDs, event.ID)
+		}
+		insertTestEvents(t, testDB.Client, repoConfig.EventsTableName, events)
+
+		require.NoError(t, repo.ArchiveEvents(ctx, eventIDs))
+
+		for _, id := range eventIDs {
+			assert.False(t, checkEventExists(t, testDB.Client, repoConfig.EventsTableName, id))
+			assert.True(t, checkEventExists(t, testDB.Client, repoConfig.ArchivedEventsTableName, id))
+		}
 	})
 }
 
@@ -115,7 +203,7 @@ func createEvent(faker *gofakeit.Faker, groupId string, dateTime time.Time) mode
 	return event
 }
 
-func deleteAllItems(t *testing.T, client *dynamodb.Client, tableName string) {
+func deleteAllItems(t *testing.T, client *db.Client, tableName string) {
 	scanInput := &dynamodb.ScanInput{TableName: aws.String(tableName)}
 	paginator := dynamodb.NewScanPaginator(client, scanInput)
 	ctx := context.Background()
@@ -137,7 +225,7 @@ func deleteAllItems(t *testing.T, client *dynamodb.Client, tableName string) {
 	}
 }
 
-func insertTestEvents(t *testing.T, client *dynamodb.Client, tableName string, events []models.MeetupEvent) {
+func insertTestEvents(t *testing.T, client *db.Client, tableName string, events []models.MeetupEvent) {
 	for _, event := range events {
 		av, err := attributevalue.MarshalMap(event)
 		require.NoError(t, err)
@@ -148,4 +236,15 @@ func insertTestEvents(t *testing.T, client *dynamodb.Client, tableName string, e
 		})
 		require.NoError(t, err)
 	}
+}
+
+func checkEventExists(t *testing.T, client *db.Client, tableName string, eventID string) bool {
+	resp, err := client.GetItem(context.Background(), &dynamodb.GetItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: eventID},
+		},
+	})
+	require.NoError(t, err)
+	return len(resp.Item) > 0
 }

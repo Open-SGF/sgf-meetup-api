@@ -5,20 +5,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"log/slog"
-	"net/url"
-	"strings"
 )
 
-type Config struct {
-	Endpoint        string
-	Region          string
-	AccessKey       string
-	SecretAccessKey string
+type Client struct {
+	*dynamodb.Client
 }
 
-func New(ctx context.Context, cfg Config, logger *slog.Logger) (*dynamodb.Client, error) {
+func NewClient(ctx context.Context, cfg Config, logger *slog.Logger) (*Client, error) {
 	var cfgOpts []func(*config.LoadOptions) error
 	var clientOpts []func(*dynamodb.Options)
 
@@ -47,21 +41,7 @@ func New(ctx context.Context, cfg Config, logger *slog.Logger) (*dynamodb.Client
 		clientOpts = append(clientOpts, dynamodb.WithEndpointResolverV2(cfg))
 	}
 
-	return dynamodb.NewFromConfig(awsCfg, clientOpts...), nil
-}
+	dynamoDbClient := dynamodb.NewFromConfig(awsCfg, clientOpts...)
 
-func (c Config) ResolveEndpoint(ctx context.Context, params dynamodb.EndpointParameters) (smithyendpoints.Endpoint, error) {
-	scheme, rest := splitURL(c.Endpoint)
-
-	return smithyendpoints.Endpoint{
-		URI: url.URL{Host: rest, Scheme: scheme},
-	}, nil
-}
-
-func splitURL(url string) (scheme, rest string) {
-	parts := strings.SplitN(url, "://", 2)
-	if len(parts) < 2 {
-		return "", url
-	}
-	return parts[0], parts[1]
+	return &Client{dynamoDbClient}, nil
 }

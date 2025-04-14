@@ -23,7 +23,7 @@ const (
 	meetupApiUrlKey           = "MEETUP_API_URL"
 )
 
-var keys = []string{
+var configKeys = []string{
 	logLevelKey,
 	logTypeKey,
 	sentryDsnKey,
@@ -56,7 +56,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 	config, err := configparser.Parse[Config](configparser.ParseOptions{
 		EnvFilepath: path,
 		EnvFilename: filename,
-		Keys:        keys,
+		Keys:        configKeys,
 		SetDefaults: setDefaults,
 	})
 

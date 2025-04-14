@@ -3,7 +3,7 @@ package models
 import "time"
 
 type MeetupEvent struct {
-	Id          string        `json:"id" dynamodbav:"id" fake:"{uuid}"`
+	ID          string        `json:"id" dynamodbav:"id" fake:"{uuid}"`
 	GroupId     string        `json:"group.urlname" dynamodbav:"groupId" fake:"{username}"`
 	GroupName   string        `json:"group.name" dynamodbav:"groupName" fake:"{username}"`
 	Title       string        `json:"title" dynamodbav:"title" fake:"{sentence:3}"`

@@ -11,7 +11,7 @@ import (
 )
 
 var CommonSet = wire.NewSet(logging.DefaultLogger, getLoggingConfig)
-var DBSet = wire.NewSet(getDbConfig, db.New)
+var DBSet = wire.NewSet(getDbConfig, db.NewClient)
 
 func InitService(ctx context.Context, config *Config) (*Service, error) {
 	wire.Build(CommonSet, DBSet, NewService)

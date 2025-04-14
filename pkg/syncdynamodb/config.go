@@ -18,7 +18,7 @@ const (
 	awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
 )
 
-var keys = []string{
+var configKeys = []string{
 	logLevelKey,
 	logTypeKey,
 	dynamoDbEndpoint,
@@ -44,7 +44,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 	config, err := configparser.Parse[Config](configparser.ParseOptions{
 		EnvFilepath: path,
 		EnvFilename: filename,
-		Keys:        keys,
+		Keys:        configKeys,
 		SetDefaults: setDefaults,
 	})
 
