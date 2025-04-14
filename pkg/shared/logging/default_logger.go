@@ -14,11 +14,15 @@ type Config struct {
 func DefaultLogger(config Config) *slog.Logger {
 	var handler slog.Handler
 
+	opts := &slog.HandlerOptions{
+		Level: config.Level,
+	}
+
 	switch config.Type {
 	case LogTypeText:
-		handler = NewTextHandler(config.Level)
+		handler = slog.NewTextHandler(os.Stdout, opts)
 	case LogTypeJSON:
-		handler = NewJSONHandler(config.Level)
+		handler = slog.NewJSONHandler(os.Stdout, opts)
 	default:
 		panic("unknown log type")
 	}
@@ -28,16 +32,4 @@ func DefaultLogger(config Config) *slog.Logger {
 	}
 
 	return slog.New(handler)
-}
-
-func NewJSONHandler(level slog.Level) *slog.JSONHandler {
-	return slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: level,
-	})
-}
-
-func NewTextHandler(level slog.Level) *slog.TextHandler {
-	return slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: level,
-	})
 }
