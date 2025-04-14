@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/testcontainers/testcontainers-go"
 	tcdynamodb "github.com/testcontainers/testcontainers-go/modules/dynamodb"
 	"log"
@@ -11,7 +10,7 @@ import (
 )
 
 type TestDB struct {
-	DB        *dynamodb.Client
+	Client    *Client
 	Container *tcdynamodb.DynamoDBContainer
 }
 
@@ -48,18 +47,18 @@ func NewTestDB(ctx context.Context) (*TestDB, error) {
 
 	logger := logging.DefaultLogger(logging.Config{Level: slog.LevelError, Type: logging.LogTypeText})
 
-	db, err := New(ctx, dbOptions, logger)
+	client, err := NewClient(ctx, dbOptions, logger)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if err = SyncTables(ctx, db, logger); err != nil {
+	if err = SyncTables(ctx, client, logger); err != nil {
 		return nil, err
 	}
 
 	testDB := TestDB{
-		DB:        db,
+		Client:    client,
 		Container: ctr,
 	}
 

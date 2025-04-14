@@ -19,7 +19,7 @@ func InitService(ctx context.Context, config *Config) (*Service, error) {
 	dbConfig := getDbConfig(config)
 	loggingConfig := getLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
-	client, err := db.New(ctx, dbConfig, logger)
+	client, err := db.NewClient(ctx, dbConfig, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -31,4 +31,4 @@ func InitService(ctx context.Context, config *Config) (*Service, error) {
 
 var CommonSet = wire.NewSet(logging.DefaultLogger, getLoggingConfig)
 
-var DBSet = wire.NewSet(getDbConfig, db.New)
+var DBSet = wire.NewSet(getDbConfig, db.NewClient)

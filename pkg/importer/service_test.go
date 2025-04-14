@@ -32,7 +32,7 @@ func TestDynamoDb(t *testing.T) {
 			*infra.ArchivedEventsTableProps.TableName,
 			*infra.GroupIdDateTimeIndex.IndexName,
 		},
-		testDB.DB,
+		testDB.Client,
 		timeSource,
 		logger,
 	)

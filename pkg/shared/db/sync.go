@@ -11,7 +11,7 @@ import (
 	"sgf-meetup-api/pkg/infra"
 )
 
-func SyncTables(ctx context.Context, client *dynamodb.Client, logger *slog.Logger) error {
+func SyncTables(ctx context.Context, client *Client, logger *slog.Logger) error {
 	tables := []infra.DynamoDbProps{infra.EventsTableProps, infra.ArchivedEventsTableProps}
 
 	for _, tableProps := range tables {
@@ -37,7 +37,7 @@ func SyncTables(ctx context.Context, client *dynamodb.Client, logger *slog.Logge
 	return nil
 }
 
-func tableExists(ctx context.Context, client *dynamodb.Client, logger *slog.Logger, tableName string) (bool, error) {
+func tableExists(ctx context.Context, client *Client, logger *slog.Logger, tableName string) (bool, error) {
 	logger.Info("checking table", "tableName", tableName)
 	_, err := client.DescribeTable(ctx, &dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
@@ -54,7 +54,7 @@ func tableExists(ctx context.Context, client *dynamodb.Client, logger *slog.Logg
 	return true, nil
 }
 
-func createTable(ctx context.Context, client *dynamodb.Client, tableProps infra.DynamoDbProps) error {
+func createTable(ctx context.Context, client *Client, tableProps infra.DynamoDbProps) error {
 	attrMap := make(map[string]types.ScalarAttributeType)
 
 	partitionKeyName := *tableProps.PartitionKey.Name
