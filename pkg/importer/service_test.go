@@ -139,7 +139,7 @@ func TestService_Import(t *testing.T) {
 		)
 
 		err := svc.Import(ctx)
-		assert.NoError(t, err) // Import itself doesn't return individual group errors
+		assert.ErrorIs(t, err, expectedErr)
 
 		meetupRepo.AssertNotCalled(t, "GetEventsUntilDateForGroup")
 		eventRepo.AssertNotCalled(t, "UpsertEvents")
