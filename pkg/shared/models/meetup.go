@@ -4,10 +4,10 @@ import "time"
 
 type MeetupEvent struct {
 	ID          string        `json:"id" dynamodbav:"id" fake:"{uuid}"`
-	GroupId     string        `json:"group.urlname" dynamodbav:"groupId" fake:"{username}"`
+	GroupID     string        `json:"group.urlname" dynamodbav:"groupId" fake:"{username}"`
 	GroupName   string        `json:"group.name" dynamodbav:"groupName" fake:"{username}"`
 	Title       string        `json:"title" dynamodbav:"title" fake:"{sentence:3}"`
-	EventUrl    string        `json:"eventUrl" dynamodbav:"eventUrl" fake:"{url}"`
+	EventURL    string        `json:"eventUrl" dynamodbav:"eventUrl" fake:"{url}"`
 	Description string        `json:"description" dynamodbav:"description" fake:"{paragraph:3,5,2,\n}"`
 	DateTime    *time.Time    `json:"dateTime" dynamodbav:"dateTime" fake:"{futuredate}"`
 	Duration    string        `json:"duration" dynamodbav:"duration" fake:"{randomstring:[2h,1h30m,3h]}"`

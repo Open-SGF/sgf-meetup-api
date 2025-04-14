@@ -67,7 +67,7 @@ func TestDynamoDBEventRepository_GetUpcomingEventsForGroup(t *testing.T) {
 		assert.Len(t, result, 2)
 
 		for _, event := range result {
-			assert.Equal(t, "test-group", event.GroupId)
+			assert.Equal(t, "test-group", event.GroupID)
 			assert.True(t, event.DateTime.After(mockNow))
 		}
 	})
@@ -273,7 +273,7 @@ func TestDynamoDBEventRepository_UpsertEvents(t *testing.T) {
 func createEvent(faker *gofakeit.Faker, groupId string, dateTime time.Time) models.MeetupEvent {
 	event := models.MeetupEvent{}
 	_ = faker.Struct(&event)
-	event.GroupId = groupId
+	event.GroupID = groupId
 	event.DateTime = &dateTime
 	return event
 }
