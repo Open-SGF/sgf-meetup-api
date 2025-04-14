@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
+func TestDynamoDBEventRepository_GetUpcomingEventsForGroup(t *testing.T) {
 	ctx := context.Background()
 	testDB, err := db.NewTestDB(ctx)
 	if err != nil {
@@ -108,7 +108,7 @@ func TestEventDBRepository_GetUpcomingEventsForGroup(t *testing.T) {
 	})
 }
 
-func TestEventDBRepository_ArchiveEvents(t *testing.T) {
+func TestDynamoDBEventRepository_ArchiveEvents(t *testing.T) {
 	ctx := context.Background()
 	testDB, err := db.NewTestDB(ctx)
 	require.NoError(t, err)
@@ -179,7 +179,7 @@ func TestEventDBRepository_ArchiveEvents(t *testing.T) {
 
 		var eventIDs []string
 		var events []models.MeetupEvent
-		for i := 0; i < 30; i++ {
+		for i := 0; i < db.MaxBatchSize+5; i++ {
 			event := createEvent(faker, "test-group", mockNow.Add(time.Duration(i)*time.Hour))
 			events = append(events, event)
 			eventIDs = append(eventIDs, event.ID)
@@ -192,6 +192,81 @@ func TestEventDBRepository_ArchiveEvents(t *testing.T) {
 			assert.False(t, checkEventExists(t, testDB.Client, repoConfig.EventsTableName, id))
 			assert.True(t, checkEventExists(t, testDB.Client, repoConfig.ArchivedEventsTableName, id))
 		}
+	})
+}
+
+func TestDynamoDBEventRepository_UpsertEvents(t *testing.T) {
+	ctx := context.Background()
+	testDB, err := db.NewTestDB(ctx)
+	require.NoError(t, err)
+	defer testDB.Close()
+
+	repoConfig := DynamoDBEventRepositoryConfig{
+		EventsTableName: *infra.EventsTableProps.TableName,
+	}
+	repo := NewDynamoDBEventRepository(
+		repoConfig,
+		testDB.Client,
+		clock.NewMockTimeSource(time.Now()),
+		logging.NewMockLogger(),
+	)
+	faker := gofakeit.New(0)
+
+	t.Run("inserts new events into table", func(t *testing.T) {
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
+
+		testEvents := []models.MeetupEvent{
+			createEvent(faker, "group1", time.Now().Add(1*time.Hour)),
+			createEvent(faker, "group1", time.Now().Add(2*time.Hour)),
+		}
+
+		require.NoError(t, repo.UpsertEvents(ctx, testEvents))
+
+		for _, event := range testEvents {
+			assert.True(t, checkEventExists(t, testDB.Client, repoConfig.EventsTableName, event.ID))
+		}
+	})
+
+	t.Run("updates existing events", func(t *testing.T) {
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
+
+		originalEvent := createEvent(faker, "group1", time.Now().Add(1*time.Hour))
+		require.NoError(t, repo.UpsertEvents(ctx, []models.MeetupEvent{originalEvent}))
+
+		updatedEvent := originalEvent
+		updatedEvent.Title = "UPDATED TITLE"
+		require.NoError(t, repo.UpsertEvents(ctx, []models.MeetupEvent{updatedEvent}))
+
+		var result models.MeetupEvent
+		resp, err := testDB.Client.GetItem(ctx, &dynamodb.GetItemInput{
+			TableName: aws.String(repoConfig.EventsTableName),
+			Key:       repo.createKey(originalEvent.ID),
+		})
+		require.NoError(t, err)
+		require.NoError(t, attributevalue.UnmarshalMap(resp.Item, &result))
+
+		assert.Equal(t, "UPDATED TITLE", result.Title)
+	})
+
+	t.Run("handles empty input list", func(t *testing.T) {
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
+
+		require.NoError(t, repo.UpsertEvents(ctx, []models.MeetupEvent{}))
+		require.NoError(t, repo.UpsertEvents(ctx, nil))
+	})
+
+	t.Run("chunks large batches", func(t *testing.T) {
+		defer deleteAllItems(t, testDB.Client, repoConfig.EventsTableName)
+
+		var testEvents []models.MeetupEvent
+		for i := 0; i < db.MaxBatchSize+5; i++ {
+			testEvents = append(testEvents, createEvent(faker, "group1", time.Now()))
+		}
+
+		require.NoError(t, repo.UpsertEvents(ctx, testEvents))
+
+		eventCount := countTableItems(t, testDB.Client, repoConfig.EventsTableName)
+		assert.Equal(t, db.MaxBatchSize+5, eventCount)
 	})
 }
 
@@ -247,4 +322,18 @@ func checkEventExists(t *testing.T, client *db.Client, tableName string, eventID
 	})
 	require.NoError(t, err)
 	return len(resp.Item) > 0
+}
+
+func countTableItems(t *testing.T, client *db.Client, tableName string) int {
+	scanInput := &dynamodb.ScanInput{TableName: aws.String(tableName)}
+	paginator := dynamodb.NewScanPaginator(client, scanInput)
+	ctx := context.Background()
+
+	count := 0
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		require.NoError(t, err)
+		count += len(page.Items)
+	}
+	return count
 }
