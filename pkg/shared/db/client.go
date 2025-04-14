@@ -8,6 +8,10 @@ import (
 	"log/slog"
 )
 
+const (
+	MaxBatchSize = 25
+)
+
 type Client struct {
 	*dynamodb.Client
 }

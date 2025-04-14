@@ -19,6 +19,7 @@ import (
 type EventRepository interface {
 	GetUpcomingEventsForGroup(ctx context.Context, group string) ([]models.MeetupEvent, error)
 	ArchiveEvents(ctx context.Context, eventIds []string) error
+	UpsertEvents(ctx context.Context, events []models.MeetupEvent) error
 }
 
 type DynamoDBEventRepositoryConfig struct {
@@ -96,7 +97,7 @@ func (er *DynamoDBEventRepository) ArchiveEvents(ctx context.Context, eventIds [
 		return nil
 	}
 
-	for chunk := range slices.Chunk(eventIds, 25) {
+	for chunk := range slices.Chunk(eventIds, db.MaxBatchSize) {
 		items, err := er.getItems(ctx, chunk)
 		if err != nil {
 			return err
@@ -114,6 +115,44 @@ func (er *DynamoDBEventRepository) ArchiveEvents(ctx context.Context, eventIds [
 			return fmt.Errorf("delete chunk: %w", err)
 		}
 	}
+	return nil
+}
+
+func (er *DynamoDBEventRepository) UpsertEvents(ctx context.Context, events []models.MeetupEvent) error {
+	return er.upsertEventsToTable(ctx, events, er.config.EventsTableName)
+}
+
+func (er *DynamoDBEventRepository) upsertEventsToTable(ctx context.Context, events []models.MeetupEvent, table string) error {
+	if len(events) == 0 {
+		return nil
+	}
+
+	for chunk := range slices.Chunk(events, db.MaxBatchSize) {
+		writeRequests := make([]types.WriteRequest, 0, len(chunk))
+
+		for _, event := range chunk {
+			av, err := attributevalue.MarshalMap(event)
+
+			if err != nil {
+				return err
+			}
+
+			writeRequests = append(writeRequests, types.WriteRequest{
+				PutRequest: &types.PutRequest{Item: av},
+			})
+		}
+
+		_, err := er.db.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+			RequestItems: map[string][]types.WriteRequest{
+				table: writeRequests,
+			},
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
