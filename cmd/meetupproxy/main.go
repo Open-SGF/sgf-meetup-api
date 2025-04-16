@@ -6,19 +6,18 @@ import (
 	"sgf-meetup-api/pkg/meetupproxy"
 )
 
-var config *meetupproxy.Config
+var service *meetupproxy.Service
 
 func init() {
-	cfg, err := meetupproxy.NewConfig()
+	newService, err := meetupproxy.InitService()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	config = cfg
+	service = newService
 }
 
 func main() {
-	p := meetupproxy.InitService(config)
-	lambda.Start(p.HandleRequest)
+	lambda.Start(service.HandleRequest)
 }

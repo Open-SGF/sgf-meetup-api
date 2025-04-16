@@ -10,10 +10,10 @@ import (
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
-var CommonSet = wire.NewSet(logging.DefaultLogger, getLoggingConfig)
+var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, getLoggingConfig)
 var DBSet = wire.NewSet(getDbConfig, db.NewClient)
 
-func InitService(ctx context.Context, config *Config) (*Service, error) {
+func InitService(ctx context.Context) (*Service, error) {
 	wire.Build(CommonSet, DBSet, NewService)
 	return &Service{}, nil
 }

@@ -15,7 +15,11 @@ import (
 
 // Injectors from wire.go:
 
-func InitService(ctx context.Context, config *Config) (*Service, error) {
+func InitService(ctx context.Context) (*Service, error) {
+	config, err := NewConfig()
+	if err != nil {
+		return nil, err
+	}
 	dbConfig := getDbConfig(config)
 	loggingConfig := getLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
@@ -29,6 +33,6 @@ func InitService(ctx context.Context, config *Config) (*Service, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(logging.DefaultLogger, getLoggingConfig)
+var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, getLoggingConfig)
 
 var DBSet = wire.NewSet(getDbConfig, db.NewClient)

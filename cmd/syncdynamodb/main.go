@@ -4,30 +4,26 @@ import (
 	"context"
 	"log"
 	"sgf-meetup-api/pkg/syncdynamodb"
+	"time"
 )
 
-var config *syncdynamodb.Config
+var service *syncdynamodb.Service
 
 func init() {
-	cfg, err := syncdynamodb.NewConfig()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	config = cfg
-}
-
-func main() {
-	ctx := context.Background()
-
-	service, err := syncdynamodb.InitService(ctx, config)
+	newService, err := syncdynamodb.InitService(ctx)
 
 	if err != nil {
 		log.Fatalf("Failed to init syncdynamdb service: %v", err)
 	}
 
-	if err := service.Run(ctx); err != nil {
+	service = newService
+}
+
+func main() {
+	if err := service.Run(context.Background()); err != nil {
 		log.Fatalf("Failed to sync database: %v", err)
 	}
 }
