@@ -1,4 +1,4 @@
-//go:generate swag init -g router.go
+//go:generate go tool swag init -g router.go
 
 package api
 
