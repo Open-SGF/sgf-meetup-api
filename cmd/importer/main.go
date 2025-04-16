@@ -5,35 +5,24 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"log"
 	"sgf-meetup-api/pkg/importer"
+	"time"
 )
 
-var config *importer.Config
 var service *importer.Service
 
 func init() {
-	cfg, err := importer.NewConfig()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	newService, err := importer.InitService(ctx)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	config = cfg
+	service = newService
 }
 
 func main() {
-	lambda.Start(handleRequest)
-}
-
-func handleRequest(ctx context.Context) error {
-	if service == nil {
-		newService, err := importer.InitService(ctx, config)
-
-		if err != nil {
-			return err
-		}
-
-		service = newService
-	}
-
-	return service.Import(ctx)
+	lambda.Start(service.Import)
 }

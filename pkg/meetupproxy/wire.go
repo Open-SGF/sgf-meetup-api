@@ -10,15 +10,15 @@ import (
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
-var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, getLoggingConfig)
+var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, getLoggingConfig)
 var AuthHandlerSet = wire.NewSet(wire.Bind(new(AuthHandler), new(*MeetupHttpAuthHandler)), NewMeetupAuthHandlerConfig, NewMeetupHttpAuthHandler)
 
-func InitService(config *Config) *Service {
+func InitService() (*Service, error) {
 	wire.Build(
 		CommonSet,
 		AuthHandlerSet,
 		NewServiceConfig,
 		NewService,
 	)
-	return &Service{}
+	return &Service{}, nil
 }

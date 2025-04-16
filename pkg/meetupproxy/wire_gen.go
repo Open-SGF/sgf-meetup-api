@@ -15,7 +15,11 @@ import (
 
 // Injectors from wire.go:
 
-func InitService(config *Config) *Service {
+func InitService() (*Service, error) {
+	config, err := NewConfig()
+	if err != nil {
+		return nil, err
+	}
 	serviceConfig := NewServiceConfig(config)
 	realTimeSource := clock.NewRealTimeSource()
 	loggingConfig := getLoggingConfig(config)
@@ -24,11 +28,11 @@ func InitService(config *Config) *Service {
 	meetupHttpAuthHandlerConfig := NewMeetupAuthHandlerConfig(config)
 	meetupHttpAuthHandler := NewMeetupHttpAuthHandler(meetupHttpAuthHandlerConfig, client, logger)
 	service := NewService(serviceConfig, client, meetupHttpAuthHandler, logger)
-	return service
+	return service, nil
 }
 
 // wire.go:
 
-var CommonSet = wire.NewSet(logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, getLoggingConfig)
+var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, getLoggingConfig)
 
 var AuthHandlerSet = wire.NewSet(wire.Bind(new(AuthHandler), new(*MeetupHttpAuthHandler)), NewMeetupAuthHandlerConfig, NewMeetupHttpAuthHandler)
