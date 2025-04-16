@@ -14,11 +14,10 @@ var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, clock.RealClockSet
 var AuthHandlerSet = wire.NewSet(wire.Bind(new(AuthHandler), new(*MeetupHttpAuthHandler)), NewMeetupAuthHandlerConfig, NewMeetupHttpAuthHandler)
 
 func InitService() (*Service, error) {
-	wire.Build(
+	panic(wire.Build(
 		CommonSet,
 		AuthHandlerSet,
 		NewServiceConfig,
 		NewService,
-	)
-	return &Service{}, nil
+	))
 }
