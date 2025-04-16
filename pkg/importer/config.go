@@ -63,10 +63,10 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 		return nil, err
 	}
 
-	config.ArchivedEventsTableName = *infra.ArchivedEventsTableProps.TableName
+	config.ArchivedEventsTableName = *db.ArchivedEventsTableProps.TableName
 	config.ProxyFunctionName = *infra.MeetupProxyFunctionName
-	config.EventsTableName = *infra.EventsTableProps.TableName
-	config.GroupUrlNameDateTimeIndexName = *infra.GroupIdDateTimeIndex.IndexName
+	config.EventsTableName = *db.EventsTableProps.TableName
+	config.GroupUrlNameDateTimeIndexName = *db.GroupIdDateTimeIndex.IndexName
 
 	return config, nil
 }

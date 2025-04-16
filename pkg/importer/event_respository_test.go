@@ -9,7 +9,6 @@ import (
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
@@ -29,8 +28,8 @@ func TestDynamoDBEventRepository_GetUpcomingEventsForGroup(t *testing.T) {
 	mockNow := time.Date(2025, 4, 12, 10, 0, 0, 0, time.UTC)
 	timeSource := clock.NewMockTimeSource(mockNow)
 	repoConfig := DynamoDBEventRepositoryConfig{
-		EventsTableName:    *infra.EventsTableProps.TableName,
-		GroupDateIndexName: *infra.GroupIdDateTimeIndex.IndexName,
+		EventsTableName:    *db.EventsTableProps.TableName,
+		GroupDateIndexName: *db.GroupIdDateTimeIndex.IndexName,
 	}
 
 	repo := NewDynamoDBEventRepository(
@@ -117,9 +116,9 @@ func TestDynamoDBEventRepository_ArchiveEvents(t *testing.T) {
 	mockNow := time.Date(2025, 4, 12, 10, 0, 0, 0, time.UTC)
 	timeSource := clock.NewMockTimeSource(mockNow)
 	repoConfig := DynamoDBEventRepositoryConfig{
-		EventsTableName:         *infra.EventsTableProps.TableName,
-		ArchivedEventsTableName: *infra.ArchivedEventsTableProps.TableName,
-		GroupDateIndexName:      *infra.GroupIdDateTimeIndex.IndexName,
+		EventsTableName:         *db.EventsTableProps.TableName,
+		ArchivedEventsTableName: *db.ArchivedEventsTableProps.TableName,
+		GroupDateIndexName:      *db.GroupIdDateTimeIndex.IndexName,
 	}
 
 	repo := NewDynamoDBEventRepository(
@@ -164,7 +163,7 @@ func TestDynamoDBEventRepository_ArchiveEvents(t *testing.T) {
 		defer deleteAllItems(t, testDB.Client, repoConfig.ArchivedEventsTableName)
 
 		validEvent := createEvent(faker, "test-group", mockNow.Add(1*time.Hour))
-		insertTestEvents(t, testDB.Client, *infra.EventsTableProps.TableName, []models.MeetupEvent{validEvent})
+		insertTestEvents(t, testDB.Client, *db.EventsTableProps.TableName, []models.MeetupEvent{validEvent})
 
 		err := repo.ArchiveEvents(ctx, []string{validEvent.ID, "non-existent-id"})
 		require.NoError(t, err)
@@ -202,7 +201,7 @@ func TestDynamoDBEventRepository_UpsertEvents(t *testing.T) {
 	defer testDB.Close()
 
 	repoConfig := DynamoDBEventRepositoryConfig{
-		EventsTableName: *infra.EventsTableProps.TableName,
+		EventsTableName: *db.EventsTableProps.TableName,
 	}
 	repo := NewDynamoDBEventRepository(
 		repoConfig,

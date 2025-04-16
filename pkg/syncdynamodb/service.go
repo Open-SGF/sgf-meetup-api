@@ -18,6 +18,6 @@ func NewService(db *db.Client, logger *slog.Logger) *Service {
 	}
 }
 
-func (s *Service) Run(ctx context.Context) error {
-	return db.SyncTables(ctx, s.db, s.logger)
+func (s *Service) Run(ctx context.Context, tables []db.DynamoDbProps) error {
+	return db.SyncTables(ctx, s.logger, s.db, tables)
 }
