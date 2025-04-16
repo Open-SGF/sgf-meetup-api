@@ -19,7 +19,7 @@ var GraphQLHandlerSet = wire.NewSet(wire.Bind(new(GraphQLHandler), new(*LambdaPr
 var MeetupRepositorySet = wire.NewSet(wire.Bind(new(MeetupRepository), new(*GraphQLMeetupRepository)), NewGraphQLMeetupRepository)
 
 func InitService(ctx context.Context) (*Service, error) {
-	wire.Build(
+	panic(wire.Build(
 		CommonSet,
 		DBSet,
 		EventRepositorySet,
@@ -27,6 +27,5 @@ func InitService(ctx context.Context) (*Service, error) {
 		MeetupRepositorySet,
 		NewServiceConfig,
 		NewService,
-	)
-	return &Service{}, nil
+	))
 }

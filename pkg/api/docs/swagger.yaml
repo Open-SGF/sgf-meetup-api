@@ -1,0 +1,76 @@
+definitions:
+  auth.authRequestDTO:
+    properties:
+      clientId:
+        type: string
+      clientSecret:
+        type: string
+    type: object
+  auth.authResponseDTO:
+    properties:
+      accessToken:
+        type: string
+      expiresIn:
+        type: integer
+      refreshToken:
+        type: string
+    type: object
+  auth.refreshTokenRequestDTO:
+    properties:
+      refreshToken:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: SGF Meetup API
+  version: "1.0"
+paths:
+  /v1/auth:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.authRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.authResponseDTO'
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+      summary: Authenticate with credentials
+      tags:
+      - auth
+  /v1/refresh:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.refreshTokenRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.authResponseDTO'
+        "400":
+          description: Invalid token
+      summary: Refresh token
+      tags:
+      - auth
+swagger: "2.0"
