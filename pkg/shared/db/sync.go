@@ -8,11 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"log/slog"
-	"sgf-meetup-api/pkg/infra"
 )
 
-func SyncTables(ctx context.Context, client *Client, logger *slog.Logger) error {
-	tables := []infra.DynamoDbProps{infra.EventsTableProps, infra.ArchivedEventsTableProps}
+func SyncTables(ctx context.Context, logger *slog.Logger, client *Client, tables []DynamoDbProps) error {
 
 	for _, tableProps := range tables {
 		tableName := *tableProps.TableName
@@ -54,7 +52,7 @@ func tableExists(ctx context.Context, client *Client, logger *slog.Logger, table
 	return true, nil
 }
 
-func createTable(ctx context.Context, client *Client, tableProps infra.DynamoDbProps) error {
+func createTable(ctx context.Context, client *Client, tableProps DynamoDbProps) error {
 	attrMap := make(map[string]types.ScalarAttributeType)
 
 	partitionKeyName := *tableProps.PartitionKey.Name

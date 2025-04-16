@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/spf13/viper"
 	"log/slog"
-	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/configparser"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
@@ -58,8 +57,8 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 		return nil, err
 	}
 
-	config.EventsTableName = *infra.EventsTableProps.TableName
-	config.GroupUrlNameDateTimeIndexName = *infra.GroupIdDateTimeIndex.IndexName
+	config.EventsTableName = *db.EventsTableProps.TableName
+	config.GroupUrlNameDateTimeIndexName = *db.GroupIdDateTimeIndex.IndexName
 
 	return config, nil
 }

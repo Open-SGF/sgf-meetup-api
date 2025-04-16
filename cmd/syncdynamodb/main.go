@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/syncdynamodb"
 	"time"
 )
@@ -23,7 +24,7 @@ func init() {
 }
 
 func main() {
-	if err := service.Run(context.Background()); err != nil {
+	if err := service.Run(context.Background(), db.Tables); err != nil {
 		log.Fatalf("Failed to sync database: %v", err)
 	}
 }

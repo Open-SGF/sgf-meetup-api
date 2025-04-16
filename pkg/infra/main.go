@@ -6,55 +6,11 @@ import (
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 	"sgf-meetup-api/pkg/infra/customconstructs"
+	"sgf-meetup-api/pkg/shared/db"
 )
 
 type AppStackProps struct {
 	awscdk.StackProps
-}
-
-type DynamoDbProps struct {
-	*awsdynamodb.TableProps
-	GlobalSecondaryIndexes []*awsdynamodb.GlobalSecondaryIndexProps
-}
-
-var GroupIdDateTimeIndex = awsdynamodb.GlobalSecondaryIndexProps{
-	IndexName: jsii.String("GroupIdDateTimeIndex"),
-	PartitionKey: &awsdynamodb.Attribute{
-		Name: jsii.String("groupId"),
-		Type: awsdynamodb.AttributeType_STRING,
-	},
-	SortKey: &awsdynamodb.Attribute{
-		Name: jsii.String("dateTime"),
-		Type: awsdynamodb.AttributeType_STRING,
-	},
-}
-
-var EventsTableProps = DynamoDbProps{
-	TableProps: &awsdynamodb.TableProps{
-		TableName: jsii.String("MeetupEvents"),
-		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("id"),
-			Type: awsdynamodb.AttributeType_STRING,
-		},
-		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
-	},
-	GlobalSecondaryIndexes: []*awsdynamodb.GlobalSecondaryIndexProps{
-		&GroupIdDateTimeIndex,
-	},
-}
-
-var ArchivedEventsTableProps = DynamoDbProps{
-	TableProps: &awsdynamodb.TableProps{
-		TableName: jsii.String("MeetupArchivedEvents"),
-		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("id"),
-			Type: awsdynamodb.AttributeType_STRING,
-		},
-		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
-	},
-	GlobalSecondaryIndexes: []*awsdynamodb.GlobalSecondaryIndexProps{
-		&GroupIdDateTimeIndex,
-	},
 }
 
 var MeetupProxyFunctionName = jsii.String("meetupproxy")
@@ -66,16 +22,22 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	eventsTable := awsdynamodb.NewTable(stack, EventsTableProps.TableName, EventsTableProps.TableProps)
+	eventsTable := awsdynamodb.NewTable(stack, db.EventsTableProps.TableName, db.EventsTableProps.TableProps)
 
-	for _, gsi := range EventsTableProps.GlobalSecondaryIndexes {
+	for _, gsi := range db.EventsTableProps.GlobalSecondaryIndexes {
 		eventsTable.AddGlobalSecondaryIndex(gsi)
 	}
 
-	archivedEventsTable := awsdynamodb.NewTable(stack, ArchivedEventsTableProps.TableName, ArchivedEventsTableProps.TableProps)
+	archivedEventsTable := awsdynamodb.NewTable(stack, db.ArchivedEventsTableProps.TableName, db.ArchivedEventsTableProps.TableProps)
 
-	for _, gsi := range ArchivedEventsTableProps.GlobalSecondaryIndexes {
+	for _, gsi := range db.ArchivedEventsTableProps.GlobalSecondaryIndexes {
 		archivedEventsTable.AddGlobalSecondaryIndex(gsi)
+	}
+
+	apiUsers := awsdynamodb.NewTable(stack, db.ApiUsersTableProps.TableName, db.ApiUsersTableProps.TableProps)
+
+	for _, gsi := range db.ApiUsersTableProps.GlobalSecondaryIndexes {
+		apiUsers.AddGlobalSecondaryIndex(gsi)
 	}
 
 	customconstructs.NewGoLambdaFunction(stack, MeetupProxyFunctionName, &customconstructs.GoLambdaFunctionProps{
