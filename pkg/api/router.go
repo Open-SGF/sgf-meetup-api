@@ -1,4 +1,5 @@
 //go:generate go tool swag init -g router.go
+//go:generate go tool swag fmt
 
 package api
 
