@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"log/slog"
+	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/models"
@@ -28,7 +29,7 @@ type DynamoDBEventRepositoryConfig struct {
 	GroupDateIndexName      string
 }
 
-func NewDynamoDBEventRepositoryConfig(config *Config) DynamoDBEventRepositoryConfig {
+func NewDynamoDBEventRepositoryConfig(config *importerconfig.Config) DynamoDBEventRepositoryConfig {
 	return DynamoDBEventRepositoryConfig{
 		EventsTableName:         config.EventsTableName,
 		ArchivedEventsTableName: config.ArchivedEventsTableName,

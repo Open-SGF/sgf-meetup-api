@@ -8,13 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"log/slog"
+	"sgf-meetup-api/pkg/importer/importerconfig"
 )
 
 type LambdaProxyGraphQLHandlerConfig struct {
 	ProxyFunctionName string
 }
 
-func NewLambdaProxyGraphQLHandlerConfig(config *Config) LambdaProxyGraphQLHandlerConfig {
+func NewLambdaProxyGraphQLHandlerConfig(config *importerconfig.Config) LambdaProxyGraphQLHandlerConfig {
 	return LambdaProxyGraphQLHandlerConfig{
 		ProxyFunctionName: config.ProxyFunctionName,
 	}

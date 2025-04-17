@@ -9,6 +9,7 @@ package importer
 import (
 	"context"
 	"github.com/google/wire"
+	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/httpclient"
@@ -18,16 +19,16 @@ import (
 // Injectors from wire.go:
 
 func InitService(ctx context.Context) (*Service, error) {
-	config, err := NewConfig()
+	config, err := importerconfig.NewConfig()
 	if err != nil {
 		return nil, err
 	}
 	serviceConfig := NewServiceConfig(config)
 	realTimeSource := clock.NewRealTimeSource()
-	loggingConfig := getLoggingConfig(config)
+	loggingConfig := importerconfig.NewLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
 	dynamoDBEventRepositoryConfig := NewDynamoDBEventRepositoryConfig(config)
-	dbConfig := getDbConfig(config)
+	dbConfig := importerconfig.NewDBConfig(config)
 	client, err := db.NewClient(ctx, dbConfig, logger)
 	if err != nil {
 		return nil, err
@@ -42,9 +43,9 @@ func InitService(ctx context.Context) (*Service, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, getLoggingConfig)
+var CommonSet = wire.NewSet(importerconfig.NewConfig, logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, importerconfig.NewLoggingConfig)
 
-var DBSet = wire.NewSet(getDbConfig, db.NewClient)
+var DBSet = wire.NewSet(importerconfig.NewDBConfig, db.NewClient)
 
 var EventRepositorySet = wire.NewSet(wire.Bind(new(EventRepository), new(*DynamoDBEventRepository)), NewDynamoDBEventRepositoryConfig, NewDynamoDBEventRepository)
 

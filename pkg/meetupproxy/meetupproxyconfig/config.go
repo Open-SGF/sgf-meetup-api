@@ -1,4 +1,4 @@
-package meetupproxy
+package meetupproxyconfig
 
 import (
 	"encoding/base64"
@@ -106,7 +106,7 @@ func (config *Config) validate() error {
 	return nil
 }
 
-func getLoggingConfig(config *Config) logging.Config {
+func NewLoggingConfig(config *Config) logging.Config {
 	return logging.Config{
 		Level: config.LogLevel,
 		Type:  config.LogType,
