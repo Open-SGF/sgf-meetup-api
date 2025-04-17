@@ -1,4 +1,4 @@
-package syncdynamodb
+package syncdynamodbconfig
 
 import (
 	"github.com/spf13/viper"
@@ -61,14 +61,14 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault(strings.ToLower(awsRegion), "us-east-2")
 }
 
-func getLoggingConfig(config *Config) logging.Config {
+func MewLoggingConfig(config *Config) logging.Config {
 	return logging.Config{
 		Level: config.LogLevel,
 		Type:  config.LogType,
 	}
 }
 
-func getDbConfig(config *Config) db.Config {
+func NewDBConfig(config *Config) db.Config {
 	return db.Config{
 		Endpoint:        config.DynamoDbEndpoint,
 		Region:          config.AwsRegion,

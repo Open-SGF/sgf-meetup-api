@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/clock"
 	"time"
 )
@@ -12,7 +13,7 @@ type ServiceConfig struct {
 	GroupNames []string
 }
 
-func NewServiceConfig(config *Config) ServiceConfig {
+func NewServiceConfig(config *importerconfig.Config) ServiceConfig {
 	return ServiceConfig{
 		GroupNames: config.MeetupGroupNames,
 	}

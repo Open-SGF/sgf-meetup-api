@@ -10,6 +10,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
+	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/api/auth"
 	"sgf-meetup-api/pkg/api/groupevents"
 	"sgf-meetup-api/pkg/shared/db"
@@ -23,12 +24,12 @@ import (
 // Injectors from wire.go:
 
 func InitRouter(ctx context.Context) (*gin.Engine, error) {
-	config, err := NewConfig()
+	config, err := apiconfig.NewConfig()
 	if err != nil {
 		return nil, err
 	}
-	dbConfig := getDbConfig(config)
-	loggingConfig := getLoggingConfig(config)
+	dbConfig := apiconfig.NewDBConfig(config)
+	loggingConfig := apiconfig.NewLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
 	client, err := db.NewClient(ctx, dbConfig, logger)
 	if err != nil {
@@ -43,6 +44,6 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, getLoggingConfig)
+var CommonSet = wire.NewSet(apiconfig.NewConfig, logging.DefaultLogger, apiconfig.NewLoggingConfig)
 
-var DbSet = wire.NewSet(getDbConfig, db.NewClient)
+var DbSet = wire.NewSet(apiconfig.NewDBConfig, db.NewClient)

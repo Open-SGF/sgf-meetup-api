@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
 	"strings"
 )
 
@@ -15,7 +16,7 @@ type ServiceConfig struct {
 	Url string
 }
 
-func NewServiceConfig(config *Config) ServiceConfig {
+func NewServiceConfig(config *meetupproxyconfig.Config) ServiceConfig {
 	return ServiceConfig{
 		Url: config.MeetupAPIURL,
 	}

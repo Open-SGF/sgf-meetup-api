@@ -11,17 +11,18 @@ import (
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
+	"sgf-meetup-api/pkg/syncdynamodb/syncdynamodbconfig"
 )
 
 // Injectors from wire.go:
 
 func InitService(ctx context.Context) (*Service, error) {
-	config, err := NewConfig()
+	config, err := syncdynamodbconfig.NewConfig()
 	if err != nil {
 		return nil, err
 	}
-	dbConfig := getDbConfig(config)
-	loggingConfig := getLoggingConfig(config)
+	dbConfig := syncdynamodbconfig.NewDBConfig(config)
+	loggingConfig := syncdynamodbconfig.MewLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
 	client, err := db.NewClient(ctx, dbConfig, logger)
 	if err != nil {
@@ -33,6 +34,6 @@ func InitService(ctx context.Context) (*Service, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, getLoggingConfig)
+var CommonSet = wire.NewSet(syncdynamodbconfig.NewConfig, logging.DefaultLogger, syncdynamodbconfig.MewLoggingConfig)
 
-var DBSet = wire.NewSet(getDbConfig, db.NewClient)
+var DBSet = wire.NewSet(syncdynamodbconfig.NewDBConfig, db.NewClient)

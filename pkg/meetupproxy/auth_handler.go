@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
 	"strings"
 	"sync"
 	"time"
@@ -26,7 +27,7 @@ type MeetupHttpAuthHandlerConfig struct {
 	privateKey   []byte
 }
 
-func NewMeetupAuthHandlerConfig(config *Config) MeetupHttpAuthHandlerConfig {
+func NewMeetupAuthHandlerConfig(config *meetupproxyconfig.Config) MeetupHttpAuthHandlerConfig {
 	return MeetupHttpAuthHandlerConfig{
 		url:          config.MeetupAuthURL,
 		userID:       config.MeetupUserID,

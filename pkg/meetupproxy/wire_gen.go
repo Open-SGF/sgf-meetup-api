@@ -8,6 +8,7 @@ package meetupproxy
 
 import (
 	"github.com/google/wire"
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/httpclient"
 	"sgf-meetup-api/pkg/shared/logging"
@@ -16,13 +17,13 @@ import (
 // Injectors from wire.go:
 
 func InitService() (*Service, error) {
-	config, err := NewConfig()
+	config, err := meetupproxyconfig.NewConfig()
 	if err != nil {
 		return nil, err
 	}
 	serviceConfig := NewServiceConfig(config)
 	realTimeSource := clock.NewRealTimeSource()
-	loggingConfig := getLoggingConfig(config)
+	loggingConfig := meetupproxyconfig.NewLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
 	client := httpclient.DefaultClient(realTimeSource, logger)
 	meetupHttpAuthHandlerConfig := NewMeetupAuthHandlerConfig(config)
@@ -33,6 +34,6 @@ func InitService() (*Service, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, getLoggingConfig)
+var CommonSet = wire.NewSet(meetupproxyconfig.NewConfig, logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, meetupproxyconfig.NewLoggingConfig)
 
 var AuthHandlerSet = wire.NewSet(wire.Bind(new(AuthHandler), new(*MeetupHttpAuthHandler)), NewMeetupAuthHandlerConfig, NewMeetupHttpAuthHandler)

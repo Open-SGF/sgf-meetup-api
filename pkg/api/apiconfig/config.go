@@ -1,4 +1,4 @@
-package api
+package apiconfig
 
 import (
 	"fmt"
@@ -98,14 +98,14 @@ func (config *Config) validate() error {
 	return nil
 }
 
-func getLoggingConfig(config *Config) logging.Config {
+func NewLoggingConfig(config *Config) logging.Config {
 	return logging.Config{
 		Level: config.LogLevel,
 		Type:  config.LogType,
 	}
 }
 
-func getDbConfig(config *Config) db.Config {
+func NewDBConfig(config *Config) db.Config {
 	return db.Config{
 		Endpoint:        config.DynamoDbEndpoint,
 		Region:          config.AwsRegion,

@@ -8,10 +8,11 @@ import (
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
+	"sgf-meetup-api/pkg/syncdynamodb/syncdynamodbconfig"
 )
 
-var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, getLoggingConfig)
-var DBSet = wire.NewSet(getDbConfig, db.NewClient)
+var CommonSet = wire.NewSet(syncdynamodbconfig.NewConfig, logging.DefaultLogger, syncdynamodbconfig.MewLoggingConfig)
+var DBSet = wire.NewSet(syncdynamodbconfig.NewDBConfig, db.NewClient)
 
 func InitService(ctx context.Context) (*Service, error) {
 	panic(wire.Build(CommonSet, DBSet, NewService))
