@@ -3,6 +3,7 @@ package syncdynamodb
 import (
 	"context"
 	"log/slog"
+	"sgf-meetup-api/pkg/infra/customconstructs"
 	"sgf-meetup-api/pkg/shared/db"
 )
 
@@ -18,6 +19,6 @@ func NewService(db *db.Client, logger *slog.Logger) *Service {
 	}
 }
 
-func (s *Service) Run(ctx context.Context, tables []db.DynamoDbProps) error {
+func (s *Service) Run(ctx context.Context, tables []customconstructs.DynamoTableProps) error {
 	return db.SyncTables(ctx, s.logger, s.db, tables)
 }

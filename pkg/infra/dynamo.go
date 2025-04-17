@@ -1,15 +1,11 @@
-package db
+package infra
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/jsii-runtime-go"
+	"sgf-meetup-api/pkg/infra/customconstructs"
 )
-
-type DynamoDbProps struct {
-	*awsdynamodb.TableProps
-	GlobalSecondaryIndexes []*awsdynamodb.GlobalSecondaryIndexProps
-}
 
 var GroupIdDateTimeIndex = awsdynamodb.GlobalSecondaryIndexProps{
 	IndexName: jsii.String("GroupIdDateTimeIndex"),
@@ -23,8 +19,8 @@ var GroupIdDateTimeIndex = awsdynamodb.GlobalSecondaryIndexProps{
 	},
 }
 
-var EventsTableProps = DynamoDbProps{
-	TableProps: &awsdynamodb.TableProps{
+var EventsTableProps = &customconstructs.DynamoTableProps{
+	TableProps: awsdynamodb.TableProps{
 		TableName: jsii.String("MeetupEvents"),
 		PartitionKey: &awsdynamodb.Attribute{
 			Name: jsii.String("id"),
@@ -32,13 +28,13 @@ var EventsTableProps = DynamoDbProps{
 		},
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 	},
-	GlobalSecondaryIndexes: []*awsdynamodb.GlobalSecondaryIndexProps{
-		&GroupIdDateTimeIndex,
+	GlobalSecondaryIndexes: []awsdynamodb.GlobalSecondaryIndexProps{
+		GroupIdDateTimeIndex,
 	},
 }
 
-var ArchivedEventsTableProps = DynamoDbProps{
-	TableProps: &awsdynamodb.TableProps{
+var ArchivedEventsTableProps = &customconstructs.DynamoTableProps{
+	TableProps: awsdynamodb.TableProps{
 		TableName: jsii.String("MeetupArchivedEvents"),
 		PartitionKey: &awsdynamodb.Attribute{
 			Name: jsii.String("id"),
@@ -46,13 +42,13 @@ var ArchivedEventsTableProps = DynamoDbProps{
 		},
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 	},
-	GlobalSecondaryIndexes: []*awsdynamodb.GlobalSecondaryIndexProps{
-		&GroupIdDateTimeIndex,
+	GlobalSecondaryIndexes: []awsdynamodb.GlobalSecondaryIndexProps{
+		GroupIdDateTimeIndex,
 	},
 }
 
-var ApiUsersTableProps = DynamoDbProps{
-	TableProps: &awsdynamodb.TableProps{
+var ApiUsersTableProps = &customconstructs.DynamoTableProps{
+	TableProps: awsdynamodb.TableProps{
 		TableName: jsii.String("MeetupApiUsers"),
 		PartitionKey: &awsdynamodb.Attribute{
 			Name: jsii.String("id"),
@@ -62,4 +58,4 @@ var ApiUsersTableProps = DynamoDbProps{
 	},
 }
 
-var Tables = []DynamoDbProps{EventsTableProps, ArchivedEventsTableProps, ApiUsersTableProps}
+var Tables = []customconstructs.DynamoTableProps{*EventsTableProps, *ArchivedEventsTableProps, *ApiUsersTableProps}
