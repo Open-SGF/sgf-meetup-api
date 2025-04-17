@@ -2,53 +2,58 @@ package infra
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
-	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 	"sgf-meetup-api/pkg/infra/customconstructs"
-	"sgf-meetup-api/pkg/shared/db"
 )
 
 type AppStackProps struct {
 	awscdk.StackProps
-	//TODO: Handle AppEnv
 	AppEnv string
 }
-
-var MeetupProxyFunctionName = jsii.String("meetupproxy")
 
 func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscdk.Stack {
 	stack := awscdk.NewStack(scope, &id, &props.StackProps)
 
-	eventsTable := awsdynamodb.NewTable(stack, db.EventsTableProps.TableName, db.EventsTableProps.TableProps)
-
-	for _, gsi := range db.EventsTableProps.GlobalSecondaryIndexes {
-		eventsTable.AddGlobalSecondaryIndex(gsi)
+	namespace := props.AppEnv
+	if namespace != "" {
+		namespace = namespace + "-"
 	}
 
-	archivedEventsTable := awsdynamodb.NewTable(stack, db.ArchivedEventsTableProps.TableName, db.ArchivedEventsTableProps.TableProps)
+	eventsTable := customconstructs.NewDynamoTable(stack, namespace, EventsTableProps)
+	archivedEventsTable := customconstructs.NewDynamoTable(stack, namespace, ArchivedEventsTableProps)
+	apiUsersTable := customconstructs.NewDynamoTable(stack, namespace, ApiUsersTableProps)
 
-	for _, gsi := range db.ArchivedEventsTableProps.GlobalSecondaryIndexes {
-		archivedEventsTable.AddGlobalSecondaryIndex(gsi)
-	}
+	meetupProxyFunctionName := customconstructs.NewFunctionName(namespace, "meetupproxy")
 
-	apiUsers := awsdynamodb.NewTable(stack, db.ApiUsersTableProps.TableName, db.ApiUsersTableProps.TableProps)
-
-	for _, gsi := range db.ApiUsersTableProps.GlobalSecondaryIndexes {
-		apiUsers.AddGlobalSecondaryIndex(gsi)
-	}
-
-	customconstructs.NewGoLambdaFunction(stack, MeetupProxyFunctionName, &customconstructs.GoLambdaFunctionProps{
+	customconstructs.NewGoLambdaFunction(stack, meetupProxyFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/meetupproxy"),
-		FunctionName: MeetupProxyFunctionName,
+		FunctionName: meetupProxyFunctionName.PrefixedName(),
 	})
 
-	customconstructs.NewGoLambdaFunction(stack, jsii.String("importer"), &customconstructs.GoLambdaFunctionProps{
-		CodePath: jsii.String("./cmd/importer"),
+	importerFunctionName := customconstructs.NewFunctionName(namespace, "importer")
+
+	customconstructs.NewGoLambdaFunction(stack, importerFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
+		CodePath:     jsii.String("./cmd/importer"),
+		FunctionName: importerFunctionName.PrefixedName(),
+		Environment: &map[string]*string{
+			"MEETUP_PROXY_FUNCTION_NAME":    meetupProxyFunctionName.PrefixedName(),
+			"EVENTS_TABLE_NAME":             &eventsTable.FullTableName,
+			"GROUP_ID_DATE_TIME_INDEX_NAME": GroupIdDateTimeIndex.IndexName,
+			"ARCHIVED_EVENTS_TABLE_NAME":    &archivedEventsTable.FullTableName,
+		},
 	})
 
-	customconstructs.NewGoLambdaFunction(stack, jsii.String("api"), &customconstructs.GoLambdaFunctionProps{
-		CodePath: jsii.String("./cmd/api"),
+	apiFunctionName := customconstructs.NewFunctionName(namespace, "api")
+
+	customconstructs.NewGoLambdaFunction(stack, apiFunctionName.PrefixedName(), &customconstructs.GoLambdaFunctionProps{
+		CodePath:     jsii.String("./cmd/api"),
+		FunctionName: apiFunctionName.PrefixedName(),
+		Environment: &map[string]*string{
+			"EVENTS_TABLE_NAME":             &eventsTable.FullTableName,
+			"GROUP_ID_DATE_TIME_INDEX_NAME": GroupIdDateTimeIndex.IndexName,
+			"API_USERS_TABLE_NAME":          &apiUsersTable.FullTableName,
+		},
 	})
 
 	return stack

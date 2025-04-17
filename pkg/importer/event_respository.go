@@ -32,7 +32,7 @@ func NewDynamoDBEventRepositoryConfig(config *Config) DynamoDBEventRepositoryCon
 	return DynamoDBEventRepositoryConfig{
 		EventsTableName:         config.EventsTableName,
 		ArchivedEventsTableName: config.ArchivedEventsTableName,
-		GroupDateIndexName:      config.GroupUrlNameDateTimeIndexName,
+		GroupDateIndexName:      config.GroupIDDateTimeIndexName,
 	}
 }
 

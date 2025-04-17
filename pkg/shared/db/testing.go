@@ -6,6 +6,7 @@ import (
 	tcdynamodb "github.com/testcontainers/testcontainers-go/modules/dynamodb"
 	"log"
 	"log/slog"
+	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
@@ -53,7 +54,7 @@ func NewTestDB(ctx context.Context) (*TestDB, error) {
 		return nil, err
 	}
 
-	if err = SyncTables(ctx, logger, client, Tables); err != nil {
+	if err = SyncTables(ctx, logger, client, infra.Tables); err != nil {
 		return nil, err
 	}
 

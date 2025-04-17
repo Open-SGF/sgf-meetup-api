@@ -6,18 +6,17 @@ import (
 )
 
 type ServiceConfig struct {
-	apiUsersTable string
+	//apiUsersTable string
 }
 
 type Service struct {
-	config ServiceConfig
-	db     *db.Client
+	//config ServiceConfig
+	db *db.Client
 }
 
-func NewService(config ServiceConfig, db *db.Client) *Service {
+func NewService(db *db.Client) *Service {
 	return &Service{
-		config: config,
-		db:     db,
+		db: db,
 	}
 }
 
