@@ -7,10 +7,13 @@ import (
 )
 
 type Controller struct {
+	service *Service
 }
 
-func NewController() *Controller {
-	return &Controller{}
+func NewController(service *Service) *Controller {
+	return &Controller{
+		service: service,
+	}
 }
 
 func (c *Controller) RegisterRoutes(r gin.IRouter) {
@@ -35,7 +38,18 @@ func (c *Controller) auth(ctx *gin.Context) {
 		return
 	}
 
-	responseDTO := authResponseDTO{}
+	result, err := c.service.AuthClientCredentials(requestDTO.ClientID, requestDTO.ClientSecret)
+
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, "")
+		return
+	}
+
+	responseDTO := authResponseDTO{
+		AccessToken:  result.AccessToken,
+		RefreshToken: result.RefreshToken,
+		ExpiresIn:    result.ExpiresIn,
+	}
 	ctx.JSON(http.StatusOK, responseDTO)
 }
 
@@ -59,4 +73,4 @@ func (c *Controller) refresh(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, responseDTO)
 }
 
-var ProviderSet = wire.NewSet(NewController)
+var ProviderSet = wire.NewSet(NewController, NewService)

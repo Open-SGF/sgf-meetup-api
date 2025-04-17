@@ -53,7 +53,7 @@ var ArchivedEventsTableProps = DynamoDbProps{
 
 var ApiUsersTableProps = DynamoDbProps{
 	TableProps: &awsdynamodb.TableProps{
-		TableName: jsii.String("MeeupApiUsers"),
+		TableName: jsii.String("MeetupApiUsers"),
 		PartitionKey: &awsdynamodb.Attribute{
 			Name: jsii.String("id"),
 			Type: awsdynamodb.AttributeType_STRING,

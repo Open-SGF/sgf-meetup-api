@@ -38,6 +38,7 @@ type Config struct {
 	AwsAccessKey                  string          `mapstructure:"aws_access_key"`
 	AwsSecretAccessKey            string          `mapstructure:"aws_secret_access_key"`
 	EventsTableName               string
+	ApiUsersTableName             string
 	GroupUrlNameDateTimeIndexName string
 }
 
@@ -57,6 +58,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 		return nil, err
 	}
 
+	config.ApiUsersTableName = *db.ApiUsersTableProps.TableName
 	config.EventsTableName = *db.EventsTableProps.TableName
 	config.GroupUrlNameDateTimeIndexName = *db.GroupIdDateTimeIndex.IndexName
 
