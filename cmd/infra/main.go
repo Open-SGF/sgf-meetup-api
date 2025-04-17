@@ -11,6 +11,7 @@ func main() {
 
 	app := awscdk.NewApp(nil)
 
+	// TODO parse in APP_ENV and pass in
 	infra.NewStack(app, "SgfMeetupApiGo", &infra.AppStackProps{
 		StackProps: awscdk.StackProps{
 			Env: env(),

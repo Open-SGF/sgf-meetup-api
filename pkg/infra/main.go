@@ -11,16 +11,14 @@ import (
 
 type AppStackProps struct {
 	awscdk.StackProps
+	//TODO: Handle AppEnv
+	AppEnv string
 }
 
 var MeetupProxyFunctionName = jsii.String("meetupproxy")
 
 func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscdk.Stack {
-	var sprops awscdk.StackProps
-	if props != nil {
-		sprops = props.StackProps
-	}
-	stack := awscdk.NewStack(scope, &id, &sprops)
+	stack := awscdk.NewStack(scope, &id, &props.StackProps)
 
 	eventsTable := awsdynamodb.NewTable(stack, db.EventsTableProps.TableName, db.EventsTableProps.TableProps)
 

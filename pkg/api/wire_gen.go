@@ -13,6 +13,7 @@ import (
 	"sgf-meetup-api/pkg/api/auth"
 	"sgf-meetup-api/pkg/api/groupevents"
 	"sgf-meetup-api/pkg/shared/db"
+	"sgf-meetup-api/pkg/shared/logging"
 )
 
 import (
@@ -22,7 +23,19 @@ import (
 // Injectors from wire.go:
 
 func InitRouter(ctx context.Context) (*gin.Engine, error) {
-	controller := auth.NewController()
+	config, err := NewConfig()
+	if err != nil {
+		return nil, err
+	}
+	dbConfig := getDbConfig(config)
+	loggingConfig := getLoggingConfig(config)
+	logger := logging.DefaultLogger(loggingConfig)
+	client, err := db.NewClient(ctx, dbConfig, logger)
+	if err != nil {
+		return nil, err
+	}
+	service := auth.NewService(client)
+	controller := auth.NewController(service)
 	groupeventsController := groupevents.NewController()
 	engine := NewRouter(controller, groupeventsController)
 	return engine, nil
@@ -30,6 +43,6 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(NewConfig, getLoggingConfig)
+var CommonSet = wire.NewSet(NewConfig, logging.DefaultLogger, getLoggingConfig)
 
 var DbSet = wire.NewSet(getDbConfig, db.NewClient)
