@@ -28,9 +28,9 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 	if err != nil {
 		return nil, err
 	}
-	dbConfig := apiconfig.NewDBConfig(config)
 	loggingConfig := apiconfig.NewLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
+	dbConfig := apiconfig.NewDBConfig(config)
 	client, err := db.NewClient(ctx, dbConfig, logger)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 	service := auth.NewService(client)
 	controller := auth.NewController(service)
 	groupeventsController := groupevents.NewController()
-	engine := NewRouter(controller, groupeventsController)
+	engine := NewRouter(logger, controller, groupeventsController)
 	return engine, nil
 }
 
