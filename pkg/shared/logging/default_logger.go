@@ -2,6 +2,8 @@ package logging
 
 import (
 	"github.com/getsentry/sentry-go"
+	slogSentry "github.com/getsentry/sentry-go/slog"
+	slogmulti "github.com/samber/slog-multi"
 	"log/slog"
 	"os"
 )
@@ -12,7 +14,8 @@ type Config struct {
 }
 
 func DefaultLogger(config Config) *slog.Logger {
-	var handler slog.Handler
+
+	handlers := make([]slog.Handler, 0, 2)
 
 	opts := &slog.HandlerOptions{
 		Level: config.Level,
@@ -20,16 +23,19 @@ func DefaultLogger(config Config) *slog.Logger {
 
 	switch config.Type {
 	case LogTypeText:
-		handler = slog.NewTextHandler(os.Stdout, opts)
+		handlers = append(handlers, slog.NewTextHandler(os.Stdout, opts))
 	case LogTypeJSON:
-		handler = slog.NewJSONHandler(os.Stdout, opts)
+		handlers = append(handlers, slog.NewJSONHandler(os.Stdout, opts))
 	default:
 		panic("unknown log type")
 	}
 
 	if sentry.CurrentHub().Client() != nil {
-		handler = WithErrorLogger(handler, NewSentryErrorLogger())
+		handlers = append(handlers, slogSentry.Option{
+			Level:     slog.LevelError,
+			AddSource: true,
+		}.NewSentryHandler())
 	}
 
-	return slog.New(handler)
+	return slog.New(slogmulti.Fanout(handlers...))
 }
