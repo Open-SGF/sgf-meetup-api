@@ -5,8 +5,10 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	sloggin "github.com/samber/slog-gin"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
+	"log/slog"
 	"sgf-meetup-api/pkg/api/auth"
 	_ "sgf-meetup-api/pkg/api/docs"
 	"sgf-meetup-api/pkg/api/groupevents"
@@ -16,10 +18,14 @@ import (
 //	@version	1.0
 
 func NewRouter(
+	logger *slog.Logger,
 	authController *auth.Controller,
 	groupEventsController *groupevents.Controller,
 ) *gin.Engine {
 	r := gin.Default()
+
+	r.Use(sloggin.New(logger.WithGroup("http")))
+	r.Use(gin.Recovery())
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
