@@ -22,10 +22,10 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v7
         with:
-          version: v2.0.2
+          version: v2.1.2
           args: cmd/... pkg/...
       - name: go test
-        run: go test -coverprofile=coverage.out ./cmd/... ./pkg/...
+        run: go test -coverprofile=coverage.out -p=3 ./cmd/... ./pkg/...
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
