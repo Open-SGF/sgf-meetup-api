@@ -11,18 +11,18 @@ import (
 )
 
 const (
-	logLevelKey              = "LOG_LEVEL"
-	logTypeKey               = "LOG_TYPE"
-	sentryDsnKey             = "SENTRY_DSN"
-	meetupGroupNamesKey      = "MEETUP_GROUP_NAMES"
-	dynamoDbEndpoint         = "DYNAMODB_ENDPOINT"
-	awsRegion                = "AWS_REGION"
-	awsAccessKey             = "AWS_ACCESS_KEY"
-	awsSecretAccessKey       = "AWS_SECRET_ACCESS_KEY"
-	proxyFunctionName        = "MEETUP_PROXY_FUNCTION_NAME"
-	archivedEventsTableName  = "ARCHIVED_EVENTS_TABLE_NAME"
-	eventsTableName          = "EVENTS_TABLE_NAME"
-	groupIDDateTimeIndexName = "GROUP_ID_DATE_TIME_INDEX_NAME"
+	logLevelKey                 = "LOG_LEVEL"
+	logTypeKey                  = "LOG_TYPE"
+	sentryDsnKey                = "SENTRY_DSN"
+	meetupGroupNamesKey         = "MEETUP_GROUP_NAMES"
+	dynamoDbEndpointKey         = "DYNAMODB_ENDPOINT"
+	awsRegionKey                = "AWS_REGION"
+	awsAccessKeyKey             = "AWS_ACCESS_KEY"
+	awsSecretAccessKeyKey       = "AWS_SECRET_ACCESS_KEY"
+	proxyFunctionNameKey        = "MEETUP_PROXY_FUNCTION_NAME"
+	archivedEventsTableNameKey  = "ARCHIVED_EVENTS_TABLE_NAME"
+	eventsTableNameKey          = "EVENTS_TABLE_NAME"
+	groupIDDateTimeIndexNameKey = "GROUP_ID_DATE_TIME_INDEX_NAME"
 )
 
 var configKeys = []string{
@@ -30,14 +30,14 @@ var configKeys = []string{
 	logTypeKey,
 	sentryDsnKey,
 	meetupGroupNamesKey,
-	dynamoDbEndpoint,
-	awsRegion,
-	awsAccessKey,
-	awsSecretAccessKey,
-	proxyFunctionName,
-	archivedEventsTableName,
-	eventsTableName,
-	groupIDDateTimeIndexName,
+	dynamoDbEndpointKey,
+	awsRegionKey,
+	awsAccessKeyKey,
+	awsSecretAccessKeyKey,
+	proxyFunctionNameKey,
+	archivedEventsTableNameKey,
+	eventsTableNameKey,
+	groupIDDateTimeIndexNameKey,
 }
 
 type Config struct {
@@ -82,23 +82,23 @@ func setDefaults(v *viper.Viper) {
 	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
 	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
 	v.SetDefault(strings.ToLower(meetupGroupNamesKey), []string{})
-	v.SetDefault(strings.ToLower(awsRegion), "us-east-2")
+	v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
 }
 
 func (config *Config) validate() error {
 	var missing []string
 
 	if config.ProxyFunctionName == "" {
-		missing = append(missing, proxyFunctionName)
+		missing = append(missing, proxyFunctionNameKey)
 	}
 	if config.EventsTableName == "" {
-		missing = append(missing, eventsTableName)
+		missing = append(missing, eventsTableNameKey)
 	}
 	if config.ArchivedEventsTableName == "" {
-		missing = append(missing, archivedEventsTableName)
+		missing = append(missing, archivedEventsTableNameKey)
 	}
 	if config.GroupIDDateTimeIndexName == "" {
-		missing = append(missing, groupIDDateTimeIndexName)
+		missing = append(missing, groupIDDateTimeIndexNameKey)
 	}
 
 	if len(missing) > 0 {

@@ -22,7 +22,7 @@ func InitService(ctx context.Context) (*Service, error) {
 		return nil, err
 	}
 	dbConfig := syncdynamodbconfig.NewDBConfig(config)
-	loggingConfig := syncdynamodbconfig.MewLoggingConfig(config)
+	loggingConfig := syncdynamodbconfig.NewLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
 	client, err := db.NewClient(ctx, dbConfig, logger)
 	if err != nil {
@@ -34,6 +34,6 @@ func InitService(ctx context.Context) (*Service, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(syncdynamodbconfig.NewConfig, logging.DefaultLogger, syncdynamodbconfig.MewLoggingConfig)
+var CommonSet = wire.NewSet(syncdynamodbconfig.NewConfig, logging.DefaultLogger, syncdynamodbconfig.NewLoggingConfig)
 
 var DBSet = wire.NewSet(syncdynamodbconfig.NewDBConfig, db.NewClient)

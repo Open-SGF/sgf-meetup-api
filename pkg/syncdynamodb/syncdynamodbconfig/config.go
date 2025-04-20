@@ -10,21 +10,21 @@ import (
 )
 
 const (
-	logLevelKey        = "LOG_LEVEL"
-	logTypeKey         = "LOG_TYPE"
-	dynamoDbEndpoint   = "DYNAMODB_ENDPOINT"
-	awsRegion          = "AWS_REGION"
-	awsAccessKey       = "AWS_ACCESS_KEY"
-	awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
+	logLevelKey           = "LOG_LEVEL"
+	logTypeKey            = "LOG_TYPE"
+	dynamoDBEndpointKey   = "DYNAMODB_ENDPOINT"
+	awsRegionKey          = "AWS_REGION"
+	awsAccessKeyKey       = "AWS_ACCESS_KEY"
+	awsSecretAccessKeyKey = "AWS_SECRET_ACCESS_KEY"
 )
 
 var configKeys = []string{
 	logLevelKey,
 	logTypeKey,
-	dynamoDbEndpoint,
-	awsRegion,
-	awsAccessKey,
-	awsSecretAccessKey,
+	dynamoDBEndpointKey,
+	awsRegionKey,
+	awsAccessKeyKey,
+	awsSecretAccessKeyKey,
 }
 
 type Config struct {
@@ -58,10 +58,10 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 func setDefaults(v *viper.Viper) {
 	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
 	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
-	v.SetDefault(strings.ToLower(awsRegion), "us-east-2")
+	v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
 }
 
-func MewLoggingConfig(config *Config) logging.Config {
+func NewLoggingConfig(config *Config) logging.Config {
 	return logging.Config{
 		Level: config.LogLevel,
 		Type:  config.LogType,

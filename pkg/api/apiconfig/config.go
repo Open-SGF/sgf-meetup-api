@@ -11,33 +11,33 @@ import (
 )
 
 const (
-	logLevelKey              = "LOG_LEVEL"
-	logTypeKey               = "LOG_TYPE"
-	sentryDSNKey             = "SENTRY_DSN"
-	dynamoDbEndpoint         = "DYNAMODB_ENDPOINT"
-	awsRegion                = "AWS_REGION"
-	awsAccessKey             = "AWS_ACCESS_KEY"
-	awsSecretAccessKey       = "AWS_SECRET_ACCESS_KEY"
-	eventsTableName          = "EVENTS_TABLE_NAME"
-	apiUsersTableName        = "API_USERS_TABLE_NAME"
-	groupIDDateTimeIndexName = "GROUP_ID_DATE_TIME_INDEX_NAME"
-	jwtIssuer                = "JWT_ISSUER"
-	jwtSecret                = "JWT_SECRET"
+	logLevelKey                 = "LOG_LEVEL"
+	logTypeKey                  = "LOG_TYPE"
+	sentryDSNKey                = "SENTRY_DSN"
+	dynamoDbEndpointKey         = "DYNAMODB_ENDPOINT"
+	awsRegionKey                = "AWS_REGION"
+	awsAccessKeyKey             = "AWS_ACCESS_KEY"
+	awsSecretAccessKeyKey       = "AWS_SECRET_ACCESS_KEY"
+	eventsTableNameKey          = "EVENTS_TABLE_NAME"
+	apiUsersTableNameKey        = "API_USERS_TABLE_NAME"
+	groupIDDateTimeIndexNameKey = "GROUP_ID_DATE_TIME_INDEX_NAME"
+	jwtIssuerKey                = "JWT_ISSUER"
+	jwtSecretKey                = "JWT_SECRET"
 )
 
 var configKeys = []string{
 	logLevelKey,
 	logTypeKey,
 	sentryDSNKey,
-	dynamoDbEndpoint,
-	awsRegion,
-	awsAccessKey,
-	awsSecretAccessKey,
-	eventsTableName,
-	apiUsersTableName,
-	groupIDDateTimeIndexName,
-	jwtIssuer,
-	jwtSecret,
+	dynamoDbEndpointKey,
+	awsRegionKey,
+	awsAccessKeyKey,
+	awsSecretAccessKeyKey,
+	eventsTableNameKey,
+	apiUsersTableNameKey,
+	groupIDDateTimeIndexNameKey,
+	jwtIssuerKey,
+	jwtSecretKey,
 }
 
 type Config struct {
@@ -81,24 +81,24 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 func setDefaults(v *viper.Viper) {
 	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
 	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
-	v.SetDefault(strings.ToLower(awsRegion), "us-east-2")
-	v.SetDefault(strings.ToLower(jwtSecret), "meetup-api.opensgf.org")
+	v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
+	v.SetDefault(strings.ToLower(jwtIssuerKey), "meetup-api.opensgf.org")
 }
 
 func (config *Config) validate() error {
 	var missing []string
 
 	if config.EventsTableName == "" {
-		missing = append(missing, eventsTableName)
+		missing = append(missing, eventsTableNameKey)
 	}
 	if config.ApiUsersTableName == "" {
-		missing = append(missing, apiUsersTableName)
+		missing = append(missing, apiUsersTableNameKey)
 	}
 	if config.GroupIDDateTimeIndexName == "" {
-		missing = append(missing, groupIDDateTimeIndexName)
+		missing = append(missing, groupIDDateTimeIndexNameKey)
 	}
 	if config.JWTSecret == "" {
-		missing = append(missing, jwtSecret)
+		missing = append(missing, jwtSecretKey)
 	}
 
 	if len(missing) > 0 {

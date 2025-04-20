@@ -3,6 +3,8 @@ package configparser
 import (
 	"errors"
 	"github.com/spf13/viper"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -54,4 +56,23 @@ func ParseFromKey[T any](v *viper.Viper, key string, parser func(string) (T, err
 	}
 
 	v.Set(normalizedKey, value)
+}
+
+func SetupTestEnv(envContent string) (string, func(), error) {
+	tempDir, err := os.MkdirTemp("", "configtest")
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	envPath := filepath.Join(tempDir, ".env")
+	err = os.WriteFile(envPath, []byte(envContent), 0644)
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	return tempDir, func() {
+		_ = os.RemoveAll(tempDir)
+	}, nil
 }
