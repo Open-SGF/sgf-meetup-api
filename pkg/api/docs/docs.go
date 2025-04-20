@@ -21,7 +21,8 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "produces": [
-                    "application/json"
+                    "application/json",
+                    "application/problem+json"
                 ],
                 "tags": [
                     "auth"
@@ -46,21 +47,34 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid input"
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/apierrors.ProblemDetails"
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized"
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierrors.ProblemDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/apierrors.ProblemDetails"
+                        }
                     }
                 }
             }
         },
-        "/v1/refresh": {
+        "/v1/auth/refresh": {
             "post": {
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
-                    "application/json"
+                    "application/json",
+                    "application/problem+json"
                 ],
                 "tags": [
                     "auth"
@@ -85,13 +99,48 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid token"
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/apierrors.ProblemDetails"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierrors.ProblemDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/apierrors.ProblemDetails"
+                        }
                     }
                 }
             }
         }
     },
     "definitions": {
+        "apierrors.ProblemDetails": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "string"
+                },
+                "instance": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "auth.authRequestDTO": {
             "type": "object",
             "properties": {
