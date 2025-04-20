@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"net/http"
@@ -18,7 +19,7 @@ func NewController(service *Service) *Controller {
 
 func (c *Controller) RegisterRoutes(r gin.IRouter) {
 	r.POST("/auth", c.auth)
-	r.POST("/refresh", c.refresh)
+	r.POST("/auth/refresh", c.refresh)
 }
 
 // @Summary	Authenticate with credentials
@@ -38,19 +39,24 @@ func (c *Controller) auth(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.service.AuthClientCredentials(requestDTO.ClientID, requestDTO.ClientSecret)
+	result, err := c.service.AuthClientCredentials(ctx, requestDTO.ClientID, requestDTO.ClientSecret)
+
+	if errors.Is(err, InvalidCredentials) {
+		ctx.String(http.StatusUnauthorized, "")
+		return
+	}
 
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, "")
 		return
 	}
 
-	responseDTO := authResponseDTO{
-		AccessToken:  result.AccessToken,
-		RefreshToken: result.RefreshToken,
-		ExpiresIn:    result.ExpiresIn,
-	}
-	ctx.JSON(http.StatusOK, responseDTO)
+	ctx.JSON(http.StatusOK, &authResponseDTO{
+		AccessToken:           result.AccessToken,
+		AccessTokenExpiresAt:  result.AccessTokenExpiresAt,
+		RefreshToken:          result.RefreshToken,
+		RefreshTokenExpiresAt: result.RefreshTokenExpiresAt,
+	})
 }
 
 // @Summary	Refresh token
@@ -69,8 +75,24 @@ func (c *Controller) refresh(ctx *gin.Context) {
 		return
 	}
 
-	responseDTO := authResponseDTO{}
-	ctx.JSON(http.StatusOK, responseDTO)
+	result, err := c.service.RefreshCredentials(ctx, requestDTO.RefreshToken)
+
+	if errors.Is(err, InvalidCredentials) {
+		ctx.String(http.StatusUnauthorized, "")
+		return
+	}
+
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, "")
+		return
+	}
+
+	ctx.JSON(http.StatusOK, authResponseDTO{
+		AccessToken:           result.AccessToken,
+		AccessTokenExpiresAt:  result.AccessTokenExpiresAt,
+		RefreshToken:          result.RefreshToken,
+		RefreshTokenExpiresAt: result.RefreshTokenExpiresAt,
+	})
 }
 
-var ProviderSet = wire.NewSet(NewController, NewService)
+var ProviderSet = wire.NewSet(NewController, NewServiceConfig, NewService)

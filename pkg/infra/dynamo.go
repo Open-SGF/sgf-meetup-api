@@ -51,7 +51,7 @@ var ApiUsersTableProps = &customconstructs.DynamoTableProps{
 	TableProps: awsdynamodb.TableProps{
 		TableName: jsii.String("MeetupApiUsers"),
 		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("id"),
+			Name: jsii.String("clientId"),
 			Type: awsdynamodb.AttributeType_STRING,
 		},
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
