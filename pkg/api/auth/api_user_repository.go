@@ -52,7 +52,7 @@ func (r *DynamoDBAPIUserRepository) GetAPIUser(ctx context.Context, clientID str
 	}
 
 	if result.Item == nil {
-		return nil, APIUserNotFound
+		return nil, ErrAPIUserNotFound
 	}
 
 	var user models.APIUser
@@ -63,7 +63,7 @@ func (r *DynamoDBAPIUserRepository) GetAPIUser(ctx context.Context, clientID str
 	return &user, nil
 }
 
-var APIUserNotFound = errors.New("api user not found")
+var ErrAPIUserNotFound = errors.New("api user not found")
 
 var APIUserRepositoryProviders = wire.NewSet(
 	wire.Bind(new(APIUserRepository), new(*DynamoDBAPIUserRepository)),

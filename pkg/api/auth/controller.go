@@ -43,7 +43,7 @@ func (c *Controller) auth(ctx *gin.Context) {
 
 	result, err := c.service.AuthClientCredentials(ctx, requestDTO.ClientID, requestDTO.ClientSecret)
 
-	if errors.Is(err, InvalidCredentials) {
+	if errors.Is(err, ErrInvalidCredentials) {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusUnauthorized)
 		return
 	}
@@ -81,7 +81,7 @@ func (c *Controller) refresh(ctx *gin.Context) {
 
 	result, err := c.service.RefreshCredentials(ctx, requestDTO.RefreshToken)
 
-	if errors.Is(err, InvalidCredentials) {
+	if errors.Is(err, ErrInvalidCredentials) {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusUnauthorized)
 		return
 	}
