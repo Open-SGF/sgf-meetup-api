@@ -40,10 +40,13 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 		return nil, err
 	}
 	dynamoDBAPIUserRepository := auth.NewDynamoDBAPIUserRepository(dynamoDBAPIUserRepositoryConfig, client)
-	service := auth.NewService(serviceConfig, realTimeSource, dynamoDBAPIUserRepository)
+	tokenManagerConfig := auth.NewTokenValidatorConfig(config)
+	tokenManagerImpl := auth.NewTokenManager(tokenManagerConfig, realTimeSource)
+	service := auth.NewService(serviceConfig, realTimeSource, dynamoDBAPIUserRepository, tokenManagerImpl)
 	controller := auth.NewController(service)
 	groupeventsController := groupevents.NewController()
-	engine := NewRouter(logger, controller, groupeventsController)
+	middleware := auth.NewMiddleware(tokenManagerImpl)
+	engine := NewRouter(logger, controller, groupeventsController, middleware)
 	return engine, nil
 }
 

@@ -101,7 +101,9 @@ func (c *Controller) refresh(ctx *gin.Context) {
 
 var Providers = wire.NewSet(
 	APIUserRepositoryProviders,
+	TokenValidatorProviders,
 	NewServiceConfig,
 	NewService,
 	NewController,
+	NewMiddleware,
 )

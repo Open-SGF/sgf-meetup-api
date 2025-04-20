@@ -3,8 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/shared/clock"
@@ -15,16 +13,12 @@ import (
 type ServiceConfig struct {
 	AccessTokenExpiration  time.Duration
 	RefreshTokenExpiration time.Duration
-	JWTIssuer              string
-	JWTSecret              []byte
 }
 
 func NewServiceConfig(config *apiconfig.Config) ServiceConfig {
 	return ServiceConfig{
 		AccessTokenExpiration:  time.Minute * 15,
 		RefreshTokenExpiration: time.Hour * 24 * 30,
-		JWTIssuer:              config.JWTIssuer,
-		JWTSecret:              []byte(config.JWTSecret),
 	}
 }
 
@@ -32,13 +26,20 @@ type Service struct {
 	config            ServiceConfig
 	timeSource        clock.TimeSource
 	apiUserRepository APIUserRepository
+	tokenManager      TokenManager
 }
 
-func NewService(config ServiceConfig, timeSource clock.TimeSource, apiUserRepository APIUserRepository) *Service {
+func NewService(
+	config ServiceConfig,
+	timeSource clock.TimeSource,
+	apiUserRepository APIUserRepository,
+	tokenManager TokenManager,
+) *Service {
 	return &Service{
 		config:            config,
 		timeSource:        timeSource,
 		apiUserRepository: apiUserRepository,
+		tokenManager:      tokenManager,
 	}
 }
 
@@ -61,13 +62,13 @@ func (s *Service) AuthClientCredentials(ctx context.Context, clientID, clientSec
 }
 
 func (s *Service) RefreshCredentials(ctx context.Context, refreshToken string) (*models.AuthResult, error) {
-	clientID, err := s.validateToken(refreshToken)
+	token, err := s.tokenManager.Validate(refreshToken)
 
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.apiUserRepository.GetAPIUser(ctx, clientID)
+	_, err = s.apiUserRepository.GetAPIUser(ctx, token.ClientID)
 
 	if errors.Is(err, ErrAPIUserNotFound) {
 		return nil, ErrInvalidCredentials
@@ -77,7 +78,7 @@ func (s *Service) RefreshCredentials(ctx context.Context, refreshToken string) (
 		return nil, err
 	}
 
-	return s.getAuthResult(clientID)
+	return s.getAuthResult(token.ClientID)
 }
 
 func (s *Service) getAuthResult(clientID string) (*models.AuthResult, error) {
@@ -85,12 +86,12 @@ func (s *Service) getAuthResult(clientID string) (*models.AuthResult, error) {
 	accessTokenExpiresAt := now.Add(s.config.AccessTokenExpiration)
 	refreshTokenExpiresAt := now.Add(s.config.RefreshTokenExpiration)
 
-	accessToken, err := s.createToken(clientID, accessTokenExpiresAt)
+	accessToken, err := s.tokenManager.CreateSignedToken(clientID, accessTokenExpiresAt)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := s.createToken(clientID, refreshTokenExpiresAt)
+	refreshToken, err := s.tokenManager.CreateSignedToken(clientID, refreshTokenExpiresAt)
 	if err != nil {
 		return nil, err
 	}
@@ -106,43 +107,6 @@ func (s *Service) getAuthResult(clientID string) (*models.AuthResult, error) {
 func (s *Service) verifyClientSecret(clientSecret, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(clientSecret))
 	return err == nil
-}
-
-func (s *Service) createToken(clientID string, expiration time.Time) (string, error) {
-	claims := jwt.RegisteredClaims{
-		Issuer:    s.config.JWTIssuer,
-		Subject:   clientID,
-		IssuedAt:  jwt.NewNumericDate(s.timeSource.Now()),
-		ExpiresAt: jwt.NewNumericDate(expiration),
-	}
-
-	signedJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	return signedJWT.SignedString(s.config.JWTSecret)
-}
-
-func (s *Service) validateToken(tokenStr string) (string, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing met hod: %v", token.Header["alg"])
-		}
-		return s.config.JWTSecret, nil
-	}, jwt.WithTimeFunc(s.timeSource.Now))
-
-	if err != nil || !token.Valid {
-		return "", ErrInvalidCredentials
-	}
-
-	claims, ok := token.Claims.(*jwt.RegisteredClaims)
-	if !ok {
-		return "", ErrInvalidCredentials
-	}
-
-	if claims.Subject == "" {
-		return "", ErrInvalidCredentials
-	}
-
-	return claims.Subject, nil
 }
 
 var ErrInvalidCredentials = errors.New("provided credentials are invalid")
