@@ -13,6 +13,7 @@ import (
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/api/auth"
 	"sgf-meetup-api/pkg/api/groupevents"
+	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
 )
@@ -30,12 +31,16 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 	}
 	loggingConfig := apiconfig.NewLoggingConfig(config)
 	logger := logging.DefaultLogger(loggingConfig)
+	serviceConfig := auth.NewServiceConfig(config)
+	realTimeSource := clock.NewRealTimeSource()
+	dynamoDBAPIUserRepositoryConfig := auth.NewDynamoDBAPIUserRepositoryConfig(config)
 	dbConfig := apiconfig.NewDBConfig(config)
 	client, err := db.NewClient(ctx, dbConfig, logger)
 	if err != nil {
 		return nil, err
 	}
-	service := auth.NewService(client)
+	dynamoDBAPIUserRepository := auth.NewDynamoDBAPIUserRepository(dynamoDBAPIUserRepositoryConfig, client)
+	service := auth.NewService(serviceConfig, realTimeSource, dynamoDBAPIUserRepository)
 	controller := auth.NewController(service)
 	groupeventsController := groupevents.NewController()
 	engine := NewRouter(logger, controller, groupeventsController)
@@ -44,6 +49,6 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(apiconfig.NewConfig, logging.DefaultLogger, apiconfig.NewLoggingConfig)
+var CommonProviders = wire.NewSet(apiconfig.NewConfig, logging.DefaultLogger, apiconfig.NewLoggingConfig, clock.RealClockProvider)
 
-var DbSet = wire.NewSet(apiconfig.NewDBConfig, db.NewClient)
+var DBProvider = wire.NewSet(apiconfig.NewDBConfig, db.NewClient)

@@ -1,6 +1,6 @@
 package models
 
-type ApiUser struct {
+type APIUser struct {
 	ClientID           string `dynamodbav:"clientId"`
 	HashedClientSecret string `dynamodbav:"hashedClientSecret"`
 }

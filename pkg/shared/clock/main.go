@@ -35,4 +35,4 @@ func (m *MockTimeSource) SetTime(t time.Time) {
 	m.frozenTime = t
 }
 
-var RealClockSet = wire.NewSet(wire.Bind(new(TimeSource), new(*RealTimeSource)), NewRealTimeSource)
+var RealClockProvider = wire.NewSet(wire.Bind(new(TimeSource), new(*RealTimeSource)), NewRealTimeSource)

@@ -109,10 +109,13 @@ const docTemplate = `{
                 "accessToken": {
                     "type": "string"
                 },
-                "expiresIn": {
-                    "type": "integer"
+                "accessTokenExpiresAt": {
+                    "type": "string"
                 },
                 "refreshToken": {
+                    "type": "string"
+                },
+                "refreshTokenExpiresAt": {
                     "type": "string"
                 }
             }

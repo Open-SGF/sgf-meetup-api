@@ -43,7 +43,7 @@ func InitService(ctx context.Context) (*Service, error) {
 
 // wire.go:
 
-var CommonSet = wire.NewSet(importerconfig.NewConfig, logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, importerconfig.NewLoggingConfig)
+var CommonSet = wire.NewSet(importerconfig.NewConfig, logging.DefaultLogger, clock.RealClockProvider, httpclient.DefaultClient, importerconfig.NewLoggingConfig)
 
 var DBSet = wire.NewSet(importerconfig.NewDBConfig, db.NewClient)
 

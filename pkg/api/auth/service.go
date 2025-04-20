@@ -4,55 +4,48 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/shared/clock"
-	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/models"
 	"time"
 )
 
 type ServiceConfig struct {
-	accessTokenExpiration  time.Duration
-	refreshTokenExpiration time.Duration
-	jwtIssuer              string
-	jwtSecret              []byte
-	apiUsersTable          string
+	AccessTokenExpiration  time.Duration
+	RefreshTokenExpiration time.Duration
+	JWTIssuer              string
+	JWTSecret              []byte
 }
 
 func NewServiceConfig(config *apiconfig.Config) ServiceConfig {
 	return ServiceConfig{
-		accessTokenExpiration:  time.Minute * 15,
-		refreshTokenExpiration: time.Hour * 24 * 30,
-		jwtIssuer:              config.JWTIssuer,
-		jwtSecret:              []byte(config.JWTSecret),
-		apiUsersTable:          config.ApiUsersTableName,
+		AccessTokenExpiration:  time.Minute * 15,
+		RefreshTokenExpiration: time.Hour * 24 * 30,
+		JWTIssuer:              config.JWTIssuer,
+		JWTSecret:              []byte(config.JWTSecret),
 	}
 }
 
 type Service struct {
-	config     ServiceConfig
-	db         *db.Client
-	timeSource clock.TimeSource
+	config            ServiceConfig
+	timeSource        clock.TimeSource
+	apiUserRepository APIUserRepository
 }
 
-func NewService(config ServiceConfig, db *db.Client, timeSource clock.TimeSource) *Service {
+func NewService(config ServiceConfig, timeSource clock.TimeSource, apiUserRepository APIUserRepository) *Service {
 	return &Service{
-		config:     config,
-		db:         db,
-		timeSource: timeSource,
+		config:            config,
+		timeSource:        timeSource,
+		apiUserRepository: apiUserRepository,
 	}
 }
 
 func (s *Service) AuthClientCredentials(ctx context.Context, clientID, clientSecret string) (*models.AuthResult, error) {
-	user, err := s.getApiUser(ctx, clientID)
+	user, err := s.apiUserRepository.GetAPIUser(ctx, clientID)
 
-	if errors.Is(err, ApiUserNotFound) {
+	if errors.Is(err, APIUserNotFound) {
 		return nil, InvalidCredentials
 	}
 
@@ -74,9 +67,9 @@ func (s *Service) RefreshCredentials(ctx context.Context, refreshToken string) (
 		return nil, err
 	}
 
-	_, err = s.getApiUser(ctx, clientID)
+	_, err = s.apiUserRepository.GetAPIUser(ctx, clientID)
 
-	if errors.Is(err, ApiUserNotFound) {
+	if errors.Is(err, APIUserNotFound) {
 		return nil, InvalidCredentials
 	}
 
@@ -89,8 +82,8 @@ func (s *Service) RefreshCredentials(ctx context.Context, refreshToken string) (
 
 func (s *Service) getAuthResult(clientID string) (*models.AuthResult, error) {
 	now := s.timeSource.Now()
-	accessTokenExpiresAt := now.Add(s.config.accessTokenExpiration)
-	refreshTokenExpiresAt := now.Add(s.config.refreshTokenExpiration)
+	accessTokenExpiresAt := now.Add(s.config.AccessTokenExpiration)
+	refreshTokenExpiresAt := now.Add(s.config.RefreshTokenExpiration)
 
 	accessToken, err := s.createToken(clientID, accessTokenExpiresAt)
 	if err != nil {
@@ -110,30 +103,6 @@ func (s *Service) getAuthResult(clientID string) (*models.AuthResult, error) {
 	}, nil
 }
 
-func (s *Service) getApiUser(ctx context.Context, clientID string) (*models.ApiUser, error) {
-	result, err := s.db.GetItem(ctx, &dynamodb.GetItemInput{
-		TableName: aws.String(s.config.apiUsersTable),
-		Key: map[string]types.AttributeValue{
-			"clientId": &types.AttributeValueMemberS{Value: clientID},
-		},
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Item == nil {
-		return nil, ApiUserNotFound
-	}
-
-	var user models.ApiUser
-	if err = attributevalue.UnmarshalMap(result.Item, &user); err != nil {
-		return nil, err
-	}
-
-	return &user, nil
-}
-
 func (s *Service) verifyClientSecret(clientSecret, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(clientSecret))
 	return err == nil
@@ -141,7 +110,7 @@ func (s *Service) verifyClientSecret(clientSecret, hash string) bool {
 
 func (s *Service) createToken(clientID string, expiration time.Time) (string, error) {
 	claims := jwt.RegisteredClaims{
-		Issuer:    s.config.jwtIssuer,
+		Issuer:    s.config.JWTIssuer,
 		Subject:   clientID,
 		IssuedAt:  jwt.NewNumericDate(s.timeSource.Now()),
 		ExpiresAt: jwt.NewNumericDate(expiration),
@@ -149,7 +118,7 @@ func (s *Service) createToken(clientID string, expiration time.Time) (string, er
 
 	signedJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return signedJWT.SignedString(s.config.jwtSecret)
+	return signedJWT.SignedString(s.config.JWTSecret)
 }
 
 func (s *Service) validateToken(tokenStr string) (string, error) {
@@ -157,7 +126,7 @@ func (s *Service) validateToken(tokenStr string) (string, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing met hod: %v", token.Header["alg"])
 		}
-		return s.config.jwtSecret, nil
+		return s.config.JWTSecret, nil
 	})
 
 	if err != nil {
@@ -183,4 +152,3 @@ func (s *Service) validateToken(tokenStr string) (string, error) {
 }
 
 var InvalidCredentials = errors.New("provided credentials are invalid")
-var ApiUserNotFound = errors.New("api user not found")

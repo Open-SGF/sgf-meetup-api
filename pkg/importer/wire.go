@@ -13,7 +13,7 @@ import (
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
-var CommonSet = wire.NewSet(importerconfig.NewConfig, logging.DefaultLogger, clock.RealClockSet, httpclient.DefaultClient, importerconfig.NewLoggingConfig)
+var CommonSet = wire.NewSet(importerconfig.NewConfig, logging.DefaultLogger, clock.RealClockProvider, httpclient.DefaultClient, importerconfig.NewLoggingConfig)
 var DBSet = wire.NewSet(importerconfig.NewDBConfig, db.NewClient)
 var EventRepositorySet = wire.NewSet(wire.Bind(new(EventRepository), new(*DynamoDBEventRepository)), NewDynamoDBEventRepositoryConfig, NewDynamoDBEventRepository)
 var GraphQLHandlerSet = wire.NewSet(wire.Bind(new(GraphQLHandler), new(*LambdaProxyGraphQLHandler)), NewLambdaProxyGraphQLHandlerConfig, NewLambdaProxyGraphQLHandler)
