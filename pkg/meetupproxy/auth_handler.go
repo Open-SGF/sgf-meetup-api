@@ -20,20 +20,20 @@ type AuthHandler interface {
 }
 
 type MeetupHttpAuthHandlerConfig struct {
-	url          string
-	userID       string
-	clientKey    string
-	signingKeyID string
-	privateKey   []byte
+	URL          string
+	UserID       string
+	ClientKey    string
+	SigningKeyID string
+	PrivateKey   []byte
 }
 
 func NewMeetupAuthHandlerConfig(config *meetupproxyconfig.Config) MeetupHttpAuthHandlerConfig {
 	return MeetupHttpAuthHandlerConfig{
-		url:          config.MeetupAuthURL,
-		userID:       config.MeetupUserID,
-		clientKey:    config.MeetupClientKey,
-		signingKeyID: config.MeetupSigningKeyID,
-		privateKey:   config.MeetupPrivateKey,
+		URL:          config.MeetupAuthURL,
+		UserID:       config.MeetupUserID,
+		ClientKey:    config.MeetupClientKey,
+		SigningKeyID: config.MeetupSigningKeyID,
+		PrivateKey:   config.MeetupPrivateKey,
 	}
 }
 
@@ -94,7 +94,7 @@ func (ah *MeetupHttpAuthHandler) getNewAccessToken(ctx context.Context) (*authTo
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		ah.config.url,
+		ah.config.URL,
 		strings.NewReader(form.Encode()),
 	)
 
@@ -130,16 +130,16 @@ func (ah *MeetupHttpAuthHandler) getNewAccessToken(ctx context.Context) (*authTo
 
 func (ah *MeetupHttpAuthHandler) createSignedJWT() (string, error) {
 	claims := jwt.RegisteredClaims{
-		Issuer:    ah.config.clientKey,
-		Subject:   ah.config.userID,
+		Issuer:    ah.config.ClientKey,
+		Subject:   ah.config.UserID,
 		Audience:  jwt.ClaimStrings{"api.meetup.com"},
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(10 * time.Minute)),
 	}
 
 	signedJwt := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	signedJwt.Header["kid"] = ah.config.signingKeyID
+	signedJwt.Header["kid"] = ah.config.SigningKeyID
 
-	key, err := jwt.ParseRSAPrivateKeyFromPEM(ah.config.privateKey)
+	key, err := jwt.ParseRSAPrivateKeyFromPEM(ah.config.PrivateKey)
 
 	if err != nil {
 		return "", err

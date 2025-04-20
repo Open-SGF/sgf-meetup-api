@@ -13,12 +13,12 @@ import (
 const userAgent = "curl/8.7.1"
 
 type ServiceConfig struct {
-	Url string
+	URL string
 }
 
 func NewServiceConfig(config *meetupproxyconfig.Config) ServiceConfig {
 	return ServiceConfig{
-		Url: config.MeetupAPIURL,
+		URL: config.MeetupAPIURL,
 	}
 }
 
@@ -61,7 +61,7 @@ func (s *Service) HandleRequest(ctx context.Context, req Request) (*Response, er
 		return nil, err
 	}
 
-	meetupReq, err := http.NewRequestWithContext(ctx, http.MethodPost, s.config.Url, strings.NewReader(string(reqBodyJson)))
+	meetupReq, err := http.NewRequestWithContext(ctx, http.MethodPost, s.config.URL, strings.NewReader(string(reqBodyJson)))
 
 	if err != nil {
 		return nil, err

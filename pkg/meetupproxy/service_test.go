@@ -9,10 +9,21 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
 	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 	"time"
 )
+
+func TestNewServiceConfig(t *testing.T) {
+	cfg := &meetupproxyconfig.Config{
+		MeetupAPIURL: "https://example.com",
+	}
+
+	serviceConfig := NewServiceConfig(cfg)
+
+	assert.Equal(t, cfg.MeetupAPIURL, serviceConfig.URL)
+}
 
 type mockAuth struct {
 	token string

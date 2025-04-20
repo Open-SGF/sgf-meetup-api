@@ -6,6 +6,7 @@ import (
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/shared/models"
@@ -14,6 +15,16 @@ import (
 
 	"github.com/stretchr/testify/mock"
 )
+
+func TestNewServiceConfig(t *testing.T) {
+	cfg := &importerconfig.Config{
+		MeetupGroupNames: []string{"Test1", "Test2"},
+	}
+
+	serviceConfig := NewServiceConfig(cfg)
+
+	assert.ElementsMatch(t, cfg.MeetupGroupNames, serviceConfig.GroupNames)
+}
 
 type MockEventRepository struct {
 	mock.Mock
