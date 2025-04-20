@@ -27,6 +27,7 @@ func TestRealTimeSource(t *testing.T) {
 	clock := NewRealTimeSource()
 	before := time.Now()
 	now := clock.Now()
+	time.Sleep(time.Millisecond * 10)
 	after := time.Now()
 
 	assert.True(t, now.After(before))
