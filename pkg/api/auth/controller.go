@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"net/http"
+	"sgf-meetup-api/pkg/api/apierrors"
 )
 
 type Controller struct {
@@ -25,29 +26,30 @@ func (c *Controller) RegisterRoutes(r gin.IRouter) {
 // @Summary	Authenticate with credentials
 // @Tags		auth
 // @Accept		json
-// @Produce	json
+// @Produce	json,application/problem+json
 // @Param		request	body		authRequestDTO	true	"Credentials"
 // @Success	200		{object}	authResponseDTO
-// @Failure	400		"Invalid input"
-// @Failure	401		"Unauthorized"
+// @Failure	400		{object}	apierrors.ProblemDetails	"Invalid input"
+// @Failure	401		{object}	apierrors.ProblemDetails	"Unauthorized"
+// @Failure	500		{object}	apierrors.ProblemDetails	"Server error"
 // @Router		/v1/auth [post]
 func (c *Controller) auth(ctx *gin.Context) {
 	requestDTO := authRequestDTO{}
 
 	if err := ctx.ShouldBindJSON(&requestDTO); err != nil {
-		ctx.String(http.StatusBadRequest, "")
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusBadRequest)
 		return
 	}
 
 	result, err := c.service.AuthClientCredentials(ctx, requestDTO.ClientID, requestDTO.ClientSecret)
 
 	if errors.Is(err, InvalidCredentials) {
-		ctx.String(http.StatusUnauthorized, "")
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusUnauthorized)
 		return
 	}
 
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, "")
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusInternalServerError)
 		return
 	}
 
@@ -62,28 +64,30 @@ func (c *Controller) auth(ctx *gin.Context) {
 // @Summary	Refresh token
 // @Tags		auth
 // @Accept		json
-// @Produce	json
+// @Produce	json,application/problem+json
 // @Param		request	body		refreshTokenRequestDTO	true	"Refresh token"
 // @Success	200		{object}	authResponseDTO
-// @Failure	400		"Invalid token"
-// @Router		/v1/refresh [post]
+// @Failure	400		{object}	apierrors.ProblemDetails	"Invalid input"
+// @Failure	401		{object}	apierrors.ProblemDetails	"Unauthorized"
+// @Failure	500		{object}	apierrors.ProblemDetails	"Server error"
+// @Router		/v1/auth/refresh [post]
 func (c *Controller) refresh(ctx *gin.Context) {
 	requestDTO := refreshTokenRequestDTO{}
 
 	if err := ctx.ShouldBindJSON(&requestDTO); err != nil {
-		ctx.String(http.StatusBadRequest, "")
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusBadRequest)
 		return
 	}
 
 	result, err := c.service.RefreshCredentials(ctx, requestDTO.RefreshToken)
 
 	if errors.Is(err, InvalidCredentials) {
-		ctx.String(http.StatusUnauthorized, "")
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusUnauthorized)
 		return
 	}
 
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, "")
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusInternalServerError)
 		return
 	}
 

@@ -1,4 +1,17 @@
 definitions:
+  apierrors.ProblemDetails:
+    properties:
+      detail:
+        type: string
+      instance:
+        type: string
+      status:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+    type: object
   auth.authRequestDTO:
     properties:
       clientId:
@@ -40,6 +53,7 @@ paths:
           $ref: '#/definitions/auth.authRequestDTO'
       produces:
       - application/json
+      - application/problem+json
       responses:
         "200":
           description: OK
@@ -47,12 +61,20 @@ paths:
             $ref: '#/definitions/auth.authResponseDTO'
         "400":
           description: Invalid input
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
       summary: Authenticate with credentials
       tags:
       - auth
-  /v1/refresh:
+  /v1/auth/refresh:
     post:
       consumes:
       - application/json
@@ -65,13 +87,24 @@ paths:
           $ref: '#/definitions/auth.refreshTokenRequestDTO'
       produces:
       - application/json
+      - application/problem+json
       responses:
         "200":
           description: OK
           schema:
             $ref: '#/definitions/auth.authResponseDTO'
         "400":
-          description: Invalid token
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
       summary: Refresh token
       tags:
       - auth
