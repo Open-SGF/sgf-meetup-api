@@ -39,12 +39,14 @@ func TestController_Integration(t *testing.T) {
 		ApiUserTable: *infra.ApiUsersTableProps.TableName,
 	}, testDB.Client)
 	tokenSecret := []byte("some-secret-value")
+	tokenValidator := NewTokenManager(TokenManagerConfig{
+		JWTIssuer: "meetup-api.opensgf.org",
+		JWTSecret: tokenSecret,
+	}, timeSource)
 	service := NewService(ServiceConfig{
 		AccessTokenExpiration:  time.Minute * 15,
 		RefreshTokenExpiration: time.Hour * 24 * 30,
-		JWTIssuer:              "meetup-api.opensgf.org",
-		JWTSecret:              tokenSecret,
-	}, timeSource, apiUserRepo)
+	}, timeSource, apiUserRepo, tokenValidator)
 	controller := NewController(service)
 
 	router := gin.New()

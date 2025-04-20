@@ -13,20 +13,20 @@ func NewController() *Controller {
 }
 
 func (c *Controller) RegisterRoutes(r gin.IRouter) {
-	r.GET("/groups/:group/events", c.getGroupEvents)
-	r.GET("/groups/:group/events/next", c.getNextGroupEvent)
-	r.GET("/groups/:group/events/:eventId", c.getGroupEventById)
+	r.GET("/groups/:group/events", c.groupEvents)
+	r.GET("/groups/:group/events/next", c.nextGroupEvent)
+	r.GET("/groups/:group/events/:eventId", c.groupEventByID)
 }
 
-func (c *Controller) getGroupEvents(ctx *gin.Context) {
-
-}
-
-func (c *Controller) getNextGroupEvent(ctx *gin.Context) {
+func (c *Controller) groupEvents(ctx *gin.Context) {
 
 }
 
-func (c *Controller) getGroupEventById(ctx *gin.Context) {
+func (c *Controller) nextGroupEvent(ctx *gin.Context) {
+
+}
+
+func (c *Controller) groupEventByID(ctx *gin.Context) {
 
 }
 

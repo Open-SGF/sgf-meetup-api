@@ -44,7 +44,7 @@ JWT_SECRET=secretkey
 		assert.Equal(t, "users", cfg.ApiUsersTableName)
 		assert.Equal(t, "group-index", cfg.GroupIDDateTimeIndexName)
 		assert.Equal(t, "myapp", cfg.JWTIssuer)
-		assert.Equal(t, "secretkey", cfg.JWTSecret)
+		assert.Equal(t, []byte("secretkey"), cfg.JWTSecret)
 	})
 
 	t.Run("minimal with defaults", func(t *testing.T) {

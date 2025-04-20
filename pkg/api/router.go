@@ -21,6 +21,7 @@ func NewRouter(
 	logger *slog.Logger,
 	authController *auth.Controller,
 	groupEventsController *groupevents.Controller,
+	authMiddleware *auth.Middleware,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -29,10 +30,14 @@ func NewRouter(
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	v1 := r.Group("v1")
+	v1Group := r.Group("v1")
 
-	authController.RegisterRoutes(v1)
-	groupEventsController.RegisterRoutes(v1)
+	authController.RegisterRoutes(v1Group)
+
+	authGroup := v1Group.Group("/")
+	authGroup.Use(authMiddleware.Handler)
+
+	groupEventsController.RegisterRoutes(authGroup)
 
 	return r
 }

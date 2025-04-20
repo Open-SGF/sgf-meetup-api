@@ -52,7 +52,7 @@ type Config struct {
 	ApiUsersTableName        string          `mapstructure:"api_users_table_name"`
 	GroupIDDateTimeIndexName string          `mapstructure:"group_id_date_time_index_name"`
 	JWTIssuer                string          `mapstructure:"jwt_issuer"`
-	JWTSecret                string          `mapstructure:"jwt_secret"`
+	JWTSecret                []byte          `mapstructure:"jwt_secret"`
 }
 
 func NewConfig() (*Config, error) {
@@ -83,6 +83,7 @@ func setDefaults(v *viper.Viper) {
 	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
 	v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
 	v.SetDefault(strings.ToLower(jwtIssuerKey), "meetup-api.opensgf.org")
+	v.Set(strings.ToLower(jwtSecretKey), []byte(v.GetString(strings.ToLower(jwtSecretKey))))
 }
 
 func (config *Config) validate() error {
@@ -97,7 +98,7 @@ func (config *Config) validate() error {
 	if config.GroupIDDateTimeIndexName == "" {
 		missing = append(missing, groupIDDateTimeIndexNameKey)
 	}
-	if config.JWTSecret == "" {
+	if len(config.JWTSecret) == 0 {
 		missing = append(missing, jwtSecretKey)
 	}
 
