@@ -5,18 +5,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
-	"os"
-	"path/filepath"
 	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 )
 
 func TestParse_ValidEnvFile(t *testing.T) {
-	dir := t.TempDir()
-	envPath := filepath.Join(dir, ".env")
-	if err := os.WriteFile(envPath, []byte("DB_HOST=localhost\nDB_PORT=5432"), 0644); err != nil {
-		t.Fatal(err)
-	}
+	tempDir, cleanup, err := SetupTestEnv(`
+DB_HOST=localhost
+DB_PORT=5432
+`)
+
+	require.NoError(t, err)
+	defer cleanup()
 
 	type Config struct {
 		Host string `mapstructure:"db_host"`
@@ -25,7 +25,7 @@ func TestParse_ValidEnvFile(t *testing.T) {
 
 	opts := ParseOptions{
 		EnvFilename: ".env",
-		EnvFilepath: dir,
+		EnvFilepath: tempDir,
 		SetDefaults: func(v *viper.Viper) { v.SetDefault("db_port", 3306) },
 	}
 
@@ -38,20 +38,22 @@ func TestParse_ValidEnvFile(t *testing.T) {
 }
 
 func TestParse_EnvVarOverridesConfigFile(t *testing.T) {
-	dir := t.TempDir()
-	envPath := filepath.Join(dir, ".env")
-	if err := os.WriteFile(envPath, []byte("API_KEY=file_key"), 0644); err != nil {
-		t.Fatal(err)
-	}
+	tempDir, cleanup, err := SetupTestEnv(`
+API_KEY=file_key
+`)
+
+	require.NoError(t, err)
+	defer cleanup()
+
 	t.Setenv("API_KEY", "env_key")
 
 	type Config struct {
-		APIKey string `mapstructure:"API_KEY"`
+		APIKey string `mapstructure:"api_key"`
 	}
 
 	opts := ParseOptions{
 		EnvFilename: ".env",
-		EnvFilepath: dir,
+		EnvFilepath: tempDir,
 		SetDefaults: func(v *viper.Viper) {},
 	}
 
@@ -83,11 +85,12 @@ func TestParse_MissingConfigFileWithDefaults(t *testing.T) {
 }
 
 func TestParse_InvalidConfigFile(t *testing.T) {
-	dir := t.TempDir()
-	envPath := filepath.Join(dir, ".env")
-	if err := os.WriteFile(envPath, []byte("INVALID_KEY_WITHOUT_VALUE"), 0644); err != nil {
-		t.Fatal(err)
-	}
+	tempDir, cleanup, err := SetupTestEnv(`
+INVALID_KEY_WITHOUT_VALUE
+`)
+
+	require.NoError(t, err)
+	defer cleanup()
 
 	type Config struct {
 		Key string `mapstructure:"INVALID_KEY_WITHOUT_VALUE"`
@@ -95,11 +98,11 @@ func TestParse_InvalidConfigFile(t *testing.T) {
 
 	opts := ParseOptions{
 		EnvFilename: ".env",
-		EnvFilepath: dir,
+		EnvFilepath: tempDir,
 		SetDefaults: func(v *viper.Viper) {},
 	}
 
-	_, err := Parse[Config](opts)
+	_, err = Parse[Config](opts)
 
 	require.Error(t, err)
 }
