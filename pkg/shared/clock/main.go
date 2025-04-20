@@ -20,19 +20,24 @@ func (r RealTimeSource) Now() time.Time {
 }
 
 type MockTimeSource struct {
-	frozenTime time.Time
+	initialTime time.Time
+	currentTime time.Time
 }
 
 func NewMockTimeSource(initialTime time.Time) *MockTimeSource {
-	return &MockTimeSource{frozenTime: initialTime}
+	return &MockTimeSource{initialTime: initialTime, currentTime: initialTime}
 }
 
 func (m *MockTimeSource) Now() time.Time {
-	return m.frozenTime
+	return m.currentTime
 }
 
 func (m *MockTimeSource) SetTime(t time.Time) {
-	m.frozenTime = t
+	m.currentTime = t
+}
+
+func (m *MockTimeSource) Reset() {
+	m.currentTime = m.initialTime
 }
 
 var RealClockProvider = wire.NewSet(wire.Bind(new(TimeSource), new(*RealTimeSource)), NewRealTimeSource)

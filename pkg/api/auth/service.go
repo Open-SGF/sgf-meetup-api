@@ -127,13 +127,9 @@ func (s *Service) validateToken(tokenStr string) (string, error) {
 			return nil, fmt.Errorf("unexpected signing met hod: %v", token.Header["alg"])
 		}
 		return s.config.JWTSecret, nil
-	})
+	}, jwt.WithTimeFunc(s.timeSource.Now))
 
-	if err != nil {
-		return "", err
-	}
-
-	if !token.Valid {
+	if err != nil || !token.Valid {
 		return "", ErrInvalidCredentials
 	}
 
@@ -142,13 +138,11 @@ func (s *Service) validateToken(tokenStr string) (string, error) {
 		return "", ErrInvalidCredentials
 	}
 
-	clientID := claims.Audience[0]
-
-	if clientID == "" {
+	if claims.Subject == "" {
 		return "", ErrInvalidCredentials
 	}
 
-	return clientID, nil
+	return claims.Subject, nil
 }
 
 var ErrInvalidCredentials = errors.New("provided credentials are invalid")

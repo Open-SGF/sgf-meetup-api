@@ -2,12 +2,16 @@ package db
 
 import (
 	"context"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/testcontainers/testcontainers-go"
 	tcdynamodb "github.com/testcontainers/testcontainers-go/modules/dynamodb"
 	"log"
 	"log/slog"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/logging"
+	"slices"
 )
 
 type TestDB struct {
@@ -21,11 +25,61 @@ func (ctr *TestDB) Close() {
 	}
 }
 
+func (ctr *TestDB) Reset(ctx context.Context) error {
+	for _, table := range infra.Tables {
+		var deleteRequests []types.WriteRequest
+
+		paginator := dynamodb.NewScanPaginator(ctr.Client, &dynamodb.ScanInput{
+			TableName:            table.TableName,
+			ProjectionExpression: table.PartitionKey.Name,
+		})
+
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return fmt.Errorf("scan failed for %s: %w", *table.TableName, err)
+			}
+
+			for _, item := range page.Items {
+				deleteRequests = append(deleteRequests, types.WriteRequest{
+					DeleteRequest: &types.DeleteRequest{
+						Key: map[string]types.AttributeValue{
+							*table.PartitionKey.Name: item[*table.PartitionKey.Name],
+						},
+					},
+				})
+			}
+		}
+
+		for chunk := range slices.Chunk(deleteRequests, MaxBatchSize) {
+			input := &dynamodb.BatchWriteItemInput{
+				RequestItems: map[string][]types.WriteRequest{
+					*table.TableName: chunk,
+				},
+			}
+
+			for {
+				resp, err := ctr.Client.BatchWriteItem(ctx, input)
+				if err != nil {
+					return fmt.Errorf("batch delete failed for %s: %w", *table.TableName, err)
+				}
+
+				if len(resp.UnprocessedItems) == 0 {
+					break
+				}
+
+				input.RequestItems = resp.UnprocessedItems
+			}
+		}
+	}
+
+	return nil
+}
+
 func NewTestDB(ctx context.Context) (*TestDB, error) {
 	ctr, err := tcdynamodb.Run(
 		ctx,
 		"amazon/dynamodb-local:2.6.0",
-		tcdynamodb.WithSharedDB(),
 		tcdynamodb.WithDisableTelemetry(),
 	)
 
