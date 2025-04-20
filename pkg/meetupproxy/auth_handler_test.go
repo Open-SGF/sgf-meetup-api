@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
 	"sgf-meetup-api/pkg/shared/logging"
 	"strings"
 	"sync"
@@ -20,6 +21,24 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
+func TestNewMeetupAuthHandlerConfig(t *testing.T) {
+	cfg := &meetupproxyconfig.Config{
+		MeetupAuthURL:      "https://example.com/auth",
+		MeetupUserID:       "1234",
+		MeetupClientKey:    "clientKey",
+		MeetupSigningKeyID: "signingKey",
+		MeetupPrivateKey:   []byte("privateKey"),
+	}
+
+	authHandlerConfig := NewMeetupAuthHandlerConfig(cfg)
+
+	assert.Equal(t, cfg.MeetupAuthURL, authHandlerConfig.URL)
+	assert.Equal(t, cfg.MeetupUserID, authHandlerConfig.UserID)
+	assert.Equal(t, cfg.MeetupClientKey, authHandlerConfig.ClientKey)
+	assert.Equal(t, cfg.MeetupSigningKeyID, authHandlerConfig.SigningKeyID)
+	assert.Equal(t, cfg.MeetupPrivateKey, authHandlerConfig.PrivateKey)
+}
 
 func TestAuthHandler_GetAccessToken_InitialFetch(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -33,8 +52,8 @@ func TestAuthHandler_GetAccessToken_InitialFetch(t *testing.T) {
 
 	privateKey, _ := generatePrivateKey()
 	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
-		url:        ts.URL,
-		privateKey: privateKey,
+		URL:        ts.URL,
+		PrivateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
 
 	token, err := ah.GetAccessToken(context.Background())
@@ -58,8 +77,8 @@ func TestAuthHandler_GetAccessToken_ValidUserAgent(t *testing.T) {
 
 	privateKey, _ := generatePrivateKey()
 	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
-		url:        ts.URL,
-		privateKey: privateKey,
+		URL:        ts.URL,
+		PrivateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
 
 	_, err := ah.GetAccessToken(context.Background())
@@ -87,8 +106,8 @@ func TestAuthHandler_GetAccessToken_ExpiredToken(t *testing.T) {
 
 	privateKey, _ := generatePrivateKey()
 	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
-		url:        ts.URL,
-		privateKey: privateKey,
+		URL:        ts.URL,
+		PrivateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
 
 	token, err := ah.GetAccessToken(context.Background())
@@ -112,8 +131,8 @@ func TestAuthHandler_GetAccessTokenn_HTTPErrorHandling(t *testing.T) {
 
 	privateKey, _ := generatePrivateKey()
 	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
-		url:        ts.URL,
-		privateKey: privateKey,
+		URL:        ts.URL,
+		PrivateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
 
 	_, err := ah.GetAccessToken(context.Background())
@@ -140,8 +159,8 @@ func TestAuthHandler_GetAccessToken_ConcurrentRequests(t *testing.T) {
 
 	privateKey, _ := generatePrivateKey()
 	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{
-		url:        ts.URL,
-		privateKey: privateKey,
+		URL:        ts.URL,
+		PrivateKey: privateKey,
 	}, &http.Client{}, logging.NewMockLogger())
 
 	var wg sync.WaitGroup
@@ -162,10 +181,10 @@ func TestAuthHandler_createSignedJWT_ValidClaims(t *testing.T) {
 	privateKeyBytes, _ := privateKeyToBytes(privateKey)
 	ah := &MeetupHttpAuthHandler{
 		config: MeetupHttpAuthHandlerConfig{
-			clientKey:    "test-client",
-			userID:       "user1",
-			signingKeyID: "key1",
-			privateKey:   privateKeyBytes,
+			ClientKey:    "test-client",
+			UserID:       "user1",
+			SigningKeyID: "key1",
+			PrivateKey:   privateKeyBytes,
 		},
 	}
 

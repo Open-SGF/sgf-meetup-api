@@ -9,6 +9,7 @@ import (
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
@@ -17,6 +18,20 @@ import (
 	"testing"
 	"time"
 )
+
+func TestNewDynamoDBEventRepositoryConfig(t *testing.T) {
+	cfg := &importerconfig.Config{
+		EventsTableName:          "events",
+		ArchivedEventsTableName:  "archivedEvents",
+		GroupIDDateTimeIndexName: "groupIdDateTimeIndex",
+	}
+
+	eventRepoConfig := NewDynamoDBEventRepositoryConfig(cfg)
+
+	assert.Equal(t, cfg.EventsTableName, eventRepoConfig.EventsTableName)
+	assert.Equal(t, cfg.ArchivedEventsTableName, eventRepoConfig.ArchivedEventsTableName)
+	assert.Equal(t, cfg.GroupIDDateTimeIndexName, eventRepoConfig.GroupDateIndexName)
+}
 
 func TestDynamoDBEventRepository_GetUpcomingEventsForGroup(t *testing.T) {
 	ctx := context.Background()

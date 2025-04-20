@@ -7,9 +7,20 @@ import (
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
+	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 )
+
+func TestNewLambdaProxyGraphQLHandlerConfig(t *testing.T) {
+	cfg := &importerconfig.Config{
+		ProxyFunctionName: "meetupProxy",
+	}
+
+	handlerConfig := NewLambdaProxyGraphQLHandlerConfig(cfg)
+
+	assert.Equal(t, cfg.ProxyFunctionName, handlerConfig.ProxyFunctionName)
+}
 
 func setupMockLambdaServer(t *testing.T, handler http.HandlerFunc) *httptest.Server {
 	t.Setenv("AWS_REGION", "us-east-1")
