@@ -17,6 +17,7 @@ import (
 type TestDB struct {
 	Client    *Client
 	Container *tcdynamodb.DynamoDBContainer
+	logger    *slog.Logger
 }
 
 func (ctr *TestDB) Close() {
@@ -77,6 +78,20 @@ func (ctr *TestDB) Reset(ctx context.Context) error {
 }
 
 func NewTestDB(ctx context.Context) (*TestDB, error) {
+	testDB, err := NewTestDBWithoutMigrations(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = SyncTables(ctx, testDB.logger, testDB.Client, infra.Tables); err != nil {
+		return nil, err
+	}
+
+	return testDB, nil
+}
+
+func NewTestDBWithoutMigrations(ctx context.Context) (*TestDB, error) {
 	ctr, err := tcdynamodb.Run(
 		ctx,
 		"amazon/dynamodb-local:2.6.0",
@@ -108,13 +123,10 @@ func NewTestDB(ctx context.Context) (*TestDB, error) {
 		return nil, err
 	}
 
-	if err = SyncTables(ctx, logger, client, infra.Tables); err != nil {
-		return nil, err
-	}
-
 	testDB := TestDB{
 		Client:    client,
 		Container: ctr,
+		logger:    logger,
 	}
 
 	return &testDB, nil
