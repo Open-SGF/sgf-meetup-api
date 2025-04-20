@@ -30,4 +30,4 @@ func (c *Controller) getGroupEventById(ctx *gin.Context) {
 
 }
 
-var ProviderSet = wire.NewSet(NewController)
+var Providers = wire.NewSet(NewController)
