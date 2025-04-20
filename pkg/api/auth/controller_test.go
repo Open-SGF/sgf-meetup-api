@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
@@ -22,6 +23,11 @@ import (
 	"testing"
 	"time"
 )
+
+func TestMain(m *testing.M) {
+	gin.SetMode(gin.TestMode)
+	os.Exit(m.Run())
+}
 
 func TestController_Integration(t *testing.T) {
 	ctx := context.Background()
@@ -41,7 +47,6 @@ func TestController_Integration(t *testing.T) {
 	}, timeSource, apiUserRepo)
 	controller := NewController(service)
 
-	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	controller.RegisterRoutes(router)
 
