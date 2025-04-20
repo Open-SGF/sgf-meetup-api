@@ -45,8 +45,8 @@ func NewService(config ServiceConfig, timeSource clock.TimeSource, apiUserReposi
 func (s *Service) AuthClientCredentials(ctx context.Context, clientID, clientSecret string) (*models.AuthResult, error) {
 	user, err := s.apiUserRepository.GetAPIUser(ctx, clientID)
 
-	if errors.Is(err, APIUserNotFound) {
-		return nil, InvalidCredentials
+	if errors.Is(err, ErrAPIUserNotFound) {
+		return nil, ErrInvalidCredentials
 	}
 
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *Service) AuthClientCredentials(ctx context.Context, clientID, clientSec
 	}
 
 	if !s.verifyClientSecret(clientSecret, user.HashedClientSecret) {
-		return nil, InvalidCredentials
+		return nil, ErrInvalidCredentials
 	}
 
 	return s.getAuthResult(clientID)
@@ -69,8 +69,8 @@ func (s *Service) RefreshCredentials(ctx context.Context, refreshToken string) (
 
 	_, err = s.apiUserRepository.GetAPIUser(ctx, clientID)
 
-	if errors.Is(err, APIUserNotFound) {
-		return nil, InvalidCredentials
+	if errors.Is(err, ErrAPIUserNotFound) {
+		return nil, ErrInvalidCredentials
 	}
 
 	if err != nil {
@@ -134,21 +134,21 @@ func (s *Service) validateToken(tokenStr string) (string, error) {
 	}
 
 	if !token.Valid {
-		return "", InvalidCredentials
+		return "", ErrInvalidCredentials
 	}
 
 	claims, ok := token.Claims.(*jwt.RegisteredClaims)
 	if !ok {
-		return "", InvalidCredentials
+		return "", ErrInvalidCredentials
 	}
 
 	clientID := claims.Audience[0]
 
 	if clientID == "" {
-		return "", InvalidCredentials
+		return "", ErrInvalidCredentials
 	}
 
 	return clientID, nil
 }
 
-var InvalidCredentials = errors.New("provided credentials are invalid")
+var ErrInvalidCredentials = errors.New("provided credentials are invalid")
