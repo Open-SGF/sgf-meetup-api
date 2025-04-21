@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
@@ -24,12 +22,8 @@ import (
 	"time"
 )
 
-func TestMain(m *testing.M) {
-	gin.SetMode(gin.TestMode)
-	os.Exit(m.Run())
-}
-
 func TestController_Integration(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	ctx := context.Background()
 	testDB, err := db.NewTestDB(ctx)
 	require.NoError(t, err)
@@ -52,7 +46,7 @@ func TestController_Integration(t *testing.T) {
 	router := gin.New()
 	controller.RegisterRoutes(router)
 
-	t.Run("auth successful", func(t *testing.T) {
+	t.Run("POST /auth creates token", func(t *testing.T) {
 		defer func() { _ = testDB.Reset(ctx) }()
 
 		requestDTO := authRequestDTO{
@@ -89,7 +83,20 @@ func TestController_Integration(t *testing.T) {
 		assert.Equal(t, refreshTokenClaims.Subject, requestDTO.ClientID)
 	})
 
-	t.Run("auth invalid secret", func(t *testing.T) {
+	t.Run("POST /auth handles invalid credentials", func(t *testing.T) {
+		requestDTO := authRequestDTO{
+			ClientID:     "invalid",
+			ClientSecret: "invalid",
+		}
+		jsonValue, _ := json.Marshal(requestDTO)
+		req, _ := http.NewRequest("POST", "/auth", bytes.NewBuffer(jsonValue))
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("POST /auth handles invalid client secret for valid client id", func(t *testing.T) {
 		defer func() { _ = testDB.Reset(ctx) }()
 
 		requestDTO := authRequestDTO{
@@ -107,20 +114,7 @@ func TestController_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
 
-	t.Run("auth invalid credentials", func(t *testing.T) {
-		requestDTO := authRequestDTO{
-			ClientID:     "invalid",
-			ClientSecret: "invalid",
-		}
-		jsonValue, _ := json.Marshal(requestDTO)
-		req, _ := http.NewRequest("POST", "/auth", bytes.NewBuffer(jsonValue))
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-
-	t.Run("auth invalid json", func(t *testing.T) {
+	t.Run("POST /auth handles invalid json", func(t *testing.T) {
 		req, _ := http.NewRequest("POST", "/auth", bytes.NewBuffer([]byte("invalid json")))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -128,7 +122,7 @@ func TestController_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("refresh successful", func(t *testing.T) {
+	t.Run("POST /auth/refresh refreshes token", func(t *testing.T) {
 		defer func() { _ = testDB.Reset(ctx) }()
 
 		clientID := "someClientId"
@@ -154,7 +148,7 @@ func TestController_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
 
-	t.Run("refresh expired token", func(t *testing.T) {
+	t.Run("POST /auth/refresh handles expired token", func(t *testing.T) {
 		defer func() { _ = testDB.Reset(ctx) }()
 
 		clientID := "someClientId"
@@ -202,7 +196,7 @@ func TestController_Integration(t *testing.T) {
 		assert.Equal(t, refreshTokenClaims.Subject, clientID)
 	})
 
-	t.Run("refresh invalid token", func(t *testing.T) {
+	t.Run("POST /auth/refresh handles invalid token", func(t *testing.T) {
 		requestDTO := refreshTokenRequestDTO{
 			RefreshToken: "invalid",
 		}
@@ -214,7 +208,7 @@ func TestController_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
 
-	t.Run("refresh invalid json", func(t *testing.T) {
+	t.Run("POST /auth/refresh handles invalid json", func(t *testing.T) {
 		req, _ := http.NewRequest("POST", "/auth/refresh", bytes.NewBuffer([]byte("invalid json")))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -246,7 +240,7 @@ func addAPIUser(t *testing.T, ctx context.Context, client *db.Client, id, secret
 func parseJWTToken(tokenString string, secret []byte) (*jwt.Token, *jwt.RegisteredClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, jwt.ErrSignatureInvalid
 		}
 
 		return secret, nil

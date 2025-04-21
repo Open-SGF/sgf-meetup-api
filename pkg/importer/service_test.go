@@ -3,11 +3,11 @@ package importer
 import (
 	"context"
 	"errors"
-	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/clock"
+	"sgf-meetup-api/pkg/shared/fakers"
 	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/shared/models"
 	"testing"
@@ -56,18 +56,8 @@ func (m *MockMeetupRepository) GetEventsUntilDateForGroup(ctx context.Context, g
 
 func TestService_Import(t *testing.T) {
 	ctx := context.Background()
-	faker := gofakeit.New(0)
+	meetupFaker := fakers.NewMeetupFaker(0)
 	now := time.Now()
-
-	genEvents := func(count int) []models.MeetupEvent {
-		var events []models.MeetupEvent
-		for i := 0; i < count; i++ {
-			var event models.MeetupEvent
-			_ = faker.Struct(&event)
-			events = append(events, event)
-		}
-		return events
-	}
 
 	t.Run("processes all groups with concurrency control", func(t *testing.T) {
 		mockTimeSource := clock.NewMockTimeSource(now)
@@ -78,9 +68,9 @@ func TestService_Import(t *testing.T) {
 
 		for _, group := range groupNames {
 			meetupRepo.On("GetEventsUntilDateForGroup", ctx, group, now.AddDate(0, 6, 0)).
-				Return(genEvents(2), nil)
+				Return(meetupFaker.CreateEvents(group, 2), nil)
 			eventRepo.On("GetUpcomingEventsForGroup", ctx, group).
-				Return(genEvents(1), nil)
+				Return(meetupFaker.CreateEvents(group, 1), nil)
 			eventRepo.On("UpsertEvents", ctx, mock.Anything).Return(nil)
 			eventRepo.On("ArchiveEvents", ctx, mock.Anything).Return(nil)
 		}
@@ -106,7 +96,7 @@ func TestService_Import(t *testing.T) {
 		meetupRepo := new(MockMeetupRepository)
 		group := "test-group"
 
-		savedEvents := genEvents(3)
+		savedEvents := meetupFaker.CreateEvents(group, 3)
 		incomingEvents := savedEvents[1:]
 
 		meetupRepo.On("GetEventsUntilDateForGroup", ctx, group, now.AddDate(0, 6, 0)).
