@@ -3,12 +3,15 @@ package db
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/testcontainers/testcontainers-go"
 	tcdynamodb "github.com/testcontainers/testcontainers-go/modules/dynamodb"
 	"log"
 	"log/slog"
+	"reflect"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/logging"
 	"slices"
@@ -18,6 +21,61 @@ type TestDB struct {
 	Client    *Client
 	Container *tcdynamodb.DynamoDBContainer
 	logger    *slog.Logger
+}
+
+func NewTestDB(ctx context.Context) (*TestDB, error) {
+	testDB, err := NewTestDBWithoutMigrations(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = SyncTables(ctx, testDB.logger, testDB.Client, infra.Tables); err != nil {
+		return nil, err
+	}
+
+	return testDB, nil
+}
+
+func NewTestDBWithoutMigrations(ctx context.Context) (*TestDB, error) {
+	ctr, err := tcdynamodb.Run(
+		ctx,
+		"amazon/dynamodb-local:2.6.0",
+		tcdynamodb.WithDisableTelemetry(),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	connectionString, err := ctr.ConnectionString(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	dbOptions := Config{
+		Endpoint:        "http://" + connectionString,
+		Region:          "us-east-2",
+		SecretAccessKey: "test",
+		AccessKey:       "test",
+	}
+
+	logger := logging.DefaultLogger(logging.Config{Level: slog.LevelError, Type: logging.LogTypeText})
+
+	client, err := NewClient(ctx, dbOptions, logger)
+
+	if err != nil {
+		return nil, err
+	}
+
+	testDB := TestDB{
+		Client:    client,
+		Container: ctr,
+		logger:    logger,
+	}
+
+	return &testDB, nil
 }
 
 func (ctr *TestDB) Close() {
@@ -77,57 +135,79 @@ func (ctr *TestDB) Reset(ctx context.Context) error {
 	return nil
 }
 
-func NewTestDB(ctx context.Context) (*TestDB, error) {
-	testDB, err := NewTestDBWithoutMigrations(ctx)
-
-	if err != nil {
-		return nil, err
+func (ctr *TestDB) InsertTestItems(ctx context.Context, tableName string, testItems any) {
+	v := reflect.ValueOf(testItems)
+	if v.Kind() != reflect.Slice {
+		panic(fmt.Sprintf("expected slice, got %T", testItems))
 	}
 
-	if err = SyncTables(ctx, testDB.logger, testDB.Client, infra.Tables); err != nil {
-		return nil, err
+	items := make([]any, v.Len())
+	for i := 0; i < v.Len(); i++ {
+		items[i] = v.Index(i).Interface()
 	}
 
-	return testDB, nil
+	if len(items) == 0 {
+		return
+	}
+
+	for chunk := range slices.Chunk(items, MaxBatchSize) {
+		writeRequests := make([]types.WriteRequest, 0, len(chunk))
+
+		for _, event := range chunk {
+			av, err := attributevalue.MarshalMap(event)
+
+			if err != nil {
+				panic("error marshaling item")
+			}
+
+			writeRequests = append(writeRequests, types.WriteRequest{
+				PutRequest: &types.PutRequest{
+					Item: av,
+				},
+			})
+		}
+
+		_, err := ctr.Client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+			RequestItems: map[string][]types.WriteRequest{
+				tableName: writeRequests,
+			},
+		})
+
+		if err != nil {
+			panic("error writing item")
+		}
+	}
 }
 
-func NewTestDBWithoutMigrations(ctx context.Context) (*TestDB, error) {
-	ctr, err := tcdynamodb.Run(
-		ctx,
-		"amazon/dynamodb-local:2.6.0",
-		tcdynamodb.WithDisableTelemetry(),
-	)
+func (ctr *TestDB) CheckItemExists(ctx context.Context, tableName, keyName, key string) bool {
+	resp, err := ctr.Client.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]types.AttributeValue{
+			keyName: &types.AttributeValueMemberS{Value: key},
+		},
+	})
 
 	if err != nil {
-		return nil, err
+		panic("error while checking if item exists")
 	}
 
-	connectionString, err := ctr.ConnectionString(ctx)
+	return len(resp.Item) > 0
+}
 
-	if err != nil {
-		return nil, err
+func (ctr *TestDB) GetItemCount(ctx context.Context, tableName string) int {
+	scanInput := &dynamodb.ScanInput{TableName: aws.String(tableName)}
+	paginator := dynamodb.NewScanPaginator(ctr.Client, scanInput)
+
+	count := 0
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			panic("error getting item count")
+		}
+
+		count += len(page.Items)
 	}
 
-	dbOptions := Config{
-		Endpoint:        "http://" + connectionString,
-		Region:          "us-east-2",
-		SecretAccessKey: "test",
-		AccessKey:       "test",
-	}
-
-	logger := logging.DefaultLogger(logging.Config{Level: slog.LevelError, Type: logging.LogTypeText})
-
-	client, err := NewClient(ctx, dbOptions, logger)
-
-	if err != nil {
-		return nil, err
-	}
-
-	testDB := TestDB{
-		Client:    client,
-		Container: ctr,
-		logger:    logger,
-	}
-
-	return &testDB, nil
+	return count
 }

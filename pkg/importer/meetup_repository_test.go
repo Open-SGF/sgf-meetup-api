@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sgf-meetup-api/pkg/shared/fakers"
 	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/shared/models"
 	"testing"
@@ -16,10 +16,10 @@ import (
 
 func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 	now := time.Now()
-	faker := gofakeit.New(0)
+	meetupFaker := fakers.NewMeetupFaker(0)
 
 	t.Run("single page of events before cutoff date", func(t *testing.T) {
-		mock := mockPaginationHandler(faker, [][]time.Duration{
+		mock := mockPaginationHandler(meetupFaker, [][]time.Duration{
 			{24 * time.Hour, 48 * time.Hour},
 		})
 
@@ -34,7 +34,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 	})
 
 	t.Run("multiple pages until exceeding cutoff", func(t *testing.T) {
-		mock := mockPaginationHandler(faker, [][]time.Duration{
+		mock := mockPaginationHandler(meetupFaker, [][]time.Duration{
 			{24 * time.Hour, 48 * time.Hour},
 			{72 * time.Hour, 96 * time.Hour},
 		})
@@ -50,7 +50,7 @@ func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
 	})
 
 	t.Run("process all pages when no dates exceed", func(t *testing.T) {
-		mock := mockPaginationHandler(faker, [][]time.Duration{
+		mock := mockPaginationHandler(meetupFaker, [][]time.Duration{
 			{24 * time.Hour, 48 * time.Hour},
 			{60 * time.Hour, 72 * time.Hour},
 		})
@@ -110,17 +110,7 @@ func (m *mockGraphQLHandler) ExecuteQuery(
 	return data, nil
 }
 
-func generateEvents(faker *gofakeit.Faker, base time.Time, dates ...time.Duration) []models.MeetupEvent {
-	events := make([]models.MeetupEvent, len(dates))
-	faker.Slice(&events)
-	for i, d := range dates {
-		date := base.Add(d)
-		events[i].DateTime = &date
-	}
-	return events
-}
-
-func mockPaginationHandler(faker *gofakeit.Faker, pages [][]time.Duration) *mockGraphQLHandler {
+func mockPaginationHandler(faker *fakers.MeetupFaker, pages [][]time.Duration) *mockGraphQLHandler {
 	var handlers []func() (*MeetupFutureEventsResponse, error)
 
 	for i, offsets := range pages {
@@ -130,7 +120,7 @@ func mockPaginationHandler(faker *gofakeit.Faker, pages [][]time.Duration) *mock
 		}
 
 		finalCursor := cursor
-		events := generateEvents(faker, time.Now(), offsets...)
+		events := faker.CreateEventsWithDates("", time.Now(), offsets...)
 
 		handlers = append(handlers, func() (*MeetupFutureEventsResponse, error) {
 			return generateMeetupResponse(events, finalCursor), nil

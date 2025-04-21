@@ -2,12 +2,12 @@ package db
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sgf-meetup-api/pkg/infra"
+	"sgf-meetup-api/pkg/shared/models"
 	"testing"
 )
 
@@ -50,38 +50,25 @@ func TestNewTestDB(t *testing.T) {
 
 		require.NoError(t, err)
 
-		assert.Equal(t, 1, getRecordCount(t, ctx, testDB.Client, *infra.ApiUsersTableProps.TableName))
+		assert.Equal(t, 1, testDB.GetItemCount(ctx, *infra.ApiUsersTableProps.TableName))
 
 		err = testDB.Reset(ctx)
 
 		require.NoError(t, err)
 
-		assert.Equal(t, 0, getRecordCount(t, ctx, testDB.Client, *infra.ApiUsersTableProps.TableName))
+		assert.Equal(t, 0, testDB.GetItemCount(ctx, *infra.ApiUsersTableProps.TableName))
 	})
-}
 
-func getRecordCount(t *testing.T, ctx context.Context, client *Client, tableName string) int {
-	var totalCount = 0
-	var lastEvaluatedKey map[string]types.AttributeValue
+	t.Run("inserts test items", func(t *testing.T) {
+		defer func() { _ = testDB.Reset(ctx) }()
 
-	for {
-		input := &dynamodb.ScanInput{
-			TableName:         aws.String(tableName),
-			Select:            types.SelectCount,
-			ExclusiveStartKey: lastEvaluatedKey,
+		items := []models.APIUser{
+			{ClientID: "1", HashedClientSecret: "test"},
+			{ClientID: "3", HashedClientSecret: "test"},
 		}
 
-		result, err := client.Scan(ctx, input)
-		require.NoError(t, err)
+		testDB.InsertTestItems(ctx, *infra.ApiUsersTableProps.TableName, items)
 
-		totalCount += int(result.Count)
-
-		if result.LastEvaluatedKey == nil {
-			break
-		}
-
-		lastEvaluatedKey = result.LastEvaluatedKey
-	}
-
-	return totalCount
+		assert.Equal(t, len(items), testDB.GetItemCount(ctx, *infra.ApiUsersTableProps.TableName))
+	})
 }
