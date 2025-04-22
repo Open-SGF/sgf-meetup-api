@@ -142,6 +142,25 @@ func TestController_Integration(t *testing.T) {
 			assert.Equal(t, 3, len(responseDTO.Items))
 		})
 	})
+
+	t.Run("GET /groups/:groupId/events/next return next event", func(t *testing.T) {
+		defer func() { _ = testDB.Reset(ctx) }()
+		group := "test-group"
+
+		events := []models.MeetupEvent{
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*-2)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*-1)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*2)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*3)),
+		}
+
+		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
+
+		w := makeRequest(router, "GET", "/groups/"+group+"/events/next", nil)
+		dto := getDTOWhenStatus[eventDTO](t, w, http.StatusOK)
+
+		assert.Equal(t, events[2].ID, dto.ID)
+	})
 }
 
 func makeRequest(router *gin.Engine, method, url string, body io.Reader) *httptest.ResponseRecorder {
