@@ -35,6 +35,67 @@ definitions:
       refreshToken:
         type: string
     type: object
+  groupevents.eventDTO:
+    properties:
+      dateTime:
+        type: string
+      description:
+        type: string
+      duration:
+        type: string
+      eventUrl:
+        type: string
+      group.name:
+        type: string
+      group.urlname:
+        type: string
+      host:
+        $ref: '#/definitions/groupevents.hostDTO'
+      id:
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/groupevents.imageDTO'
+        type: array
+      title:
+        type: string
+      venue:
+        $ref: '#/definitions/groupevents.venueDTO'
+    type: object
+  groupevents.groupEventsResponseDTO:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/groupevents.eventDTO'
+        type: array
+      nextPageUrl:
+        type: string
+    type: object
+  groupevents.hostDTO:
+    properties:
+      name:
+        type: string
+    type: object
+  groupevents.imageDTO:
+    properties:
+      baseUrl:
+        type: string
+      preview:
+        type: string
+    type: object
+  groupevents.venueDTO:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      name:
+        type: string
+      postalCode:
+        type: string
+      state:
+        type: string
+    type: object
 info:
   contact: {}
   title: SGF Meetup API
@@ -108,4 +169,132 @@ paths:
       summary: Refresh token
       tags:
       - auth
+  /v1/groups/{groupId}/events:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter events before this timestamp
+        in: query
+        name: before
+        type: string
+      - description: Filter events after this timestamp
+        in: query
+        name: after
+        type: string
+      - description: Pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Maximum number of results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      - application/problem+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/groupevents.groupEventsResponseDTO'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+      summary: Get group events
+      tags:
+      - groupevents
+  /v1/groups/{groupId}/events/{eventId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Group ID
+        in: path
+        name: groupId
+        required: true
+        type: string
+      - description: Event ID
+        in: path
+        name: eventId
+        required: true
+        type: string
+      produces:
+      - application/json
+      - application/problem+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/groupevents.eventDTO'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+      summary: Get group event by ID
+      tags:
+      - groupevents
+  /v1/groups/{groupId}/events/next:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Group ID
+        in: path
+        name: groupId
+        required: true
+        type: string
+      produces:
+      - application/json
+      - application/problem+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/groupevents.eventDTO'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/apierrors.ProblemDetails'
+      summary: Get next group event
+      tags:
+      - groupevents
 swagger: "2.0"
