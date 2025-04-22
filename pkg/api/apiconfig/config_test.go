@@ -46,7 +46,7 @@ APP_URL=http://localhost
 		assert.Equal(t, "group-index", cfg.GroupIDDateTimeIndexName)
 		assert.Equal(t, "myapp", cfg.JWTIssuer)
 		assert.Equal(t, []byte("secretkey"), cfg.JWTSecret)
-		assert.Equal(t, "http://localhost", cfg.AppURL)
+		assert.Equal(t, "http://localhost", cfg.AppURL.String())
 	})
 
 	t.Run("minimal with defaults", func(t *testing.T) {
@@ -68,7 +68,7 @@ JWT_SECRET=secretkey
 		assert.Equal(t, logging.LogTypeText, cfg.LogType)
 		assert.Equal(t, "us-east-2", cfg.AwsRegion)
 		assert.Equal(t, "meetup-api.opensgf.org", cfg.JWTIssuer)
-		assert.Equal(t, "https://meetup-api.opensgf.org", cfg.AppURL)
+		assert.Equal(t, "https://meetup-api.opensgf.org", cfg.AppURL.String())
 	})
 
 	t.Run("invalid missing required", func(t *testing.T) {

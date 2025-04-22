@@ -4,23 +4,49 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"net/http"
+	"net/url"
+	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/api/apierrors"
+	"strconv"
+	"strings"
+	"time"
 )
 
+type ControllerConfig struct {
+	AppURL url.URL
+}
+
+func NewControllerConfig(config *apiconfig.Config) ControllerConfig {
+	return ControllerConfig{
+		AppURL: config.AppURL,
+	}
+}
+
 type Controller struct {
+	config  ControllerConfig
 	service *Service
 }
 
-func NewController(service *Service) *Controller {
+const (
+	groupIDKey = "groupId"
+	eventIDKey = "eventId"
+	cursorKey  = "cursor"
+	limitKey   = "limit"
+	beforeKey  = "before"
+	afterKey   = "after"
+)
+
+func NewController(config ControllerConfig, service *Service) *Controller {
 	return &Controller{
+		config:  config,
 		service: service,
 	}
 }
 
 func (c *Controller) RegisterRoutes(r gin.IRouter) {
-	r.GET("/groups/:groupId/events", c.groupEvents)
-	r.GET("/groups/:groupId/events/next", c.nextGroupEvent)
-	r.GET("/groups/:groupId/events/:eventId", c.groupEventByID)
+	r.GET("/groups/:"+groupIDKey+"/events", c.groupEvents)
+	r.GET("/groups/:"+groupIDKey+"/events/next", c.nextGroupEvent)
+	r.GET("/groups/:"+groupIDKey+"/events/:"+eventIDKey, c.groupEventByID)
 }
 
 // @Summary	Get group events
@@ -28,8 +54,8 @@ func (c *Controller) RegisterRoutes(r gin.IRouter) {
 // @Accept		json
 // @Produce	json,application/problem+json
 // @Param		id		path		string	true	"Group ID"
-// @Param		before	query		string	false	"Filter events before this timestamp"
-// @Param		after	query		string	false	"Filter events after this timestamp"
+// @Param		before	query		string	false	"Filter events before this timestamp" Format(date-time)
+// @Param		after	query		string	false	"Filter events after this timestamp" Format(date-time)
 // @Param		cursor	query		string	false	"Pagination cursor"
 // @Param		limit	query		integer	false	"Maximum number of results"
 // @Success	200		{object}	groupEventsResponseDTO
@@ -38,7 +64,8 @@ func (c *Controller) RegisterRoutes(r gin.IRouter) {
 // @Failure	500		{object}	apierrors.ProblemDetails	"Server error"
 // @Router		/v1/groups/{groupId}/events [get]
 func (c *Controller) groupEvents(ctx *gin.Context) {
-	groupID := ctx.Param("groupId")
+	ctx.FullPath()
+	groupID := ctx.Param(groupIDKey)
 
 	if groupID == "" {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusBadRequest)
@@ -51,7 +78,7 @@ func (c *Controller) groupEvents(ctx *gin.Context) {
 		return
 	}
 
-	events, nextURL, err := c.service.GroupEvents(ctx, groupID, queryParamsToGroupEventArgs(queryParams))
+	events, nextFilters, err := c.service.PaginatedEvents(ctx, groupID, queryParamsToGroupEventArgs(queryParams))
 
 	if err != nil {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusInternalServerError)
@@ -60,7 +87,7 @@ func (c *Controller) groupEvents(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, groupEventsResponseDTO{
 		Items:       meetupEventsToDTOs(events),
-		NextPageURL: nextURL,
+		NextPageURL: c.createNextURL(ctx, groupID, nextFilters),
 	})
 }
 
@@ -76,7 +103,7 @@ func (c *Controller) groupEvents(ctx *gin.Context) {
 // @Failure	500		{object}	apierrors.ProblemDetails	"Server error"
 // @Router		/v1/groups/{groupId}/events/next [get]
 func (c *Controller) nextGroupEvent(ctx *gin.Context) {
-	groupID := ctx.Param("groupId")
+	groupID := ctx.Param(groupIDKey)
 
 	if groupID == "" {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusBadRequest)
@@ -98,8 +125,8 @@ func (c *Controller) nextGroupEvent(ctx *gin.Context) {
 // @Failure	500		{object}	apierrors.ProblemDetails	"Server error"
 // @Router		/v1/groups/{groupId}/events/{eventId} [get]
 func (c *Controller) groupEventByID(ctx *gin.Context) {
-	groupID := ctx.Param("groupId")
-	eventID := ctx.Param("eventId")
+	groupID := ctx.Param(groupIDKey)
+	eventID := ctx.Param(eventIDKey)
 
 	if groupID == "" || eventID == "" {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusBadRequest)
@@ -108,4 +135,31 @@ func (c *Controller) groupEventByID(ctx *gin.Context) {
 
 }
 
-var Providers = wire.NewSet(NewServiceConfig, NewService, NewController)
+func (c *Controller) createNextURL(ctx *gin.Context, groupID string, filters *PaginatedEventsFilters) *string {
+	if filters == nil {
+		return nil
+	}
+	path := strings.ReplaceAll(ctx.FullPath(), ":"+groupIDKey, groupID)
+	newURL := c.config.AppURL.JoinPath(path)
+
+	query := url.Values{}
+
+	query.Add(cursorKey, filters.Cursor)
+
+	if filters.Limit != nil {
+		query.Add(limitKey, strconv.Itoa(*filters.Limit))
+	}
+	if filters.Before != nil {
+		query.Add(beforeKey, filters.Before.Format(time.RFC3339))
+	}
+	if filters.After != nil {
+		query.Add(afterKey, filters.After.Format(time.RFC3339))
+	}
+
+	newURL.RawQuery = query.Encode()
+
+	urlString := newURL.String()
+	return &urlString
+}
+
+var Providers = wire.NewSet(NewService, NewControllerConfig, NewController)

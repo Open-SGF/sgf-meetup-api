@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/fakers"
@@ -15,6 +17,19 @@ import (
 	"testing"
 	"time"
 )
+
+func TestNewControllerConfig(t *testing.T) {
+	u, err := url.ParseRequestURI("/")
+	require.NoError(t, err)
+
+	cfg := &apiconfig.Config{
+		AppURL: *u,
+	}
+
+	controllerConfig := NewControllerConfig(cfg)
+
+	assert.Equal(t, cfg.AppURL, controllerConfig.AppURL)
+}
 
 func TestController_Integration(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -25,7 +40,9 @@ func TestController_Integration(t *testing.T) {
 
 	meetupFaker := fakers.NewMeetupFaker(0)
 
-	controller := NewController(NewService(ServiceConfig{AppURL: "http://localhost"}))
+	u, err := url.ParseRequestURI("/")
+	require.NoError(t, err)
+	controller := NewController(ControllerConfig{AppURL: *u}, NewService())
 
 	router := gin.New()
 	controller.RegisterRoutes(router)

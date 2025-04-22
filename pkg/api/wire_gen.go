@@ -44,9 +44,9 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 	tokenManagerImpl := auth.NewTokenManager(tokenManagerConfig, realTimeSource)
 	service := auth.NewService(serviceConfig, realTimeSource, dynamoDBAPIUserRepository, tokenManagerImpl)
 	controller := auth.NewController(service)
-	groupeventsServiceConfig := groupevents.NewServiceConfig(config)
-	groupeventsService := groupevents.NewService(groupeventsServiceConfig)
-	groupeventsController := groupevents.NewController(groupeventsService)
+	controllerConfig := groupevents.NewControllerConfig(config)
+	groupeventsService := groupevents.NewService()
+	groupeventsController := groupevents.NewController(controllerConfig, groupeventsService)
 	middleware := auth.NewMiddleware(tokenManagerImpl)
 	engine := NewRouter(logger, controller, groupeventsController, middleware)
 	return engine, nil

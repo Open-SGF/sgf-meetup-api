@@ -55,10 +55,11 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 	return config, nil
 }
 
-func setDefaults(v *viper.Viper) {
+func setDefaults(v *viper.Viper) error {
 	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
 	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
 	v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
+	return nil
 }
 
 func NewLoggingConfig(config *Config) logging.Config {
