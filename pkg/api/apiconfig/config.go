@@ -23,6 +23,7 @@ const (
 	groupIDDateTimeIndexNameKey = "GROUP_ID_DATE_TIME_INDEX_NAME"
 	jwtIssuerKey                = "JWT_ISSUER"
 	jwtSecretKey                = "JWT_SECRET"
+	appUrlKey                   = "APP_URL"
 )
 
 var configKeys = []string{
@@ -38,6 +39,7 @@ var configKeys = []string{
 	groupIDDateTimeIndexNameKey,
 	jwtIssuerKey,
 	jwtSecretKey,
+	appUrlKey,
 }
 
 type Config struct {
@@ -53,6 +55,7 @@ type Config struct {
 	GroupIDDateTimeIndexName string          `mapstructure:"group_id_date_time_index_name"`
 	JWTIssuer                string          `mapstructure:"jwt_issuer"`
 	JWTSecret                []byte          `mapstructure:"jwt_secret"`
+	AppURL                   string          `mapstructure:"app_url"`
 }
 
 func NewConfig() (*Config, error) {
@@ -84,6 +87,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
 	v.SetDefault(strings.ToLower(jwtIssuerKey), "meetup-api.opensgf.org")
 	v.Set(strings.ToLower(jwtSecretKey), []byte(v.GetString(strings.ToLower(jwtSecretKey))))
+	v.SetDefault(strings.ToLower(appUrlKey), "https://meetup-api.opensgf.org")
 }
 
 func (config *Config) validate() error {

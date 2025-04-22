@@ -24,6 +24,7 @@ API_USERS_TABLE_NAME=users
 GROUP_ID_DATE_TIME_INDEX_NAME=group-index
 JWT_ISSUER=myapp
 JWT_SECRET=secretkey
+APP_URL=http://localhost
 `)
 
 		require.NoError(t, err)
@@ -45,6 +46,7 @@ JWT_SECRET=secretkey
 		assert.Equal(t, "group-index", cfg.GroupIDDateTimeIndexName)
 		assert.Equal(t, "myapp", cfg.JWTIssuer)
 		assert.Equal(t, []byte("secretkey"), cfg.JWTSecret)
+		assert.Equal(t, "http://localhost", cfg.AppURL)
 	})
 
 	t.Run("minimal with defaults", func(t *testing.T) {
@@ -66,6 +68,7 @@ JWT_SECRET=secretkey
 		assert.Equal(t, logging.LogTypeText, cfg.LogType)
 		assert.Equal(t, "us-east-2", cfg.AwsRegion)
 		assert.Equal(t, "meetup-api.opensgf.org", cfg.JWTIssuer)
+		assert.Equal(t, "https://meetup-api.opensgf.org", cfg.AppURL)
 	})
 
 	t.Run("invalid missing required", func(t *testing.T) {
