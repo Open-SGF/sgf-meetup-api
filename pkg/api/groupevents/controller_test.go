@@ -3,10 +3,10 @@ package groupevents
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -54,13 +54,14 @@ func TestController_Integration(t *testing.T) {
 	router := gin.New()
 	controller.RegisterRoutes(router)
 
-	t.Run("GET /groups/:groupId/events returns events for group", func(t *testing.T) {
+	t.Run("GET /groups/:groupId/events returns future events for group", func(t *testing.T) {
 		defer func() { _ = testDB.Reset(ctx) }()
 		group := "test-group"
 
 		events := []models.MeetupEvent{
 			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*1)),
 			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*2)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*-1)),
 			meetupFaker.CreateEvent("other-group", timeSource.Now().Add(time.Hour*3)),
 		}
 		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
@@ -69,11 +70,7 @@ func TestController_Integration(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var responseDTO groupEventsResponseDTO
-		err = json.Unmarshal(w.Body.Bytes(), &responseDTO)
-		require.NoError(t, err)
+		responseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
 
 		assert.Len(t, responseDTO.Items, 2)
 		assert.Nil(t, responseDTO.NextPageURL)
@@ -93,31 +90,71 @@ func TestController_Integration(t *testing.T) {
 
 		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
 
-		req, _ := http.NewRequest("GET", "/groups/"+group+"/events?limit=10", nil)
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var responseDTO groupEventsResponseDTO
-		err = json.Unmarshal(w.Body.Bytes(), &responseDTO)
-		require.NoError(t, err)
+		w := makeRequest(router, "GET", "/groups/"+group+"/events?limit=10", nil)
+		responseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
 
 		assert.Equal(t, 10, len(responseDTO.Items))
 		require.NotNil(t, responseDTO.NextPageURL)
-		fmt.Println(*responseDTO.NextPageURL)
 
-		req, _ = http.NewRequest("GET", *responseDTO.NextPageURL, nil)
-		w = httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var nextResponseDTO groupEventsResponseDTO
-		err = json.Unmarshal(w.Body.Bytes(), &nextResponseDTO)
-		require.NoError(t, err)
+		w = makeRequest(router, "GET", *responseDTO.NextPageURL, nil)
+		nextResponseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
 
 		assert.Equal(t, 5, len(nextResponseDTO.Items))
 		assert.Nil(t, nextResponseDTO.NextPageURL)
 	})
+
+	t.Run("GET /groups/:groupId/events handles", func(t *testing.T) {
+		defer func() { _ = testDB.Reset(ctx) }()
+		group := "test-group"
+
+		events := []models.MeetupEvent{
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*-2)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*-1)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*1)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*2)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*3)),
+		}
+
+		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
+
+		t.Run("before filter", func(t *testing.T) {
+			before := timeSource.Now().Add(time.Hour * 2).UTC().Format(time.RFC3339)
+			w := makeRequest(router, "GET", "/groups/"+group+"/events?before="+url.QueryEscape(before), nil)
+			responseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
+
+			assert.Equal(t, 4, len(responseDTO.Items))
+		})
+
+		t.Run("after filter", func(t *testing.T) {
+			after := timeSource.Now().Add(time.Hour * 2).Add(time.Second * -1).UTC().Format(time.RFC3339)
+			w := makeRequest(router, "GET", "/groups/"+group+"/events?after="+url.QueryEscape(after), nil)
+			responseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
+
+			assert.Equal(t, 2, len(responseDTO.Items))
+		})
+
+		t.Run("before and after filter", func(t *testing.T) {
+			before := timeSource.Now().Add(time.Hour * 2).UTC().Format(time.RFC3339)
+			after := timeSource.Now().Add(time.Hour * -1).Add(time.Second * -1).UTC().Format(time.RFC3339)
+			w := makeRequest(router, "GET", "/groups/"+group+"/events?after="+url.QueryEscape(after)+"&before="+url.QueryEscape(before), nil)
+			responseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
+
+			assert.Equal(t, 3, len(responseDTO.Items))
+		})
+	})
+}
+
+func makeRequest(router *gin.Engine, method, url string, body io.Reader) *httptest.ResponseRecorder {
+	req, _ := http.NewRequest(method, url, body)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	return w
+}
+
+func getDTOWhenStatus[T any](t *testing.T, w *httptest.ResponseRecorder, status int) T {
+	require.Equal(t, status, w.Code)
+	var dto T
+	err := json.Unmarshal(w.Body.Bytes(), &dto)
+	require.NoError(t, err)
+	return dto
 }
