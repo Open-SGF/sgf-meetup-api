@@ -23,8 +23,8 @@ func NewControllerConfig(config *apiconfig.Config) ControllerConfig {
 }
 
 type Controller struct {
-	config  ControllerConfig
-	service *Service
+	config         ControllerConfig
+	groupEventRepo GroupEventRepository
 }
 
 const (
@@ -36,10 +36,10 @@ const (
 	afterKey   = "after"
 )
 
-func NewController(config ControllerConfig, service *Service) *Controller {
+func NewController(config ControllerConfig, groupEventRepo GroupEventRepository) *Controller {
 	return &Controller{
-		config:  config,
-		service: service,
+		config:         config,
+		groupEventRepo: groupEventRepo,
 	}
 }
 
@@ -78,7 +78,7 @@ func (c *Controller) groupEvents(ctx *gin.Context) {
 		return
 	}
 
-	events, nextFilters, err := c.service.PaginatedEvents(ctx, groupID, queryParamsToGroupEventArgs(queryParams))
+	events, nextFilters, err := c.groupEventRepo.PaginatedEvents(ctx, groupID, queryParamsToGroupEventArgs(queryParams))
 
 	if err != nil {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusInternalServerError)
@@ -162,4 +162,8 @@ func (c *Controller) createNextURL(ctx *gin.Context, groupID string, filters *Pa
 	return &urlString
 }
 
-var Providers = wire.NewSet(NewService, NewControllerConfig, NewController)
+var Providers = wire.NewSet(
+	GroupEventRepositoryProviders,
+	NewControllerConfig,
+	NewController,
+)

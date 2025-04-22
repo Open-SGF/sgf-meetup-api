@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/infra"
+	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/fakers"
 	"sgf-meetup-api/pkg/shared/models"
@@ -42,18 +43,23 @@ func TestController_Integration(t *testing.T) {
 
 	u, err := url.ParseRequestURI("/")
 	require.NoError(t, err)
-	controller := NewController(ControllerConfig{AppURL: *u}, NewService())
+	timeSource := clock.NewMockTimeSource(time.Now().UTC())
+	groupEventRepo := NewDynamoDBGroupEventRepository(DynamoDBGroupEventRepositoryConfig{
+		EventsTableName:    *infra.EventsTableProps.TableName,
+		GroupDateIndexName: *infra.GroupIdDateTimeIndex.IndexName,
+	}, timeSource, testDB.Client)
+	controller := NewController(ControllerConfig{AppURL: *u}, groupEventRepo)
 
 	router := gin.New()
 	controller.RegisterRoutes(router)
 
-	t.Run("GET /groups/:group/events returns events for group", func(t *testing.T) {
+	t.Run("GET /groups/:groupId/events returns events for group", func(t *testing.T) {
 		defer func() { _ = testDB.Reset(ctx) }()
 		group := "test-group"
 
 		events := []models.MeetupEvent{
-			meetupFaker.CreateEvent(group, time.Now()),
-			meetupFaker.CreateEvent(group, time.Now()),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*1)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*1)),
 		}
 		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
 
@@ -67,6 +73,6 @@ func TestController_Integration(t *testing.T) {
 		err = json.Unmarshal(w.Body.Bytes(), &responseDTO)
 		require.NoError(t, err)
 
-		assert.Len(t, responseDTO.Items, 0)
+		assert.Len(t, responseDTO.Items, len(events))
 	})
 }
