@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/shared/clock"
@@ -27,6 +28,7 @@ type PaginatedEventsFilters struct {
 
 type GroupEventRepository interface {
 	PaginatedEvents(ctx context.Context, groupID string, filters PaginatedEventsFilters) ([]models.MeetupEvent, *PaginatedEventsFilters, error)
+	NextEvent(ctx *gin.Context, groupID string) (*models.MeetupEvent, error)
 }
 
 type DynamoDBGroupEventRepositoryConfig struct {
@@ -59,7 +61,7 @@ func NewDynamoDBGroupEventRepository(
 	}
 }
 
-func (r DynamoDBGroupEventRepository) PaginatedEvents(ctx context.Context, groupID string, filters PaginatedEventsFilters) ([]models.MeetupEvent, *PaginatedEventsFilters, error) {
+func (r *DynamoDBGroupEventRepository) PaginatedEvents(ctx context.Context, groupID string, filters PaginatedEventsFilters) ([]models.MeetupEvent, *PaginatedEventsFilters, error) {
 	keyCond := expression.Key("groupId").
 		Equal(expression.Value(groupID))
 
@@ -130,6 +132,45 @@ func (r DynamoDBGroupEventRepository) PaginatedEvents(ctx context.Context, group
 	return events, nextCursor, nil
 }
 
+func (r *DynamoDBGroupEventRepository) NextEvent(ctx *gin.Context, groupID string) (*models.MeetupEvent, error) {
+	now := r.timeSource.Now().UTC()
+
+	keyCond := expression.Key("groupId").
+		Equal(expression.Value(groupID)).
+		And(expression.Key("dateTime").
+			GreaterThan(expression.Value(now)))
+
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
+	if err != nil {
+		return nil, err
+	}
+
+	queryInput := &dynamodb.QueryInput{
+		TableName:                 aws.String(r.config.EventsTableName),
+		IndexName:                 aws.String(r.config.GroupDateIndexName),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		Limit:                     aws.Int32(1),
+	}
+
+	result, err := r.db.Query(ctx, queryInput)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Items) == 0 {
+		return nil, ErrEventNotFound
+	}
+
+	var event models.MeetupEvent
+	if err := attributevalue.UnmarshalMap(result.Items[0], &event); err != nil {
+		return nil, err
+	}
+
+	return &event, nil
+}
+
 func encodeCursor(lastKey map[string]types.AttributeValue) (string, error) {
 	var id string
 	if err := attributevalue.Unmarshal(lastKey["id"], &id); err != nil {
@@ -181,6 +222,7 @@ func decodeCursor(cursorStr string) (map[string]types.AttributeValue, error) {
 }
 
 var ErrInvalidCursor = errors.New("invalid cursor")
+var ErrEventNotFound = errors.New("event not found")
 
 var GroupEventRepositoryProviders = wire.NewSet(
 	wire.Bind(new(GroupEventRepository), new(*DynamoDBGroupEventRepository)),

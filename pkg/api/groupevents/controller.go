@@ -1,6 +1,7 @@
 package groupevents
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"net/http"
@@ -109,6 +110,20 @@ func (c *Controller) nextGroupEvent(ctx *gin.Context) {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusBadRequest)
 		return
 	}
+
+	event, err := c.groupEventRepo.NextEvent(ctx, groupID)
+
+	if errors.Is(err, ErrEventNotFound) {
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusInternalServerError)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, meetupEventToDTO(event))
 
 }
 
