@@ -1,6 +1,7 @@
 package configparser
 
 import (
+	"errors"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -9,119 +10,142 @@ import (
 	"testing"
 )
 
-func TestParse_ValidEnvFile(t *testing.T) {
-	tempDir, cleanup, err := SetupTestEnv(`
+func TestParse(t *testing.T) {
+	t.Run("valid env file", func(t *testing.T) {
+		tempDir, cleanup, err := SetupTestEnv(`
 DB_HOST=localhost
 DB_PORT=5432
 `)
 
-	require.NoError(t, err)
-	defer cleanup()
+		require.NoError(t, err)
+		defer cleanup()
 
-	type Config struct {
-		Host string `mapstructure:"db_host"`
-		Port int    `mapstructure:"db_port"`
-	}
+		type Config struct {
+			Host string `mapstructure:"db_host"`
+			Port int    `mapstructure:"db_port"`
+		}
 
-	opts := ParseOptions{
-		EnvFilename: ".env",
-		EnvFilepath: tempDir,
-		SetDefaults: func(v *viper.Viper) { v.SetDefault("db_port", 3306) },
-	}
+		opts := ParseOptions{
+			EnvFilename: ".env",
+			EnvFilepath: tempDir,
+			SetDefaults: func(v *viper.Viper) error {
+				v.SetDefault("db_port", 3306)
+				return nil
+			},
+		}
 
-	cfg, err := Parse[Config](opts)
+		cfg, err := Parse[Config](opts)
 
-	require.NoError(t, err)
+		require.NoError(t, err)
 
-	assert.Equal(t, "localhost", cfg.Host)
-	assert.Equal(t, 5432, cfg.Port)
-}
+		assert.Equal(t, "localhost", cfg.Host)
+		assert.Equal(t, 5432, cfg.Port)
+	})
 
-func TestParse_EnvVarOverridesConfigFile(t *testing.T) {
-	tempDir, cleanup, err := SetupTestEnv(`
+	t.Run("env var overrides .env file", func(t *testing.T) {
+		tempDir, cleanup, err := SetupTestEnv(`
 API_KEY=file_key
 `)
 
-	require.NoError(t, err)
-	defer cleanup()
+		require.NoError(t, err)
+		defer cleanup()
 
-	t.Setenv("API_KEY", "env_key")
+		t.Setenv("API_KEY", "env_key")
 
-	type Config struct {
-		APIKey string `mapstructure:"api_key"`
-	}
+		type Config struct {
+			APIKey string `mapstructure:"api_key"`
+		}
 
-	opts := ParseOptions{
-		EnvFilename: ".env",
-		EnvFilepath: tempDir,
-		SetDefaults: func(v *viper.Viper) {},
-	}
+		opts := ParseOptions{
+			EnvFilename: ".env",
+			EnvFilepath: tempDir,
+			SetDefaults: func(v *viper.Viper) error { return nil },
+		}
 
-	cfg, err := Parse[Config](opts)
+		cfg, err := Parse[Config](opts)
 
-	require.NoError(t, err)
+		require.NoError(t, err)
 
-	assert.Equal(t, "env_key", cfg.APIKey)
-}
+		assert.Equal(t, "env_key", cfg.APIKey)
+	})
 
-func TestParse_MissingConfigFileWithDefaults(t *testing.T) {
-	type Config struct {
-		LogLevel string `mapstructure:"log_level"`
-	}
+	t.Run("missing config file with defaults", func(t *testing.T) {
+		type Config struct {
+			LogLevel string `mapstructure:"log_level"`
+		}
 
-	opts := ParseOptions{
-		EnvFilename: "missing.env",
-		EnvFilepath: t.TempDir(),
-		SetDefaults: func(v *viper.Viper) {
-			v.SetDefault("log_level", "info")
-		},
-	}
+		opts := ParseOptions{
+			EnvFilename: "missing.env",
+			EnvFilepath: t.TempDir(),
+			SetDefaults: func(v *viper.Viper) error {
+				v.SetDefault("log_level", "info")
+				return nil
+			},
+		}
 
-	cfg, err := Parse[Config](opts)
+		cfg, err := Parse[Config](opts)
 
-	require.NoError(t, err)
+		require.NoError(t, err)
 
-	assert.Equal(t, "info", cfg.LogLevel)
-}
+		assert.Equal(t, "info", cfg.LogLevel)
+	})
 
-func TestParse_InvalidConfigFile(t *testing.T) {
-	tempDir, cleanup, err := SetupTestEnv(`
+	t.Run("invalid config file", func(t *testing.T) {
+		tempDir, cleanup, err := SetupTestEnv(`
 INVALID_KEY_WITHOUT_VALUE
 `)
 
-	require.NoError(t, err)
-	defer cleanup()
+		require.NoError(t, err)
+		defer cleanup()
 
-	type Config struct {
-		Key string `mapstructure:"INVALID_KEY_WITHOUT_VALUE"`
-	}
+		type Config struct {
+			Key string `mapstructure:"INVALID_KEY_WITHOUT_VALUE"`
+		}
 
-	opts := ParseOptions{
-		EnvFilename: ".env",
-		EnvFilepath: tempDir,
-		SetDefaults: func(v *viper.Viper) {},
-	}
+		opts := ParseOptions{
+			EnvFilename: ".env",
+			EnvFilepath: tempDir,
+			SetDefaults: func(v *viper.Viper) error { return nil },
+		}
 
-	_, err = Parse[Config](opts)
+		_, err = Parse[Config](opts)
 
-	require.Error(t, err)
-}
+		require.Error(t, err)
+	})
 
-func TestParse_EmptyKeysInitialization(t *testing.T) {
-	type Config struct {
-		FeatureFlag string `mapstructure:"feature_flag"`
-	}
+	t.Run("empty keys initialization", func(t *testing.T) {
+		type Config struct {
+			FeatureFlag string `mapstructure:"feature_flag"`
+		}
 
-	opts := ParseOptions{
-		Keys:        []string{"feature_flag"},
-		SetDefaults: func(v *viper.Viper) {},
-	}
+		opts := ParseOptions{
+			Keys:        []string{"feature_flag"},
+			SetDefaults: func(v *viper.Viper) error { return nil },
+		}
 
-	cfg, err := Parse[Config](opts)
+		cfg, err := Parse[Config](opts)
 
-	require.NoError(t, err)
+		require.NoError(t, err)
 
-	assert.Equal(t, "", cfg.FeatureFlag)
+		assert.Equal(t, "", cfg.FeatureFlag)
+	})
+
+	t.Run("handle SetDefaults error", func(t *testing.T) {
+		type Config struct{}
+
+		errSetDefaults := errors.New("set defaults error")
+
+		opts := ParseOptions{
+			Keys: []string{},
+			SetDefaults: func(v *viper.Viper) error {
+				return errSetDefaults
+			},
+		}
+
+		_, err := Parse[Config](opts)
+
+		assert.ErrorIs(t, err, errSetDefaults)
+	})
 }
 
 func TestParseFromKey_LogLevel(t *testing.T) {

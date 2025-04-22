@@ -71,7 +71,7 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 	return config, nil
 }
 
-func setDefaults(v *viper.Viper) {
+func setDefaults(v *viper.Viper) error {
 	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
 	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
 	v.SetDefault(strings.ToLower(meetupAuthUrlKey), "https://secure.meetup.com/oauth2/access")
@@ -82,6 +82,7 @@ func setDefaults(v *viper.Viper) {
 	if err == nil {
 		v.SetDefault(strings.ToLower(meetupPrivateKeyKey), meetupPrivateKey)
 	}
+	return nil
 }
 
 func (config *Config) validate() error {

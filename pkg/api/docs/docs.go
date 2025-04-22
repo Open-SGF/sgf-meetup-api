@@ -142,12 +142,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "format": "date-time",
                         "description": "Filter events before this timestamp",
                         "name": "before",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "format": "date-time",
                         "description": "Filter events after this timestamp",
                         "name": "after",
                         "in": "query"

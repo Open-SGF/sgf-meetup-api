@@ -180,10 +180,12 @@ paths:
         required: true
         type: string
       - description: Filter events before this timestamp
+        format: date-time
         in: query
         name: before
         type: string
       - description: Filter events after this timestamp
+        format: date-time
         in: query
         name: after
         type: string

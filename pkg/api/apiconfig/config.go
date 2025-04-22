@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"log/slog"
+	"net/url"
 	"sgf-meetup-api/pkg/shared/configparser"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
@@ -55,7 +56,7 @@ type Config struct {
 	GroupIDDateTimeIndexName string          `mapstructure:"group_id_date_time_index_name"`
 	JWTIssuer                string          `mapstructure:"jwt_issuer"`
 	JWTSecret                []byte          `mapstructure:"jwt_secret"`
-	AppURL                   string          `mapstructure:"app_url"`
+	AppURL                   url.URL         `mapstructure:"app_url"`
 }
 
 func NewConfig() (*Config, error) {
@@ -81,13 +82,24 @@ func NewConfigFromEnvFile(path, filename string) (*Config, error) {
 	return config, nil
 }
 
-func setDefaults(v *viper.Viper) {
+func setDefaults(v *viper.Viper) error {
 	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
 	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
 	v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
 	v.SetDefault(strings.ToLower(jwtIssuerKey), "meetup-api.opensgf.org")
 	v.Set(strings.ToLower(jwtSecretKey), []byte(v.GetString(strings.ToLower(jwtSecretKey))))
-	v.SetDefault(strings.ToLower(appUrlKey), "https://meetup-api.opensgf.org")
+	appUrl := v.GetString(strings.ToLower(appUrlKey))
+	if appUrl == "" {
+		appUrl = "https://meetup-api.opensgf.org"
+	}
+	parsedUrl, err := url.Parse(appUrl)
+
+	if err != nil {
+		return err
+	}
+	v.Set(strings.ToLower(appUrlKey), parsedUrl)
+
+	return nil
 }
 
 func (config *Config) validate() error {

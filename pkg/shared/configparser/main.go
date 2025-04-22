@@ -12,7 +12,7 @@ type ParseOptions struct {
 	EnvFilename string
 	EnvFilepath string
 	Keys        []string
-	SetDefaults func(v *viper.Viper)
+	SetDefaults func(v *viper.Viper) error
 }
 
 func Parse[T any](options ParseOptions) (*T, error) {
@@ -35,7 +35,9 @@ func Parse[T any](options ParseOptions) (*T, error) {
 
 	v.AutomaticEnv()
 
-	options.SetDefaults(v)
+	if err := options.SetDefaults(v); err != nil {
+		return nil, err
+	}
 
 	var cfg T
 	if err := v.Unmarshal(&cfg); err != nil {

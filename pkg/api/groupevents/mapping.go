@@ -76,6 +76,6 @@ func meetupImagesToDTOs(meetupImages []models.MeetupImage) []imageDTO {
 	return dtos
 }
 
-func queryParamsToGroupEventArgs(queryParams groupEventsQueryParams) groupEventArgs {
-	return groupEventArgs(queryParams)
+func queryParamsToGroupEventArgs(queryParams groupEventsQueryParams) PaginatedEventsFilters {
+	return PaginatedEventsFilters(queryParams)
 }
