@@ -43,7 +43,6 @@ APP_ENV=staging
 		assert.Equal(t, slog.LevelInfo, cfg.LogLevel)
 		assert.Equal(t, logging.LogTypeText, cfg.LogType)
 	})
-
 }
 
 func TestNewLoggingConfig(t *testing.T) {

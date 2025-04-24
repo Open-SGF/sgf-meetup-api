@@ -8,21 +8,24 @@ import (
 )
 
 const (
-	logLevelKey = "LOG_LEVEL"
-	logTypeKey  = "LOG_TYPE"
-	appEnvKey   = "APP_ENV"
+	logLevelKey      = "LOG_LEVEL"
+	logTypeKey       = "LOG_TYPE"
+	appEnvKey        = "APP_ENV"
+	appDomainNameEnv = "APP_DOMAIN_NAME"
 )
 
 var configKeys = []string{
 	logLevelKey,
 	logTypeKey,
 	appEnvKey,
+	appDomainNameEnv,
 }
 
 type Config struct {
-	LogLevel slog.Level      `mapstructure:"log_level"`
-	LogType  logging.LogType `mapstructure:"log_type"`
-	AppEnv   string          `mapstructure:"app_env"`
+	LogLevel      slog.Level      `mapstructure:"log_level"`
+	LogType       logging.LogType `mapstructure:"log_type"`
+	AppEnv        string          `mapstructure:"app_env"`
+	AppDomainName string          `mapstructure:"app_domain_name"`
 }
 
 func NewConfig() (*Config, error) {
