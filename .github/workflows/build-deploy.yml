@@ -2,7 +2,9 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - develop
 
 jobs:
   build:
@@ -12,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '18.18.0'
+          node-version-file: '.nvmrc'
       - name: Install dependencies
         run: npm ci
       - name: Configure AWS credentials
@@ -27,8 +29,6 @@ jobs:
         env:
           BUILD_ENV: 'production'
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          MEETUP_PRIVATE_KEY: ${{ secrets.MEETUP_PRIVATE_KEY }}
-          MEETUP_USER_ID: ${{ secrets.MEETUP_USER_ID }}
-          MEETUP_CLIENT_KEY: ${{ secrets.MEETUP_CLIENT_KEY }}
-          MEETUP_SIGNING_KEY_ID: ${{ secrets.MEETUP_SIGNING_KEY_ID }}
+          APP_ENV: ${{ vars.APP_ENV }}
+          APP_DOMAIN_NAME: ${{ vars.APP_DOMAIN_NAME }}
         run: npm run cdk deploy
