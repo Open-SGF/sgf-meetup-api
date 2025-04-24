@@ -60,7 +60,7 @@ func NewGoLambdaFunction(
 
 	functionProps := &awslambda.FunctionProps{
 		FunctionName: jsii.String(functionName),
-		Runtime:      awslambda.Runtime_GO_1_X(),
+		Runtime:      awslambda.Runtime_PROVIDED_AL2023(),
 		MemorySize:   jsii.Number(memory),
 		Timeout:      awscdk.Duration_Seconds(jsii.Number(timeout)),
 		Code: awslambda.AssetCode_FromAsset(jsii.String("."), &awss3assets.AssetOptions{
@@ -68,7 +68,7 @@ func NewGoLambdaFunction(
 				Image: awscdk.DockerImage_FromBuild(jsii.String("./pkg/infra"), nil),
 				Command: jsii.Strings(
 					"bash", "-c",
-					"go build -o /asset-output/main "+*props.CodePath+"/main.go && "+
+					"go build -o /asset-output/bootstrap "+*props.CodePath+"/main.go && "+
 						"if [ -f .env ]; then cp .env /asset-output/; fi",
 				),
 				Volumes: &[]*awscdk.DockerVolume{

@@ -34,45 +34,21 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 
 	meetupProxyFunctionName := customconstructs.NewFunctionName(namespace, "MeetupProxy")
 
-	meetupPrivateKey := awsssm.StringParameter_FromSecureStringParameterAttributes(
-		stack,
-		jsii.String("MeetupPrivateKey"),
-		&awsssm.SecureStringParameterAttributes{
-			ParameterName: jsii.String("/sgf-meetup-api/meetup-private-key-base64"),
-		},
-	)
-	meetupUserId := awsssm.StringParameter_FromSecureStringParameterAttributes(
-		stack,
-		jsii.String("MeetupUserId"),
-		&awsssm.SecureStringParameterAttributes{
-			ParameterName: jsii.String("/sgf-meetup-api/meetup-user-id"),
-		},
-	)
-	meetupClientId := awsssm.StringParameter_FromSecureStringParameterAttributes(
-		stack,
-		jsii.String("MeetupClientId"),
-		&awsssm.SecureStringParameterAttributes{
-			ParameterName: jsii.String("/sgf-meetup-api/meetup-client-key"),
-		},
-	)
-	meetupSigningKeyId := awsssm.StringParameter_FromSecureStringParameterAttributes(
-		stack,
-		jsii.String("MeetupSigningKeyId"),
-		&awsssm.SecureStringParameterAttributes{
-			ParameterName: jsii.String("/sgf-meetup-api/meetup-signing-key-id"),
-		},
-	)
+	meetupPrivateKey := awsssm.StringParameter_ValueForStringParameter(stack, jsii.String("/sgf-meetup-api/meetup-private-key-base64"), nil)
+	meetupUserId := awsssm.StringParameter_ValueForStringParameter(stack, jsii.String("/sgf-meetup-api/meetup-user-id"), nil)
+	meetupClientId := awsssm.StringParameter_ValueForStringParameter(stack, jsii.String("/sgf-meetup-api/meetup-client-key"), nil)
+	meetupSigningKeyId := awsssm.StringParameter_ValueForStringParameter(stack, jsii.String("/sgf-meetup-api/meetup-signing-key-id"), nil)
 
 	meetupProxyFunction := customconstructs.NewGoLambdaFunction(stack, meetupProxyFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/meetupproxy"),
 		FunctionName: meetupProxyFunctionName.PrefixedName(),
 		Environment: &map[string]*string{
-			"MEETUP_PRIVATE_KEY_BASE64": meetupPrivateKey.StringValue(),
-			"MEETUP_USER_ID":            meetupUserId.StringValue(),
-			"MEETUP_CLIENT_KEY":         meetupClientId.StringValue(),
-			"MEETUP_SIGNING_KEY_ID":     meetupSigningKeyId.StringValue(),
 			"LOG_LEVEL":                 jsii.String("debug"),
 			"LOG_TYPE":                  jsii.String("json"),
+			"MEETUP_PRIVATE_KEY_BASE64": meetupPrivateKey,
+			"MEETUP_USER_ID":            meetupUserId,
+			"MEETUP_CLIENT_KEY":         meetupClientId,
+			"MEETUP_SIGNING_KEY_ID":     meetupSigningKeyId,
 		},
 	})
 
@@ -80,7 +56,7 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		ManagedPolicyName: jsii.String(namespace + "meetupProxyFunctionInvokePolicy"),
 		Statements: &[]awsiam.PolicyStatement{awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
 			Actions:   jsii.Strings("lambda:InvokeFunction"),
-			Resources: jsii.Strings(*meetupProxyFunction.FunctionArn()),
+			Resources: jsii.Strings(*meetupProxyFunction.Function.FunctionArn()), //nolint:staticcheck
 			Effect:    awsiam.Effect_ALLOW,
 		})},
 	})
@@ -122,12 +98,12 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		},
 	})
 
-	meetupProxyFunction.GrantInvoke(importerFunction.Function)
-	eventsTable.GrantReadWriteData(importerFunction.Function)
-	eventsTable.GrantReadWriteData(apiFunction.Function)
-	archivedEventsTable.GrantReadWriteData(importerFunction.Function)
-	archivedEventsTable.GrantReadWriteData(apiFunction.Function)
-	apiUsersTable.GrantReadWriteData(apiFunction.Function)
+	meetupProxyFunction.Function.GrantInvoke(importerFunction.Function)     //nolint:staticcheck
+	eventsTable.Table.GrantReadWriteData(importerFunction.Function)         //nolint:staticcheck
+	eventsTable.Table.GrantReadWriteData(apiFunction.Function)              //nolint:staticcheck
+	archivedEventsTable.Table.GrantReadWriteData(importerFunction.Function) //nolint:staticcheck
+	archivedEventsTable.Table.GrantReadWriteData(apiFunction.Function)      //nolint:staticcheck
+	apiUsersTable.Table.GrantReadWriteData(apiFunction.Function)            //nolint:staticcheck
 
 	importScheduleRule := awsevents.NewRule(stack, jsii.String("ImporterEventBridgeRule"), &awsevents.RuleProps{
 		Schedule: awsevents.Schedule_Expression(jsii.String("cron(0 0-23/2 * * ? *)")), // every 2 hours
