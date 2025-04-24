@@ -7,6 +7,7 @@
 package meetupproxy
 
 import (
+	"context"
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
 	"sgf-meetup-api/pkg/shared/clock"
@@ -16,8 +17,8 @@ import (
 
 // Injectors from wire.go:
 
-func InitService() (*Service, error) {
-	config, err := meetupproxyconfig.NewConfig()
+func InitService(ctx context.Context) (*Service, error) {
+	config, err := meetupproxyconfig.NewConfig(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package meetupproxy
 
 import (
+	"context"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -11,7 +12,7 @@ func TestInitService(t *testing.T) {
 	t.Setenv("MEETUP_CLIENT_KEY", "meetupClientKey")
 	t.Setenv("MEETUP_SIGNING_KEY_ID", "signingKeyId")
 
-	_, err := InitService()
+	_, err := InitService(context.Background())
 
 	require.NoError(t, err)
 }

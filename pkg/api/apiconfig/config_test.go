@@ -1,6 +1,7 @@
 package apiconfig
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
@@ -30,7 +31,7 @@ APP_URL=http://localhost
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.NoError(t, err)
 		require.NotNil(t, cfg)
 
@@ -60,7 +61,7 @@ JWT_SECRET=secretkey
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.NoError(t, err)
 		require.NotNil(t, cfg)
 
@@ -78,7 +79,7 @@ LOG_LEVEL=info
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.Error(t, err)
 		assert.Nil(t, cfg)
 		assert.Contains(t, err.Error(), apiUsersTableNameKey)

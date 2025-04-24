@@ -1,6 +1,7 @@
 package importerconfig
 
 import (
+	"context"
 	"fmt"
 	"github.com/spf13/viper"
 	"log/slog"
@@ -55,12 +56,12 @@ type Config struct {
 	GroupIDDateTimeIndexName string          `mapstructure:"group_id_date_time_index_name"`
 }
 
-func NewConfig() (*Config, error) {
-	return NewConfigFromEnvFile(".", ".env")
+func NewConfig(ctx context.Context) (*Config, error) {
+	return NewConfigFromEnvFile(ctx, ".", ".env")
 }
 
-func NewConfigFromEnvFile(path, filename string) (*Config, error) {
-	config, err := configparser.Parse[Config](configparser.ParseOptions{
+func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, error) {
+	config, err := configparser.Parse[Config](ctx, configparser.ParseOptions{
 		EnvFilepath: path,
 		EnvFilename: filename,
 		Keys:        configKeys,

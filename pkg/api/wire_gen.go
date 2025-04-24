@@ -25,7 +25,7 @@ import (
 // Injectors from wire.go:
 
 func InitRouter(ctx context.Context) (*gin.Engine, error) {
-	config, err := apiconfig.NewConfig()
+	config, err := apiconfig.NewConfig(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package configparser
 
 import (
+	"context"
 	"errors"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +35,7 @@ DB_PORT=5432
 			},
 		}
 
-		cfg, err := Parse[Config](opts)
+		cfg, err := Parse[Config](context.Background(), opts)
 
 		require.NoError(t, err)
 
@@ -62,7 +63,7 @@ API_KEY=file_key
 			SetDefaults: func(v *viper.Viper) error { return nil },
 		}
 
-		cfg, err := Parse[Config](opts)
+		cfg, err := Parse[Config](context.Background(), opts)
 
 		require.NoError(t, err)
 
@@ -83,7 +84,7 @@ API_KEY=file_key
 			},
 		}
 
-		cfg, err := Parse[Config](opts)
+		cfg, err := Parse[Config](context.Background(), opts)
 
 		require.NoError(t, err)
 
@@ -108,7 +109,7 @@ INVALID_KEY_WITHOUT_VALUE
 			SetDefaults: func(v *viper.Viper) error { return nil },
 		}
 
-		_, err = Parse[Config](opts)
+		_, err = Parse[Config](context.Background(), opts)
 
 		require.Error(t, err)
 	})
@@ -123,7 +124,7 @@ INVALID_KEY_WITHOUT_VALUE
 			SetDefaults: func(v *viper.Viper) error { return nil },
 		}
 
-		cfg, err := Parse[Config](opts)
+		cfg, err := Parse[Config](context.Background(), opts)
 
 		require.NoError(t, err)
 
@@ -142,7 +143,7 @@ INVALID_KEY_WITHOUT_VALUE
 			},
 		}
 
-		_, err := Parse[Config](opts)
+		_, err := Parse[Config](context.Background(), opts)
 
 		assert.ErrorIs(t, err, errSetDefaults)
 	})

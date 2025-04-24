@@ -1,6 +1,7 @@
 package infraconfig
 
 import (
+	"context"
 	"github.com/spf13/viper"
 	"log/slog"
 	"sgf-meetup-api/pkg/shared/configparser"
@@ -28,12 +29,12 @@ type Config struct {
 	AppDomainName string          `mapstructure:"app_domain_name"`
 }
 
-func NewConfig() (*Config, error) {
-	return NewConfigFromEnvFile(".", ".env")
+func NewConfig(ctx context.Context) (*Config, error) {
+	return NewConfigFromEnvFile(ctx, ".", ".env")
 }
 
-func NewConfigFromEnvFile(path, filename string) (*Config, error) {
-	config, err := configparser.Parse[Config](configparser.ParseOptions{
+func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, error) {
+	config, err := configparser.Parse[Config](ctx, configparser.ParseOptions{
 		EnvFilepath: path,
 		EnvFilename: filename,
 		Keys:        configKeys,

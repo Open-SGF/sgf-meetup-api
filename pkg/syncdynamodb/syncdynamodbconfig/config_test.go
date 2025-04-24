@@ -1,6 +1,7 @@
 package syncdynamodbconfig
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
@@ -23,7 +24,7 @@ AWS_SECRET_ACCESS_KEY=testsecret
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.NoError(t, err)
 		require.NotNil(t, cfg)
 
@@ -41,7 +42,7 @@ AWS_SECRET_ACCESS_KEY=testsecret
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.NoError(t, err)
 		require.NotNil(t, cfg)
 
