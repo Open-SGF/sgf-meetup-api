@@ -17,7 +17,7 @@ import (
 // Injectors from wire.go:
 
 func InitService(ctx context.Context) (*Service, error) {
-	config, err := syncdynamodbconfig.NewConfig()
+	config, err := syncdynamodbconfig.NewConfig(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -19,7 +19,7 @@ import (
 // Injectors from wire.go:
 
 func InitService(ctx context.Context) (*Service, error) {
-	config, err := importerconfig.NewConfig()
+	config, err := importerconfig.NewConfig(ctx)
 	if err != nil {
 		return nil, err
 	}

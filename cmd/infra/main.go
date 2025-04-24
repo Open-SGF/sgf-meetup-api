@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/jsii-runtime-go"
 	"log"
@@ -11,7 +12,7 @@ import (
 func main() {
 	defer jsii.Close()
 
-	config, err := infraconfig.NewConfig()
+	config, err := infraconfig.NewConfig(context.Background())
 
 	if err != nil {
 		log.Println(err)

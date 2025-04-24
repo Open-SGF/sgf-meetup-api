@@ -1,6 +1,7 @@
 package importerconfig
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
@@ -29,7 +30,7 @@ GROUP_ID_DATE_TIME_INDEX_NAME=group-index
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.NoError(t, err)
 		require.NotNil(t, cfg)
 
@@ -58,7 +59,7 @@ GROUP_ID_DATE_TIME_INDEX_NAME=group-index
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.NoError(t, err)
 		require.NotNil(t, cfg)
 
@@ -75,7 +76,7 @@ LOG_LEVEL=info
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.Error(t, err)
 		assert.Nil(t, cfg)
 		assert.Contains(t, err.Error(), proxyFunctionNameKey)

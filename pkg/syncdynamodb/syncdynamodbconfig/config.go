@@ -1,6 +1,7 @@
 package syncdynamodbconfig
 
 import (
+	"context"
 	"github.com/spf13/viper"
 	"log/slog"
 	"sgf-meetup-api/pkg/shared/configparser"
@@ -36,12 +37,12 @@ type Config struct {
 	AwsSecretAccessKey string          `mapstructure:"aws_secret_access_key"`
 }
 
-func NewConfig() (*Config, error) {
-	return NewConfigFromEnvFile(".", ".env")
+func NewConfig(ctx context.Context) (*Config, error) {
+	return NewConfigFromEnvFile(ctx, ".", ".env")
 }
 
-func NewConfigFromEnvFile(path, filename string) (*Config, error) {
-	config, err := configparser.Parse[Config](configparser.ParseOptions{
+func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, error) {
+	config, err := configparser.Parse[Config](ctx, configparser.ParseOptions{
 		EnvFilepath: path,
 		EnvFilename: filename,
 		Keys:        configKeys,

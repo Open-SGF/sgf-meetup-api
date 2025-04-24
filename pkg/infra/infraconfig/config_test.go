@@ -1,6 +1,7 @@
 package infraconfig
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
@@ -20,7 +21,7 @@ APP_ENV=staging
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.NoError(t, err)
 		require.NotNil(t, cfg)
 
@@ -36,7 +37,7 @@ APP_ENV=staging
 		require.NoError(t, err)
 		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(tempDir, ".env")
+		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
 		require.NoError(t, err)
 		require.NotNil(t, cfg)
 
