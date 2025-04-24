@@ -122,24 +122,24 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		},
 	})
 
-	meetupProxyFunction.GrantInvoke(importerFunction)
-	eventsTable.GrantReadWriteData(importerFunction)
-	eventsTable.GrantReadWriteData(apiFunction)
-	archivedEventsTable.GrantReadWriteData(importerFunction)
-	archivedEventsTable.GrantReadWriteData(apiFunction)
-	apiUsersTable.GrantReadWriteData(apiFunction)
+	meetupProxyFunction.GrantInvoke(importerFunction.Function)
+	eventsTable.GrantReadWriteData(importerFunction.Function)
+	eventsTable.GrantReadWriteData(apiFunction.Function)
+	archivedEventsTable.GrantReadWriteData(importerFunction.Function)
+	archivedEventsTable.GrantReadWriteData(apiFunction.Function)
+	apiUsersTable.GrantReadWriteData(apiFunction.Function)
 
 	importScheduleRule := awsevents.NewRule(stack, jsii.String("ImporterEventBridgeRule"), &awsevents.RuleProps{
 		Schedule: awsevents.Schedule_Expression(jsii.String("cron(0 0-23/2 * * ? *)")), // every 2 hours
 	})
 
 	importScheduleRule.AddTarget(awseventstargets.NewLambdaFunction(
-		importerFunction,
+		importerFunction.Function,
 		&awseventstargets.LambdaFunctionProps{},
 	))
 
 	api := awsapigateway.NewLambdaRestApi(stack, jsii.String("EventsGateway"), &awsapigateway.LambdaRestApiProps{
-		Handler: apiFunction,
+		Handler: apiFunction.Function,
 		Proxy:   jsii.Bool(true),
 	})
 
