@@ -3,19 +3,27 @@ package main
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/jsii-runtime-go"
+	"log"
 	"sgf-meetup-api/pkg/infra"
+	"sgf-meetup-api/pkg/infra/infraconfig"
 )
 
 func main() {
 	defer jsii.Close()
 
+	config, err := infraconfig.NewConfig()
+
+	if err != nil {
+		log.Println(err)
+	}
+
 	app := awscdk.NewApp(nil)
 
-	// TODO parse in APP_ENV and pass in
 	infra.NewStack(app, "SgfMeetupApiGo", &infra.AppStackProps{
 		StackProps: awscdk.StackProps{
 			Env: env(),
 		},
+		AppEnv: config.AppEnv,
 	})
 
 	app.Synth(nil)
