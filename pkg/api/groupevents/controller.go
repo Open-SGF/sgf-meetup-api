@@ -148,6 +148,19 @@ func (c *Controller) groupEventByID(ctx *gin.Context) {
 		return
 	}
 
+	event, err := c.groupEventRepo.EventByID(ctx, groupID, eventID)
+
+	if errors.Is(err, ErrEventNotFound) || errors.Is(err, ErrGroupNotFound) {
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusInternalServerError)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, meetupEventToDTO(event))
 }
 
 func (c *Controller) createNextURL(ctx *gin.Context, groupID string, filters *PaginatedEventsFilters) *string {

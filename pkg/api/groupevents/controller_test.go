@@ -156,10 +156,53 @@ func TestController_Integration(t *testing.T) {
 
 		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
 
-		w := makeRequest(router, "GET", "/groups/"+group+"/events/next", nil)
-		dto := getDTOWhenStatus[eventDTO](t, w, http.StatusOK)
+		t.Run("returns next event", func(t *testing.T) {
+			w := makeRequest(router, "GET", "/groups/"+group+"/events/next", nil)
+			dto := getDTOWhenStatus[eventDTO](t, w, http.StatusOK)
 
-		assert.Equal(t, events[2].ID, dto.ID)
+			assert.Equal(t, events[2].ID, dto.ID)
+		})
+
+		t.Run("returns 404 when no next event", func(t *testing.T) {
+			timeSource.SetTime(timeSource.Now().Add(time.Hour * 4))
+			defer timeSource.Reset()
+			w := makeRequest(router, "GET", "/groups/"+group+"/events/next", nil)
+
+			assert.Equal(t, http.StatusNotFound, w.Code)
+		})
+	})
+
+	t.Run("GET /groups/:groupId/events/:eventId ", func(t *testing.T) {
+		defer func() { _ = testDB.Reset(ctx) }()
+		group := "test-group"
+
+		events := []models.MeetupEvent{
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*1)),
+			meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*2)),
+			meetupFaker.CreateEvent("other-group", timeSource.Now().Add(time.Hour*3)),
+		}
+
+		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
+
+		t.Run("return valid event", func(t *testing.T) {
+			w := makeRequest(router, "GET", "/groups/"+group+"/events/"+events[1].ID, nil)
+			dto := getDTOWhenStatus[eventDTO](t, w, http.StatusOK)
+
+			assert.Equal(t, events[1].ID, dto.ID)
+		})
+
+		t.Run("return 404 for invalid event id", func(t *testing.T) {
+			w := makeRequest(router, "GET", "/groups/"+group+"/events/invalid", nil)
+
+			assert.Equal(t, http.StatusNotFound, w.Code)
+		})
+
+		t.Run("return 404 for when event id matches but group id doesn't", func(t *testing.T) {
+			w := makeRequest(router, "GET", "/groups/"+group+"/events"+events[2].ID, nil)
+
+			assert.Equal(t, http.StatusNotFound, w.Code)
+		})
+
 	})
 }
 
