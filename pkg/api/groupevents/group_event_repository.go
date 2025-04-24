@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/shared/clock"
@@ -28,7 +27,8 @@ type PaginatedEventsFilters struct {
 
 type GroupEventRepository interface {
 	PaginatedEvents(ctx context.Context, groupID string, filters PaginatedEventsFilters) ([]models.MeetupEvent, *PaginatedEventsFilters, error)
-	NextEvent(ctx *gin.Context, groupID string) (*models.MeetupEvent, error)
+	NextEvent(ctx context.Context, groupID string) (*models.MeetupEvent, error)
+	EventByID(ctx context.Context, groupID, eventID string) (*models.MeetupEvent, error)
 }
 
 type DynamoDBGroupEventRepositoryConfig struct {
@@ -94,7 +94,7 @@ func (r *DynamoDBGroupEventRepository) PaginatedEvents(ctx context.Context, grou
 	}
 
 	if filters.Cursor != "" {
-		startKey, err := decodeCursor(filters.Cursor)
+		startKey, err := r.decodeCursor(filters.Cursor)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -117,7 +117,7 @@ func (r *DynamoDBGroupEventRepository) PaginatedEvents(ctx context.Context, grou
 
 	var nextCursor *PaginatedEventsFilters
 	if result.LastEvaluatedKey != nil {
-		cursorStr, err := encodeCursor(result.LastEvaluatedKey)
+		cursorStr, err := r.encodeCursor(result.LastEvaluatedKey)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -132,7 +132,7 @@ func (r *DynamoDBGroupEventRepository) PaginatedEvents(ctx context.Context, grou
 	return events, nextCursor, nil
 }
 
-func (r *DynamoDBGroupEventRepository) NextEvent(ctx *gin.Context, groupID string) (*models.MeetupEvent, error) {
+func (r *DynamoDBGroupEventRepository) NextEvent(ctx context.Context, groupID string) (*models.MeetupEvent, error) {
 	now := r.timeSource.Now().UTC()
 
 	keyCond := expression.Key("groupId").
@@ -171,7 +171,36 @@ func (r *DynamoDBGroupEventRepository) NextEvent(ctx *gin.Context, groupID strin
 	return &event, nil
 }
 
-func encodeCursor(lastKey map[string]types.AttributeValue) (string, error) {
+func (r *DynamoDBGroupEventRepository) EventByID(ctx context.Context, groupID, eventID string) (*models.MeetupEvent, error) {
+	getInput := &dynamodb.GetItemInput{
+		TableName: aws.String(r.config.EventsTableName),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: eventID},
+		},
+	}
+
+	result, err := r.db.GetItem(ctx, getInput)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Item == nil {
+		return nil, ErrEventNotFound
+	}
+
+	var event models.MeetupEvent
+	if err := attributevalue.UnmarshalMap(result.Item, &event); err != nil {
+		return nil, err
+	}
+
+	if event.GroupID != groupID {
+		return nil, ErrGroupNotFound
+	}
+
+	return &event, nil
+}
+
+func (r *DynamoDBGroupEventRepository) encodeCursor(lastKey map[string]types.AttributeValue) (string, error) {
 	var id string
 	if err := attributevalue.Unmarshal(lastKey["id"], &id); err != nil {
 		return "", err
@@ -193,7 +222,7 @@ func encodeCursor(lastKey map[string]types.AttributeValue) (string, error) {
 	return encodedID + "." + encodedGroup + "." + encodedTime, nil
 }
 
-func decodeCursor(cursorStr string) (map[string]types.AttributeValue, error) {
+func (r *DynamoDBGroupEventRepository) decodeCursor(cursorStr string) (map[string]types.AttributeValue, error) {
 	parts := strings.Split(cursorStr, ".")
 	if len(parts) != 3 {
 		return nil, ErrInvalidCursor
@@ -223,6 +252,7 @@ func decodeCursor(cursorStr string) (map[string]types.AttributeValue, error) {
 
 var ErrInvalidCursor = errors.New("invalid cursor")
 var ErrEventNotFound = errors.New("event not found")
+var ErrGroupNotFound = errors.New("group not found")
 
 var GroupEventRepositoryProviders = wire.NewSet(
 	wire.Bind(new(GroupEventRepository), new(*DynamoDBGroupEventRepository)),
