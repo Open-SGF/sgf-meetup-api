@@ -23,7 +23,8 @@ func main() {
 		StackProps: awscdk.StackProps{
 			Env: env(),
 		},
-		AppEnv: config.AppEnv,
+		AppEnv:     config.AppEnv,
+		DomainName: config.AppDomainName,
 	})
 
 	app.Synth(nil)
