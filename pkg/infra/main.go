@@ -80,7 +80,7 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		ManagedPolicyName: jsii.String(namespace + "meetupProxyFunctionInvokePolicy"),
 		Statements: &[]awsiam.PolicyStatement{awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
 			Actions:   jsii.Strings("lambda:InvokeFunction"),
-			Resources: jsii.Strings(*meetupProxyFunction.Function.FunctionArn()),
+			Resources: jsii.Strings(*meetupProxyFunction.FunctionArn()),
 			Effect:    awsiam.Effect_ALLOW,
 		})},
 	})
@@ -110,7 +110,7 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 
 	apiFunctionName := customconstructs.NewFunctionName(namespace, "Api")
 
-	apiFunction := customconstructs.NewGoLambdaFunction(stack, apiFunctionName.PrefixedName(), &customconstructs.GoLambdaFunctionProps{
+	apiFunction := customconstructs.NewGoLambdaFunction(stack, apiFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/api"),
 		FunctionName: apiFunctionName.PrefixedName(),
 		Environment: &map[string]*string{
@@ -122,12 +122,12 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		},
 	})
 
-	meetupProxyFunction.Function.GrantInvoke(importerFunction)
-	eventsTable.Table.GrantReadWriteData(importerFunction)
-	eventsTable.Table.GrantReadWriteData(apiFunction)
-	archivedEventsTable.Table.GrantReadWriteData(importerFunction)
-	archivedEventsTable.Table.GrantReadWriteData(apiFunction)
-	apiUsersTable.Table.GrantReadWriteData(apiFunction)
+	meetupProxyFunction.GrantInvoke(importerFunction)
+	eventsTable.GrantReadWriteData(importerFunction)
+	eventsTable.GrantReadWriteData(apiFunction)
+	archivedEventsTable.GrantReadWriteData(importerFunction)
+	archivedEventsTable.GrantReadWriteData(apiFunction)
+	apiUsersTable.GrantReadWriteData(apiFunction)
 
 	importScheduleRule := awsevents.NewRule(stack, jsii.String("ImporterEventBridgeRule"), &awsevents.RuleProps{
 		Schedule: awsevents.Schedule_Expression(jsii.String("cron(0 0-23/2 * * ? *)")), // every 2 hours
