@@ -2,79 +2,29 @@ package syncdynamodbconfig
 
 import (
 	"context"
-	"github.com/spf13/viper"
-	"log/slog"
+	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/appconfig"
-	"sgf-meetup-api/pkg/shared/db"
-	"sgf-meetup-api/pkg/shared/logging"
-	"strings"
 )
-
-const (
-	logLevelKey           = "LOG_LEVEL"
-	logTypeKey            = "LOG_TYPE"
-	dynamoDBEndpointKey   = "DYNAMODB_ENDPOINT"
-	awsRegionKey          = "AWS_REGION"
-	awsAccessKeyKey       = "AWS_ACCESS_KEY"
-	awsSecretAccessKeyKey = "AWS_SECRET_ACCESS_KEY"
-)
-
-var configKeys = []string{
-	logLevelKey,
-	logTypeKey,
-	dynamoDBEndpointKey,
-	awsRegionKey,
-	awsAccessKeyKey,
-	awsSecretAccessKeyKey,
-}
 
 type Config struct {
-	LogLevel           slog.Level      `mapstructure:"log_level"`
-	LogType            logging.LogType `mapstructure:"log_type"`
-	DynamoDbEndpoint   string          `mapstructure:"dynamodb_endpoint"`
-	AwsRegion          string          `mapstructure:"aws_region"`
-	AwsAccessKey       string          `mapstructure:"aws_access_key"`
-	AwsSecretAccessKey string          `mapstructure:"aws_secret_access_key"`
+	appconfig.Common `mapstructure:",squash"`
 }
 
-func NewConfig(ctx context.Context) (*Config, error) {
-	return NewConfigFromEnvFile(ctx, ".", ".env")
-}
+func NewConfig(ctx context.Context, awsConfigFactory *appconfig.AwsConfigManager) (*Config, error) {
+	var config Config
 
-func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, error) {
-	config, err := appconfig.Parse[Config](ctx, appconfig.ParseOptions{
-		EnvFilepath: path,
-		EnvFilename: filename,
-		Keys:        configKeys,
-		SetDefaults: setDefaults,
-	})
+	err := appconfig.NewParser().
+		WithCommonConfig().
+		WithEnvFile(".", ".env").
+		WithEnvVars().
+		WithCustomProcessor(awsConfigFactory.SetConfigFromViper).
+		Parse(ctx, &config)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return config, nil
+	return &config, nil
 }
 
-func setDefaults(v *viper.Viper) error {
-	appconfig.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
-	appconfig.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
-	v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
-	return nil
-}
-
-func NewLoggingConfig(config *Config) logging.Config {
-	return logging.Config{
-		Level: config.LogLevel,
-		Type:  config.LogType,
-	}
-}
-
-func NewDBConfig(config *Config) db.Config {
-	return db.Config{
-		Endpoint:        config.DynamoDbEndpoint,
-		Region:          config.AwsRegion,
-		AccessKey:       config.AwsAccessKey,
-		SecretAccessKey: config.AwsSecretAccessKey,
-	}
-}
+var ConfigProviders = wire.NewSet(appconfig.ConfigProviders, wire.FieldsOf(new(*Config), "Common"), NewConfig)

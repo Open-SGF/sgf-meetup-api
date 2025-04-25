@@ -11,9 +11,8 @@ import (
 	"sgf-meetup-api/pkg/syncdynamodb/syncdynamodbconfig"
 )
 
-var CommonSet = wire.NewSet(syncdynamodbconfig.NewConfig, logging.DefaultLogger, syncdynamodbconfig.NewLoggingConfig)
-var DBSet = wire.NewSet(syncdynamodbconfig.NewDBConfig, db.NewClient)
+var CommonProviders = wire.NewSet(syncdynamodbconfig.ConfigProviders, logging.DefaultLogger)
 
 func InitService(ctx context.Context) (*Service, error) {
-	panic(wire.Build(CommonSet, DBSet, NewService))
+	panic(wire.Build(CommonProviders, db.Providers, NewService))
 }

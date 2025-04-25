@@ -4,76 +4,59 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"log/slog"
+	"os"
+	"path/filepath"
 	"sgf-meetup-api/pkg/shared/appconfig"
-	"sgf-meetup-api/pkg/shared/logging"
+	"strings"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
-	t.Run("all values", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(`
-LOG_LEVEL=debug
-LOG_TYPE=json
-DYNAMODB_ENDPOINT=http://localhost:8000
-AWS_REGION=us-west-2
-AWS_ACCESS_KEY=testkey
-AWS_SECRET_ACCESS_KEY=testsecret
-`)
+	awsConfigManager := appconfig.NewAwsConfigManager()
+	ctx := context.Background()
 
+	t.Run("successful load from environment variables", func(t *testing.T) {
+		switchToTempTestDir(t)
+		t.Setenv(appconfig.DynamoDBEndpointKey, "dynamodb_endpoint")
+
+		cfg, err := NewConfig(ctx, awsConfigManager)
 		require.NoError(t, err)
-		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
-		require.NoError(t, err)
-		require.NotNil(t, cfg)
-
-		assert.Equal(t, slog.LevelDebug, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeJSON, cfg.LogType)
-		assert.Equal(t, "http://localhost:8000", cfg.DynamoDbEndpoint)
-		assert.Equal(t, "us-west-2", cfg.AwsRegion)
-		assert.Equal(t, "testkey", cfg.AwsAccessKey)
-		assert.Equal(t, "testsecret", cfg.AwsSecretAccessKey)
+		assert.Equal(t, "dynamodb_endpoint", cfg.DynamoDB.Endpoint)
 	})
 
-	t.Run("minimal with defaults", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(``)
+	t.Run("successful load from .env file", func(t *testing.T) {
+		tempDir := t.TempDir()
+		envPath := filepath.Join(tempDir, ".env")
 
+		envContent := strings.Join([]string{
+			appconfig.DynamoDBEndpointKey + "=dynamodb_endpoint",
+		}, "\n")
+
+		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0600))
+
+		origDir, err := os.Getwd()
 		require.NoError(t, err)
-		defer cleanup()
+		t.Cleanup(func() { _ = os.Chdir(origDir) })
+		require.NoError(t, os.Chdir(tempDir))
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
+		cfg, err := NewConfig(ctx, awsConfigManager)
 		require.NoError(t, err)
-		require.NotNil(t, cfg)
 
-		assert.Equal(t, slog.LevelInfo, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeText, cfg.LogType)
-		assert.Equal(t, "us-east-2", cfg.AwsRegion)
+		assert.Equal(t, "dynamodb_endpoint", cfg.DynamoDB.Endpoint)
 	})
 }
 
-func TestNewLoggingConfig(t *testing.T) {
-	cfg := &Config{
-		LogLevel: slog.LevelDebug,
-		LogType:  logging.LogTypeJSON,
-	}
+func switchToTempTestDir(t *testing.T) {
+	t.Helper()
 
-	loggingCfg := NewLoggingConfig(cfg)
-	assert.Equal(t, slog.LevelDebug, loggingCfg.Level)
-	assert.Equal(t, logging.LogTypeJSON, loggingCfg.Type)
-}
+	originalDir, err := os.Getwd()
+	require.NoError(t, err)
 
-func TestNewDBConfig(t *testing.T) {
-	cfg := &Config{
-		DynamoDbEndpoint:   "http://localhost:8000",
-		AwsRegion:          "us-west-2",
-		AwsAccessKey:       "testkey",
-		AwsSecretAccessKey: "testsecret",
-	}
+	tempDir := t.TempDir()
+	t.Cleanup(func() {
+		_ = os.Chdir(originalDir)
+	})
 
-	dbCfg := NewDBConfig(cfg)
-	assert.Equal(t, "http://localhost:8000", dbCfg.Endpoint)
-	assert.Equal(t, "us-west-2", dbCfg.Region)
-	assert.Equal(t, "testkey", dbCfg.AccessKey)
-	assert.Equal(t, "testsecret", dbCfg.SecretAccessKey)
+	require.NoError(t, os.Chdir(tempDir))
 }
