@@ -141,7 +141,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Group ID",
-                        "name": "id",
+                        "name": "groupId",
                         "in": "path",
                         "required": true
                     },

@@ -176,7 +176,7 @@ paths:
       parameters:
       - description: Group ID
         in: path
-        name: id
+        name: groupId
         required: true
         type: string
       - description: Filter events before this timestamp

@@ -14,8 +14,9 @@ import (
 	"sgf-meetup-api/pkg/api/groupevents"
 )
 
-//	@title						SGF Meetup API
-//	@version					1.0
+//	@title		SGF Meetup API
+//	@version	1.0
+
 //	@securityDefinitions.apikey	BearerAuth
 //	@in							header
 //	@name						Authorization

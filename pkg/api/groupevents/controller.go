@@ -50,21 +50,21 @@ func (c *Controller) RegisterRoutes(r gin.IRouter) {
 	r.GET("/groups/:"+groupIDKey+"/events/:"+eventIDKey, c.groupEventByID)
 }
 
-// @Summary	Get group events
-// @Tags		groupevents
-// @Security BearerAuth
-// @Accept		json
-// @Produce	json,application/problem+json
-// @Param		id		path		string	true	"Group ID"
-// @Param		before	query		string	false	"Filter events before this timestamp" Format(date-time)
-// @Param		after	query		string	false	"Filter events after this timestamp" Format(date-time)
-// @Param		cursor	query		string	false	"Pagination cursor"
-// @Param		limit	query		integer	false	"Maximum number of results"
-// @Success	200		{object}	groupEventsResponseDTO
-// @Failure	400		{object}	apierrors.ProblemDetails	"Invalid input"
-// @Failure	401		{object}	apierrors.ProblemDetails	"Unauthorized"
-// @Failure	500		{object}	apierrors.ProblemDetails	"Server error"
-// @Router		/v1/groups/{groupId}/events [get]
+//	@Summary	Get group events
+//	@Tags		groupevents
+//	@Security	BearerAuth
+//	@Accept		json
+//	@Produce	json,application/problem+json
+//	@Param		groupId	path		string	true	"Group ID"
+//	@Param		before	query		string	false	"Filter events before this timestamp"	Format(date-time)
+//	@Param		after	query		string	false	"Filter events after this timestamp"	Format(date-time)
+//	@Param		cursor	query		string	false	"Pagination cursor"
+//	@Param		limit	query		integer	false	"Maximum number of results"
+//	@Success	200		{object}	groupEventsResponseDTO
+//	@Failure	400		{object}	apierrors.ProblemDetails	"Invalid input"
+//	@Failure	401		{object}	apierrors.ProblemDetails	"Unauthorized"
+//	@Failure	500		{object}	apierrors.ProblemDetails	"Server error"
+//	@Router		/v1/groups/{groupId}/events [get]
 func (c *Controller) groupEvents(ctx *gin.Context) {
 	ctx.FullPath()
 	groupID := ctx.Param(groupIDKey)
@@ -93,18 +93,18 @@ func (c *Controller) groupEvents(ctx *gin.Context) {
 	})
 }
 
-// @Summary	Get next group event
-// @Tags		groupevents
-// @Security BearerAuth
-// @Accept		json
-// @Produce	json,application/problem+json
-// @Param		groupId	path		string	true	"Group ID"
-// @Success	200		{object}	eventDTO
-// @Failure	400		{object}	apierrors.ProblemDetails	"Invalid input"
-// @Failure	401		{object}	apierrors.ProblemDetails	"Unauthorized"
-// @Failure	404		{object}	apierrors.ProblemDetails	"Not found"
-// @Failure	500		{object}	apierrors.ProblemDetails	"Server error"
-// @Router		/v1/groups/{groupId}/events/next [get]
+//	@Summary	Get next group event
+//	@Tags		groupevents
+//	@Security	BearerAuth
+//	@Accept		json
+//	@Produce	json,application/problem+json
+//	@Param		groupId	path		string	true	"Group ID"
+//	@Success	200		{object}	eventDTO
+//	@Failure	400		{object}	apierrors.ProblemDetails	"Invalid input"
+//	@Failure	401		{object}	apierrors.ProblemDetails	"Unauthorized"
+//	@Failure	404		{object}	apierrors.ProblemDetails	"Not found"
+//	@Failure	500		{object}	apierrors.ProblemDetails	"Server error"
+//	@Router		/v1/groups/{groupId}/events/next [get]
 func (c *Controller) nextGroupEvent(ctx *gin.Context) {
 	groupID := ctx.Param(groupIDKey)
 
@@ -129,19 +129,19 @@ func (c *Controller) nextGroupEvent(ctx *gin.Context) {
 
 }
 
-// @Summary	Get group event by ID
-// @Tags		groupevents
-// @Security BearerAuth
-// @Accept		json
-// @Produce	json,application/problem+json
-// @Param		groupId	path		string	true	"Group ID"
-// @Param		eventId	path		string	true	"Event ID"
-// @Success	200		{object}	eventDTO
-// @Failure	400		{object}	apierrors.ProblemDetails	"Invalid input"
-// @Failure	401		{object}	apierrors.ProblemDetails	"Unauthorized"
-// @Failure	404		{object}	apierrors.ProblemDetails	"Not found"
-// @Failure	500		{object}	apierrors.ProblemDetails	"Server error"
-// @Router		/v1/groups/{groupId}/events/{eventId} [get]
+//	@Summary	Get group event by ID
+//	@Tags		groupevents
+//	@Security	BearerAuth
+//	@Accept		json
+//	@Produce	json,application/problem+json
+//	@Param		groupId	path		string	true	"Group ID"
+//	@Param		eventId	path		string	true	"Event ID"
+//	@Success	200		{object}	eventDTO
+//	@Failure	400		{object}	apierrors.ProblemDetails	"Invalid input"
+//	@Failure	401		{object}	apierrors.ProblemDetails	"Unauthorized"
+//	@Failure	404		{object}	apierrors.ProblemDetails	"Not found"
+//	@Failure	500		{object}	apierrors.ProblemDetails	"Server error"
+//	@Router		/v1/groups/{groupId}/events/{eventId} [get]
 func (c *Controller) groupEventByID(ctx *gin.Context) {
 	groupID := ctx.Param(groupIDKey)
 	eventID := ctx.Param(eventIDKey)
