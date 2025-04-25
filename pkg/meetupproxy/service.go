@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
@@ -81,7 +82,8 @@ func (s *Service) HandleRequest(ctx context.Context, req Request) (*Response, er
 	defer func() { _ = meetupResp.Body.Close() }()
 
 	if meetupResp.StatusCode != http.StatusOK {
-		s.logger.Error("Error fetching data from meetup", "statusCode", meetupResp.StatusCode)
+		body, _ := io.ReadAll(meetupResp.Body)
+		s.logger.Error("Error fetching data from meetup", "statusCode", meetupResp.StatusCode, "body", string(body))
 		return nil, fmt.Errorf("expected status code 200, got %v", meetupResp.StatusCode)
 	}
 
