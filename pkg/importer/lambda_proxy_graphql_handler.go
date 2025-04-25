@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/google/wire"
 	"log/slog"
 	"sgf-meetup-api/pkg/importer/importerconfig"
 )
@@ -72,3 +73,5 @@ func (m *LambdaProxyGraphQLHandler) callLambda(ctx context.Context, payload []by
 
 	return result.Payload, nil
 }
+
+var GraphQLHandlerProviders = wire.NewSet(wire.Bind(new(GraphQLHandler), new(*LambdaProxyGraphQLHandler)), NewLambdaProxyGraphQLHandlerConfig, NewLambdaProxyGraphQLHandler)

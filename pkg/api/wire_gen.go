@@ -26,8 +26,8 @@ import (
 // Injectors from wire.go:
 
 func InitRouter(ctx context.Context) (*gin.Engine, error) {
-	awsConfigFactory := appconfig.NewAwsConfigManager()
-	config, err := apiconfig.NewConfig(ctx, awsConfigFactory)
+	awsConfigManager := appconfig.NewAwsConfigManager()
+	config, err := apiconfig.NewConfig(ctx, awsConfigManager)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +58,4 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 
 // wire.go:
 
-var CommonProviders = wire.NewSet(apiconfig.ConfigProviders, logging.DefaultLogger, clock.RealClockProvider)
-
-var DBProvider = wire.NewSet(db.NewClient)
+var CommonProviders = wire.NewSet(apiconfig.ConfigProviders, logging.DefaultLogger, clock.RealClockProvider, db.Providers)

@@ -4,110 +4,99 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"log/slog"
+	"os"
+	"path/filepath"
 	"sgf-meetup-api/pkg/shared/appconfig"
-	"sgf-meetup-api/pkg/shared/logging"
+	"strings"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
-	t.Run("all values", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(`
-LOG_LEVEL=debug
-LOG_TYPE=json
-SENTRY_DSN=https://sentry.example.com
-MEETUP_GROUP_NAMES=test1,test2
-DYNAMODB_ENDPOINT=http://localhost:8000
-AWS_REGION=us-west-2
-AWS_ACCESS_KEY=testkey
-AWS_SECRET_ACCESS_KEY=testsecret
-MEETUP_PROXY_FUNCTION_NAME=meetupproxy
-ARCHIVED_EVENTS_TABLE_NAME=archived-events
-EVENTS_TABLE_NAME=events
-GROUP_ID_DATE_TIME_INDEX_NAME=group-index
-`)
+	awsConfigManager := appconfig.NewAwsConfigManager()
+	ctx := context.Background()
 
+	t.Run("successful load from environment variables", func(t *testing.T) {
+		switchToTempTestDir(t)
+		t.Setenv(proxyFunctionNameKey, "test-proxy")
+		t.Setenv(eventsTableNameKey, "test-events")
+		t.Setenv(archivedEventsTableNameKey, "test-archived")
+		t.Setenv(groupIDDateTimeIndexNameKey, "test-index")
+		t.Setenv(meetupGroupNamesKey, "group1,group2")
+
+		cfg, err := NewConfig(ctx, awsConfigManager)
 		require.NoError(t, err)
-		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
-		require.NoError(t, err)
-		require.NotNil(t, cfg)
-
-		assert.Equal(t, slog.LevelDebug, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeJSON, cfg.LogType)
-		assert.Equal(t, "https://sentry.example.com", cfg.SentryDsn)
-		assert.ElementsMatch(t, []string{"test1", "test2"}, cfg.MeetupGroupNames)
-		assert.Equal(t, "http://localhost:8000", cfg.DynamoDbEndpoint)
-		assert.Equal(t, "us-west-2", cfg.AwsRegion)
-		assert.Equal(t, "testkey", cfg.AwsAccessKey)
-		assert.Equal(t, "testsecret", cfg.AwsSecretAccessKey)
-		assert.Equal(t, "meetupproxy", cfg.ProxyFunctionName)
-		assert.Equal(t, "archived-events", cfg.ArchivedEventsTableName)
-		assert.Equal(t, "events", cfg.EventsTableName)
-		assert.Equal(t, "group-index", cfg.GroupIDDateTimeIndexName)
+		assert.Equal(t, "test-proxy", cfg.ProxyFunctionName)
+		assert.Equal(t, "test-events", cfg.EventsTableName)
+		assert.Equal(t, "test-archived", cfg.ArchivedEventsTableName)
+		assert.Equal(t, "test-index", cfg.GroupIDDateTimeIndexName)
+		assert.Equal(t, []string{"group1", "group2"}, cfg.MeetupGroupNames)
 	})
 
-	t.Run("minimal with defaults", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(`
-MEETUP_PROXY_FUNCTION_NAME=meetupproxy
-ARCHIVED_EVENTS_TABLE_NAME=archived-events
-EVENTS_TABLE_NAME=events
-GROUP_ID_DATE_TIME_INDEX_NAME=group-index
-`)
+	t.Run("successful load from .env file", func(t *testing.T) {
+		tempDir := t.TempDir()
+		envPath := filepath.Join(tempDir, ".env")
 
+		envContent := strings.Join([]string{
+			proxyFunctionNameKey + "=file-proxy",
+			eventsTableNameKey + "=file-events",
+			archivedEventsTableNameKey + "=file-archived",
+			groupIDDateTimeIndexNameKey + "=file-index",
+			meetupGroupNamesKey + "=group3,group4",
+		}, "\n")
+
+		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0600))
+
+		origDir, err := os.Getwd()
 		require.NoError(t, err)
-		defer cleanup()
+		t.Cleanup(func() { _ = os.Chdir(origDir) })
+		require.NoError(t, os.Chdir(tempDir))
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
+		cfg, err := NewConfig(ctx, awsConfigManager)
 		require.NoError(t, err)
-		require.NotNil(t, cfg)
 
-		assert.Equal(t, slog.LevelInfo, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeText, cfg.LogType)
-		assert.Equal(t, "us-east-2", cfg.AwsRegion)
-		assert.Equal(t, []string{}, cfg.MeetupGroupNames)
+		assert.Equal(t, "file-proxy", cfg.ProxyFunctionName)
+		assert.Equal(t, "file-events", cfg.EventsTableName)
+		assert.Equal(t, "file-archived", cfg.ArchivedEventsTableName)
+		assert.Equal(t, "file-index", cfg.GroupIDDateTimeIndexName)
+		assert.Equal(t, []string{"group3", "group4"}, cfg.MeetupGroupNames)
 	})
 
-	t.Run("invalid missing required", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(`
-LOG_LEVEL=info
-`)
-		require.NoError(t, err)
-		defer cleanup()
+	t.Run("sets default values for MeetupGroupNames", func(t *testing.T) {
+		switchToTempTestDir(t)
+		t.Setenv(proxyFunctionNameKey, "test-proxy")
+		t.Setenv(eventsTableNameKey, "test-events")
+		t.Setenv(archivedEventsTableNameKey, "test-archived")
+		t.Setenv(groupIDDateTimeIndexNameKey, "test-index")
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
+		cfg, err := NewConfig(ctx, awsConfigManager)
+		require.NoError(t, err)
+
+		assert.Empty(t, cfg.MeetupGroupNames)
+	})
+
+	t.Run("validation fails with missing fields", func(t *testing.T) {
+		switchToTempTestDir(t)
+
+		_, err := NewConfig(ctx, awsConfigManager)
 		require.Error(t, err)
-		assert.Nil(t, cfg)
 		assert.Contains(t, err.Error(), proxyFunctionNameKey)
-		assert.Contains(t, err.Error(), archivedEventsTableNameKey)
 		assert.Contains(t, err.Error(), eventsTableNameKey)
+		assert.Contains(t, err.Error(), archivedEventsTableNameKey)
 		assert.Contains(t, err.Error(), groupIDDateTimeIndexNameKey)
 	})
 }
 
-func TestNewLoggingConfig(t *testing.T) {
-	cfg := &Config{
-		LogLevel: slog.LevelDebug,
-		LogType:  logging.LogTypeJSON,
-	}
+func switchToTempTestDir(t *testing.T) {
+	t.Helper()
 
-	loggingCfg := NewLoggingConfig(cfg)
-	assert.Equal(t, slog.LevelDebug, loggingCfg.Level)
-	assert.Equal(t, logging.LogTypeJSON, loggingCfg.Type)
-}
+	originalDir, err := os.Getwd()
+	require.NoError(t, err)
 
-func TestNewDBConfig(t *testing.T) {
-	cfg := &Config{
-		DynamoDbEndpoint:   "http://localhost:8000",
-		AwsRegion:          "us-west-2",
-		AwsAccessKey:       "testkey",
-		AwsSecretAccessKey: "testsecret",
-	}
+	tempDir := t.TempDir()
+	t.Cleanup(func() {
+		_ = os.Chdir(originalDir)
+	})
 
-	dbCfg := NewDBConfig(cfg)
-	assert.Equal(t, "http://localhost:8000", dbCfg.Endpoint)
-	assert.Equal(t, "us-west-2", dbCfg.Region)
-	assert.Equal(t, "testkey", dbCfg.AccessKey)
-	assert.Equal(t, "testsecret", dbCfg.SecretAccessKey)
+	require.NoError(t, os.Chdir(tempDir))
 }
