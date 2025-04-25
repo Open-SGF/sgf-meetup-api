@@ -98,6 +98,8 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 
 	apiFunctionName := customconstructs.NewFunctionName(namespace, "Api")
 
+	apiSSMPath := "/sgf-meetup-api/" + *apiFunctionName.PrefixedName()
+
 	apiFunction := customconstructs.NewGoLambdaFunction(stack, apiFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/api"),
 		FunctionName: apiFunctionName.PrefixedName(),
@@ -107,8 +109,16 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 			"EVENTS_TABLE_NAME":             &eventsTable.FullTableName,
 			"GROUP_ID_DATE_TIME_INDEX_NAME": GroupIdDateTimeIndex.IndexName,
 			"API_USERS_TABLE_NAME":          &apiUsersTable.FullTableName,
+			"SSM_PATH":                      jsii.String(apiSSMPath),
 		},
 	})
+
+	//nolint:staticcheck
+	apiFunction.Function.AddToRolePolicy(awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Effect:    awsiam.Effect_ALLOW,
+		Actions:   jsii.Strings("ssm:GetParameter", "ssm:GetParametersByPath"),
+		Resources: jsii.Strings(fmt.Sprintf("arn:aws:ssm:%s:%s:parameter%s*", *awscdk.Aws_REGION(), *awscdk.Aws_ACCOUNT_ID(), apiSSMPath)),
+	}))
 
 	meetupProxyFunction.Function.GrantInvoke(importerFunction.Function)     //nolint:staticcheck
 	eventsTable.Table.GrantReadWriteData(importerFunction.Function)         //nolint:staticcheck

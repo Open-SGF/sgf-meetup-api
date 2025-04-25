@@ -2,6 +2,7 @@ package apiconfig
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/google/wire"
 	"github.com/spf13/viper"
@@ -15,11 +16,13 @@ const (
 	apiUsersTableNameKey        = "API_USERS_TABLE_NAME"
 	groupIDDateTimeIndexNameKey = "GROUP_ID_DATE_TIME_INDEX_NAME"
 	jwtIssuerKey                = "JWT_ISSUER"
+	jwtSecretBase64Key          = "JWT_SECRET_BASE64"
 	jwtSecretKey                = "JWT_SECRET"
 	appUrlKey                   = "APP_URL"
 )
 
 var configKeys = []string{
+	jwtSecretBase64Key,
 	eventsTableNameKey,
 	apiUsersTableNameKey,
 	groupIDDateTimeIndexNameKey,
@@ -67,6 +70,13 @@ func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager)
 
 func setDefaults(_ context.Context, v *viper.Viper) error {
 	v.SetDefault(strings.ToLower(jwtIssuerKey), "meetup-api.opensgf.org")
+
+	jwtSecretBase64 := v.Get(strings.ToLower(jwtSecretBase64Key)).(string)
+	jwtSecret, err := base64.StdEncoding.DecodeString(jwtSecretBase64)
+	if err == nil {
+		v.SetDefault(strings.ToLower(jwtSecretKey), jwtSecret)
+	}
+
 	v.Set(strings.ToLower(jwtSecretKey), []byte(v.GetString(strings.ToLower(jwtSecretKey))))
 	appUrl := v.GetString(strings.ToLower(appUrlKey))
 	if appUrl == "" {

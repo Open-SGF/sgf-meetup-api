@@ -20,7 +20,7 @@ func TestNewConfig(t *testing.T) {
 		t.Setenv(eventsTableNameKey, "test_events")
 		t.Setenv(apiUsersTableNameKey, "test_api_users")
 		t.Setenv(groupIDDateTimeIndexNameKey, "test_index")
-		t.Setenv(jwtSecretKey, "test_secret")
+		t.Setenv(jwtSecretBase64Key, "dGVzdF9iYXNlNjQ=")
 		t.Setenv(appUrlKey, "https://test.example.com")
 
 		cfg, err := NewConfig(ctx, awsConfigManager)
@@ -29,7 +29,7 @@ func TestNewConfig(t *testing.T) {
 		assert.Equal(t, "test_events", cfg.EventsTableName)
 		assert.Equal(t, "test_api_users", cfg.ApiUsersTableName)
 		assert.Equal(t, "test_index", cfg.GroupIDDateTimeIndexName)
-		assert.Equal(t, []byte("test_secret"), cfg.JWTSecret)
+		assert.Equal(t, []byte("test_base64"), cfg.JWTSecret)
 		assert.Equal(t, "https://test.example.com", cfg.AppURL.String())
 	})
 
@@ -41,7 +41,7 @@ func TestNewConfig(t *testing.T) {
 			eventsTableNameKey + "=file_events",
 			apiUsersTableNameKey + "=file_api_users",
 			groupIDDateTimeIndexNameKey + "=file_index",
-			jwtSecretKey + "=file_secret",
+			jwtSecretBase64Key + "=dGVzdF9iYXNlNjQ=",
 			appUrlKey + "=https://file.example.com",
 		}, "\n")
 
@@ -59,7 +59,7 @@ func TestNewConfig(t *testing.T) {
 		assert.Equal(t, "file_events", cfg.EventsTableName)
 		assert.Equal(t, "file_api_users", cfg.ApiUsersTableName)
 		assert.Equal(t, "file_index", cfg.GroupIDDateTimeIndexName)
-		assert.Equal(t, []byte("file_secret"), cfg.JWTSecret)
+		assert.Equal(t, []byte("test_base64"), cfg.JWTSecret)
 		assert.Equal(t, "https://file.example.com", cfg.AppURL.String())
 	})
 
