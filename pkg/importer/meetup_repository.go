@@ -98,7 +98,7 @@ func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(ctx context.Context
 	for {
 		variables := map[string]any{
 			"urlname":  group,
-			"itemsNum": 50,
+			"itemsNum": 10,
 			"cursor":   cursor,
 		}
 
