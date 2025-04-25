@@ -52,6 +52,7 @@ func (c *Controller) RegisterRoutes(r gin.IRouter) {
 
 // @Summary	Get group events
 // @Tags		groupevents
+// @Security BearerAuth
 // @Accept		json
 // @Produce	json,application/problem+json
 // @Param		id		path		string	true	"Group ID"
@@ -94,6 +95,7 @@ func (c *Controller) groupEvents(ctx *gin.Context) {
 
 // @Summary	Get next group event
 // @Tags		groupevents
+// @Security BearerAuth
 // @Accept		json
 // @Produce	json,application/problem+json
 // @Param		groupId	path		string	true	"Group ID"
@@ -129,6 +131,7 @@ func (c *Controller) nextGroupEvent(ctx *gin.Context) {
 
 // @Summary	Get group event by ID
 // @Tags		groupevents
+// @Security BearerAuth
 // @Accept		json
 // @Produce	json,application/problem+json
 // @Param		groupId	path		string	true	"Group ID"

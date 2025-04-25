@@ -217,6 +217,8 @@ paths:
           description: Server error
           schema:
             $ref: '#/definitions/apierrors.ProblemDetails'
+      security:
+      - BearerAuth: []
       summary: Get group events
       tags:
       - groupevents
@@ -259,6 +261,8 @@ paths:
           description: Server error
           schema:
             $ref: '#/definitions/apierrors.ProblemDetails'
+      security:
+      - BearerAuth: []
       summary: Get group event by ID
       tags:
       - groupevents
@@ -296,7 +300,15 @@ paths:
           description: Server error
           schema:
             $ref: '#/definitions/apierrors.ProblemDetails'
+      security:
+      - BearerAuth: []
       summary: Get next group event
       tags:
       - groupevents
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
