@@ -163,3 +163,32 @@ func TestParser_WithCommonConfig(t *testing.T) {
 	assert.Equal(t, "test_dynamodb_aws_secret_access_key", cfg.DynamoDB.SecretAccessKey)
 	assert.Equal(t, "test_other_key", cfg.OtherKey)
 }
+
+func TestParseFromKey_LogLevel(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       any
+		fallbackLvl slog.Level
+		expectedLvl slog.Level
+	}{
+		{"correct string value", "DEBUG", slog.LevelInfo, slog.LevelDebug},
+		{"incorrect string value", "invalid", slog.LevelWarn, slog.LevelWarn},
+		{"non-string value", 0, slog.LevelError, slog.LevelError},
+		{"nil value", nil, slog.LevelInfo, slog.LevelInfo},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			key := "loglevel"
+			v := viper.New()
+			v.SetDefault(key, tc.input)
+
+			ParseFromKey(v, key, logging.ParseLogLevel, tc.fallbackLvl)
+
+			value := v.Get(key)
+
+			assert.IsType(t, slog.LevelInfo, value)
+			assert.Equal(t, value, tc.expectedLvl)
+		})
+	}
+}

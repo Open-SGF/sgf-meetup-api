@@ -143,3 +143,16 @@ func (p *Parser) Parse(ctx context.Context, output any) error {
 
 	return nil
 }
+
+func ParseFromKey[T any](v *viper.Viper, key string, parser func(string) (T, error), fallback T) {
+	normalizedKey := strings.ToLower(key)
+	str := v.GetString(normalizedKey)
+	value, err := parser(str)
+
+	if err != nil {
+		v.Set(normalizedKey, fallback)
+		return
+	}
+
+	v.Set(normalizedKey, value)
+}
