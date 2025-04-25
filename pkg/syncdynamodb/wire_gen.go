@@ -18,16 +18,17 @@ import (
 // Injectors from wire.go:
 
 func InitService(ctx context.Context) (*Service, error) {
-	awsConfigManager := appconfig.NewAwsConfigManager()
-	config, err := syncdynamodbconfig.NewConfig(ctx, awsConfigManager)
+	awsConfigManagerImpl := appconfig.NewAwsConfigManager()
+	config, err := syncdynamodbconfig.NewConfig(ctx, awsConfigManagerImpl)
 	if err != nil {
 		return nil, err
 	}
 	common := config.Common
 	dbConfig := common.DynamoDB
+	awsConfig := appconfig.AwsConfigProvider(awsConfigManagerImpl)
 	loggingConfig := common.Logging
 	logger := logging.DefaultLogger(loggingConfig)
-	client, err := db.NewClient(ctx, dbConfig, logger)
+	client, err := db.NewClient(ctx, dbConfig, awsConfig, logger)
 	if err != nil {
 		return nil, err
 	}

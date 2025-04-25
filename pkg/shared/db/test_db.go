@@ -63,7 +63,7 @@ func NewTestDBWithoutMigrations(ctx context.Context) (*TestDB, error) {
 
 	logger := logging.DefaultLogger(logging.Config{Level: slog.LevelError, Type: logging.LogTypeText})
 
-	client, err := NewClient(ctx, dbOptions, logger)
+	client, err := NewClient(ctx, dbOptions, nil, logger)
 
 	if err != nil {
 		return nil, err

@@ -11,8 +11,9 @@ import (
 
 func TestNew_WithMinimumValidConfig(t *testing.T) {
 	client, err := NewClient(context.Background(), Config{
-		Region: "us-east-1",
-	}, logging.NewMockLogger())
+		Region:    "us-east-1",
+		AccessKey: "access_key",
+	}, nil, logging.NewMockLogger())
 
 	require.NoError(t, err)
 	assert.NotNil(t, client)
@@ -20,9 +21,10 @@ func TestNew_WithMinimumValidConfig(t *testing.T) {
 
 func TestNew_WithCustomEndpoint(t *testing.T) {
 	client, err := NewClient(context.Background(), Config{
-		Region:   "us-east-1",
-		Endpoint: "http://localhost:8000",
-	}, logging.NewMockLogger())
+		Region:    "us-east-1",
+		AccessKey: "access_key",
+		Endpoint:  "http://localhost:8000",
+	}, nil, logging.NewMockLogger())
 
 	require.NoError(t, err)
 	assert.NotNil(t, client)
@@ -33,7 +35,7 @@ func TestNew_WithStaticCredentials(t *testing.T) {
 		Region:          "us-east-1",
 		AccessKey:       "AKIAEXAMPLE",
 		SecretAccessKey: "SecretExample",
-	}, logging.NewMockLogger())
+	}, nil, logging.NewMockLogger())
 
 	require.NoError(t, err)
 	assert.NotNil(t, client)

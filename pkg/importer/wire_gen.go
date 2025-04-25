@@ -20,8 +20,8 @@ import (
 // Injectors from wire.go:
 
 func InitService(ctx context.Context) (*Service, error) {
-	awsConfigManager := appconfig.NewAwsConfigManager()
-	config, err := importerconfig.NewConfig(ctx, awsConfigManager)
+	awsConfigManagerImpl := appconfig.NewAwsConfigManager()
+	config, err := importerconfig.NewConfig(ctx, awsConfigManagerImpl)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,8 @@ func InitService(ctx context.Context) (*Service, error) {
 	logger := logging.DefaultLogger(loggingConfig)
 	dynamoDBEventRepositoryConfig := NewDynamoDBEventRepositoryConfig(config)
 	dbConfig := common.DynamoDB
-	client, err := db.NewClient(ctx, dbConfig, logger)
+	awsConfig := appconfig.AwsConfigProvider(awsConfigManagerImpl)
+	client, err := db.NewClient(ctx, dbConfig, awsConfig, logger)
 	if err != nil {
 		return nil, err
 	}

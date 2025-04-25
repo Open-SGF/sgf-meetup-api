@@ -34,7 +34,7 @@ type Config struct {
 	GroupIDDateTimeIndexName string   `mapstructure:"group_id_date_time_index_name"`
 }
 
-func NewConfig(ctx context.Context, awsConfigFactory *appconfig.AwsConfigManager) (*Config, error) {
+func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager) (*Config, error) {
 	var config Config
 
 	err := appconfig.NewParser().

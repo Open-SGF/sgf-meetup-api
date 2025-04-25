@@ -9,15 +9,20 @@ import (
 	"github.com/spf13/viper"
 )
 
-type AwsConfigManager struct {
+type AwsConfigManager interface {
+	SetConfigFromViper(ctx context.Context, v *viper.Viper) error
+	Config() *aws.Config
+}
+
+type AwsConfigManagerImpl struct {
 	config *aws.Config
 }
 
-func NewAwsConfigManager() *AwsConfigManager {
-	return &AwsConfigManager{}
+func NewAwsConfigManager() *AwsConfigManagerImpl {
+	return &AwsConfigManagerImpl{}
 }
 
-func (f *AwsConfigManager) SetConfigFromViper(ctx context.Context, v *viper.Viper) error {
+func (f *AwsConfigManagerImpl) SetConfigFromViper(ctx context.Context, v *viper.Viper) error {
 	var cfgOpts []func(*config.LoadOptions) error
 
 	if region := v.GetString(AWSRegionKey); region != "" {
@@ -60,6 +65,10 @@ func (f *AwsConfigManager) SetConfigFromViper(ctx context.Context, v *viper.Vipe
 	return nil
 }
 
-func (f *AwsConfigManager) Config() *aws.Config {
+func (f *AwsConfigManagerImpl) Config() *aws.Config {
 	return f.config
+}
+
+func AwsConfigProvider(manager AwsConfigManager) *aws.Config {
+	return manager.Config()
 }

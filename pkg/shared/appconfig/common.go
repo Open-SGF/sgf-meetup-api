@@ -62,4 +62,9 @@ type Common struct {
 	DynamoDB  db.Config      `mapstructure:",squash"`
 }
 
-var ConfigProviders = wire.NewSet(NewAwsConfigManager, wire.FieldsOf(new(Common), "Logging", "Aws", "DynamoDB"))
+var ConfigProviders = wire.NewSet(
+	wire.Bind(new(AwsConfigManager), new(*AwsConfigManagerImpl)),
+	NewAwsConfigManager,
+	AwsConfigProvider,
+	wire.FieldsOf(new(Common), "Logging", "Aws", "DynamoDB"),
+)
