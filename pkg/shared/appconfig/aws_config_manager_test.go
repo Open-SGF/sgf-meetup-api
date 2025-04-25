@@ -1,4 +1,4 @@
-package configparser
+package appconfig
 
 import (
 	"context"
@@ -10,16 +10,16 @@ import (
 	"testing"
 )
 
-func TestAwsConfigFactory(t *testing.T) {
+func TestAwsConfigManager(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("empty configuration", func(t *testing.T) {
 		v := viper.New()
 
-		factory := NewAwsConfigFactory()
+		factory := NewAwsConfigManager()
 		assert.Nil(t, factory.Config())
 
-		err := factory.FromViper(ctx, v)
+		err := factory.SetConfigFromViper(ctx, v)
 		require.NoError(t, err)
 
 		assert.NotNil(t, factory.Config())
@@ -29,10 +29,10 @@ func TestAwsConfigFactory(t *testing.T) {
 		v := viper.New()
 		v.Set(AWSRegionKey, "us-east-1")
 
-		factory := NewAwsConfigFactory()
+		factory := NewAwsConfigManager()
 		assert.Nil(t, factory.Config())
 
-		err := factory.FromViper(ctx, v)
+		err := factory.SetConfigFromViper(ctx, v)
 		require.NoError(t, err)
 
 		assert.NotNil(t, factory.Config())
@@ -44,10 +44,10 @@ func TestAwsConfigFactory(t *testing.T) {
 		v.Set(AWSAccessKeyKey, "test_access_key")
 		v.Set(AWSSecretAccessKeyKey, "test_secret_key")
 
-		factory := NewAwsConfigFactory()
+		factory := NewAwsConfigManager()
 		assert.Nil(t, factory.Config())
 
-		err := factory.FromViper(ctx, v)
+		err := factory.SetConfigFromViper(ctx, v)
 		require.NoError(t, err)
 
 		assert.NotNil(t, factory.Config())
@@ -68,10 +68,10 @@ func TestAwsConfigFactory(t *testing.T) {
 		v.Set(AWSConfigFileKey, configPath)
 		v.Set(AWSSharedCredentialsFileKey, credsPath)
 
-		factory := NewAwsConfigFactory()
+		factory := NewAwsConfigManager()
 		assert.Nil(t, factory.Config())
 
-		err := factory.FromViper(ctx, v)
+		err := factory.SetConfigFromViper(ctx, v)
 		require.NoError(t, err)
 
 		assert.NotNil(t, factory.Config())
@@ -81,10 +81,10 @@ func TestAwsConfigFactory(t *testing.T) {
 		v := viper.New()
 		v.Set(AWSAccessKeyKey, "test_access_key")
 
-		factory := NewAwsConfigFactory()
+		factory := NewAwsConfigManager()
 		assert.Nil(t, factory.Config())
 
-		err := factory.FromViper(ctx, v)
+		err := factory.SetConfigFromViper(ctx, v)
 		require.Error(t, err)
 	})
 }

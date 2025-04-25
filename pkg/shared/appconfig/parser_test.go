@@ -1,4 +1,4 @@
-package configparser
+package appconfig
 
 import (
 	"context"
@@ -8,10 +8,12 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 )
 
@@ -79,7 +81,7 @@ func TestParser_WithSSMParameters(t *testing.T) {
 	require.NoError(t, err)
 
 	p := NewParser().WithSSMParameters(func(ctx context.Context, v *viper.Viper, opts *SSMParameterOptions) {
-		opts.Config = &awsCfg
+		opts.AwsConfig = &awsCfg
 		opts.SSMPath = "/app"
 	})
 
@@ -123,4 +125,41 @@ func TestParser_ErrorHandling(t *testing.T) {
 	var cfg struct{}
 	err := p.Parse(context.Background(), &cfg)
 	assert.ErrorContains(t, err, "processor failed")
+}
+
+func TestParser_WithCommonConfig(t *testing.T) {
+	t.Setenv("LOG_LEVEL", "warn")
+	t.Setenv("LOG_TYPE", "json")
+	t.Setenv("AWS_REGION", "test_aws_region")
+	t.Setenv("AWS_ACCESS_KEY", "test_aws_access_key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "test_aws_secret_access_key")
+	t.Setenv("DYNAMODB_ENDPOINT", "test_dynamodb_endpoint")
+	t.Setenv("DYNAMODB_AWS_REGION", "test_dynamodb_aws_region")
+	t.Setenv("DYNAMODB_AWS_ACCESS_KEY", "test_dynamodb_aws_access_key")
+	t.Setenv("DYNAMODB_AWS_SECRET_ACCESS_KEY", "test_dynamodb_aws_secret_access_key")
+	t.Setenv("OTHER_KEY", "test_other_key")
+
+	p := NewParser().
+		DefineKeys([]string{"OTHER_KEY"}).
+		WithCommonConfig().
+		WithEnvVars()
+
+	var cfg struct {
+		Common   `mapstructure:",squash"`
+		OtherKey string `mapstructure:"other_key"`
+	}
+
+	err := p.Parse(context.Background(), &cfg)
+	require.NoError(t, err)
+
+	assert.Equal(t, slog.LevelWarn, cfg.Logging.Level)
+	assert.Equal(t, logging.LogTypeJSON, cfg.Logging.Type)
+	assert.Equal(t, "test_aws_region", cfg.Aws.AwsRegion)
+	assert.Equal(t, "test_aws_access_key", cfg.Aws.AwsAccessKey)
+	assert.Equal(t, "test_aws_secret_access_key", cfg.Aws.AwsSecretAccessKey)
+	assert.Equal(t, "test_dynamodb_endpoint", cfg.DynamoDB.Endpoint)
+	assert.Equal(t, "test_dynamodb_aws_region", cfg.DynamoDB.Region)
+	assert.Equal(t, "test_dynamodb_aws_access_key", cfg.DynamoDB.AccessKey)
+	assert.Equal(t, "test_dynamodb_aws_secret_access_key", cfg.DynamoDB.SecretAccessKey)
+	assert.Equal(t, "test_other_key", cfg.OtherKey)
 }

@@ -1,4 +1,4 @@
-package configparser
+package appconfig
 
 import (
 	"context"
@@ -6,24 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/spf13/viper"
+	"log/slog"
+	"sgf-meetup-api/pkg/shared/logging"
 	"strings"
-)
-
-const (
-	SSMPathKey                  = "SSM_PATH"
-	AWSRegionKey                = "AWS_REGION"
-	AWSAccessKeyKey             = "AWS_ACCESS_KEY"
-	AWSSecretAccessKeyKey       = "AWS_SECRET_ACCESS_KEY"
-	AWSSessionTokenKey          = "AWS_SESSION_TOKEN"
-	AWSProfileKey               = "AWS_PROFILE"
-	AWSConfigFileKey            = "AWS_CONFIG_FILE"
-	AWSSharedCredentialsFileKey = "AWS_SHARED_CREDENTIALS_FILE"
 )
 
 type configProcessor func(ctx context.Context, v *viper.Viper) error
 
 type Parser struct {
-	processors []configProcessor
+	processors          []configProcessor
+	includeCommonConfig bool
 }
 
 func NewParser() *Parser {
@@ -38,6 +30,12 @@ func (p *Parser) DefineKeys(keys []string) *Parser {
 
 		return nil
 	})
+	return p
+}
+
+func (p *Parser) WithCommonConfig() *Parser {
+	p.includeCommonConfig = true
+	p.DefineKeys(CommonKeys)
 	return p
 }
 
@@ -76,8 +74,8 @@ func (p *Parser) WithCustomProcessor(processor func(ctx context.Context, v *vipe
 }
 
 type SSMParameterOptions struct {
-	Config  *aws.Config
-	SSMPath string
+	AwsConfig *aws.Config
+	SSMPath   string
 }
 
 func (p *Parser) WithSSMParameters(configure func(ctx context.Context, v *viper.Viper, opts *SSMParameterOptions)) *Parser {
@@ -85,11 +83,11 @@ func (p *Parser) WithSSMParameters(configure func(ctx context.Context, v *viper.
 		ssmOptions := SSMParameterOptions{}
 		configure(ctx, v, &ssmOptions)
 
-		if ssmOptions.Config == nil || ssmOptions.SSMPath == "" {
+		if ssmOptions.AwsConfig == nil || ssmOptions.SSMPath == "" {
 			return nil
 		}
 
-		client := ssm.NewFromConfig(*ssmOptions.Config)
+		client := ssm.NewFromConfig(*ssmOptions.AwsConfig)
 
 		paginator := ssm.NewGetParametersByPathPaginator(client, &ssm.GetParametersByPathInput{
 			Path:           aws.String(ssmOptions.SSMPath),
@@ -130,6 +128,13 @@ func (p *Parser) Parse(ctx context.Context, output any) error {
 		if err := processor(ctx, v); err != nil {
 			return err
 		}
+	}
+
+	if p.includeCommonConfig {
+		ParseFromKey(v, LogLevelKey, logging.ParseLogLevel, slog.LevelInfo)
+		ParseFromKey(v, LogTypeKey, logging.ParseLogType, logging.LogTypeText)
+		v.SetDefault(strings.ToLower(AWSRegionKey), "us-east-2")
+		v.SetDefault(strings.ToLower(DynamoDBAWSRegionKey), "us-east-2")
 	}
 
 	if err := v.Unmarshal(output); err != nil {

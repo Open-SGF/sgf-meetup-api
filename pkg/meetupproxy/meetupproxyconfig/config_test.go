@@ -5,14 +5,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
-	"sgf-meetup-api/pkg/shared/configparser"
+	"sgf-meetup-api/pkg/shared/appconfig"
 	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
 	t.Run("all values", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
+		tempDir, cleanup, err := appconfig.SetupTestEnv(`
 LOG_LEVEL=debug
 LOG_TYPE=json
 SENTRY_DSN=https://sentry.example.com
@@ -43,7 +43,7 @@ MEETUP_API_URL=https://api.example.com
 	})
 
 	t.Run("minimal with defaults", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
+		tempDir, cleanup, err := appconfig.SetupTestEnv(`
 MEETUP_PRIVATE_KEY_BASE64=c29tZUJhc2U2NEtleQ==
 MEETUP_USER_ID=meetupUserId
 MEETUP_CLIENT_KEY=meetupClientKey
@@ -64,7 +64,7 @@ MEETUP_SIGNING_KEY_ID=signingKeyId
 	})
 
 	t.Run("invalid missing required", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
+		tempDir, cleanup, err := appconfig.SetupTestEnv(`
 LOG_LEVEL=info
 `)
 		require.NoError(t, err)

@@ -9,8 +9,8 @@ import (
 )
 
 type Config struct {
-	Level slog.Level
-	Type  LogType
+	Level slog.Level `mapstructure:"log_level"`
+	Type  LogType    `mapstructure:"log_type"`
 }
 
 func DefaultLogger(config Config) *slog.Logger {

@@ -1,4 +1,4 @@
-package configparser
+package appconfig
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-type AwsConfigFactory struct {
+type AwsConfigManager struct {
 	config *aws.Config
 }
 
-func NewAwsConfigFactory() *AwsConfigFactory {
-	return &AwsConfigFactory{}
+func NewAwsConfigManager() *AwsConfigManager {
+	return &AwsConfigManager{}
 }
 
-func (f *AwsConfigFactory) FromViper(ctx context.Context, v *viper.Viper) error {
+func (f *AwsConfigManager) SetConfigFromViper(ctx context.Context, v *viper.Viper) error {
 	var cfgOpts []func(*config.LoadOptions) error
 
 	if region := v.GetString(AWSRegionKey); region != "" {
@@ -60,6 +60,6 @@ func (f *AwsConfigFactory) FromViper(ctx context.Context, v *viper.Viper) error 
 	return nil
 }
 
-func (f *AwsConfigFactory) Config() *aws.Config {
+func (f *AwsConfigManager) Config() *aws.Config {
 	return f.config
 }

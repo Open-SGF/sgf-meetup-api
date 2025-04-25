@@ -1,4 +1,4 @@
-package configparser
+package appconfig
 
 import (
 	"context"
