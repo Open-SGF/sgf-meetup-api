@@ -31,4 +31,5 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           APP_ENV: ${{ vars.APP_ENV }}
           APP_DOMAIN_NAME: ${{ vars.APP_DOMAIN_NAME }}
-        run: npm run cdk deploy
+        run: npm run cdk deploy -- --require-approval never
+
