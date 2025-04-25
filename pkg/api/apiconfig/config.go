@@ -3,24 +3,14 @@ package apiconfig
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/google/wire"
 	"github.com/spf13/viper"
-	"log/slog"
 	"net/url"
-	"sgf-meetup-api/pkg/shared/configparser"
-	"sgf-meetup-api/pkg/shared/db"
-	"sgf-meetup-api/pkg/shared/logging"
+	"sgf-meetup-api/pkg/shared/appconfig"
 	"strings"
 )
 
 const (
-	logLevelKey                 = "LOG_LEVEL"
-	logTypeKey                  = "LOG_TYPE"
-	sentryDSNKey                = "SENTRY_DSN"
-	dynamoDbEndpointKey         = "DYNAMODB_ENDPOINT"
-	awsRegionKey                = "AWS_REGION"
-	awsAccessKeyKey             = "AWS_ACCESS_KEY"
-	awsSecretAccessKeyKey       = "AWS_SECRET_ACCESS_KEY"
 	eventsTableNameKey          = "EVENTS_TABLE_NAME"
 	apiUsersTableNameKey        = "API_USERS_TABLE_NAME"
 	groupIDDateTimeIndexNameKey = "GROUP_ID_DATE_TIME_INDEX_NAME"
@@ -30,13 +20,6 @@ const (
 )
 
 var configKeys = []string{
-	logLevelKey,
-	logTypeKey,
-	sentryDSNKey,
-	dynamoDbEndpointKey,
-	configparser.AWSRegionKey,
-	awsAccessKeyKey,
-	awsSecretAccessKeyKey,
 	eventsTableNameKey,
 	apiUsersTableNameKey,
 	groupIDDateTimeIndexNameKey,
@@ -46,78 +29,32 @@ var configKeys = []string{
 }
 
 type Config struct {
-	LogLevel                 slog.Level      `mapstructure:"log_level"`
-	LogType                  logging.LogType `mapstructure:"log_type"`
-	SentryDsn                string          `mapstructure:"sentry_dsn"`
-	DynamoDbEndpoint         string          `mapstructure:"dynamodb_endpoint"`
-	AwsRegion                string          `mapstructure:"aws_region"`
-	AwsAccessKey             string          `mapstructure:"aws_access_key"`
-	AwsSecretAccessKey       string          `mapstructure:"aws_secret_access_key"`
-	EventsTableName          string          `mapstructure:"events_table_name"`
-	ApiUsersTableName        string          `mapstructure:"api_users_table_name"`
-	GroupIDDateTimeIndexName string          `mapstructure:"group_id_date_time_index_name"`
-	JWTIssuer                string          `mapstructure:"jwt_issuer"`
-	JWTSecret                []byte          `mapstructure:"jwt_secret"`
-	AppURL                   url.URL         `mapstructure:"app_url"`
+	appconfig.Common         `mapstructure:",squash"`
+	EventsTableName          string  `mapstructure:"events_table_name"`
+	ApiUsersTableName        string  `mapstructure:"api_users_table_name"`
+	GroupIDDateTimeIndexName string  `mapstructure:"group_id_date_time_index_name"`
+	JWTIssuer                string  `mapstructure:"jwt_issuer"`
+	JWTSecret                []byte  `mapstructure:"jwt_secret"`
+	AppURL                   url.URL `mapstructure:"app_url"`
 }
 
-func NewConfigV2(ctx context.Context) (*Config, *aws.Config, error) {
-	awsConfigFactory := configparser.NewAwsConfigFactory()
+func NewConfig(ctx context.Context, awsConfigFactory *appconfig.AwsConfigManager) (*Config, error) {
 	var config Config
 
-	err := configparser.NewParser().
+	err := appconfig.NewParser().
+		WithCommonConfig().
+		DefineKeys(configKeys).
 		WithEnvFile(".", ".env").
 		WithEnvVars().
-		WithCustomProcessor(awsConfigFactory.FromViper).
-		WithSSMParameters(func(ctx context.Context, v *viper.Viper, opts *configparser.SSMParameterOptions) {
-			opts.Config = awsConfigFactory.Config()
-			opts.SSMPath = v.GetString(configparser.SSMPathKey)
+		WithCustomProcessor(awsConfigFactory.SetConfigFromViper).
+		WithSSMParameters(func(ctx context.Context, v *viper.Viper, opts *appconfig.SSMParameterOptions) {
+			opts.AwsConfig = awsConfigFactory.Config()
+			opts.SSMPath = v.GetString(appconfig.SSMPathKey)
 		}).
-		WithCustomProcessor(func(ctx context.Context, v *viper.Viper) error {
-			configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
-			configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
-			v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
-			v.SetDefault(strings.ToLower(jwtIssuerKey), "meetup-api.opensgf.org")
-			v.Set(strings.ToLower(jwtSecretKey), []byte(v.GetString(strings.ToLower(jwtSecretKey))))
-			appUrl := v.GetString(strings.ToLower(appUrlKey))
-			if appUrl == "" {
-				appUrl = "https://meetup-api.opensgf.org"
-			}
-			parsedUrl, err := url.Parse(appUrl)
-
-			if err != nil {
-				return err
-			}
-			v.Set(strings.ToLower(appUrlKey), parsedUrl)
-
-			return nil
-		}).
+		WithCustomProcessor(setDefaults).
 		Parse(ctx, &config)
 
 	if err != nil {
-		return nil, nil, err
-	}
-
-	if err = config.validate(); err != nil {
-		return nil, nil, err
-	}
-
-	return &config, awsConfigFactory.Config(), nil
-}
-
-func NewConfig(ctx context.Context) (*Config, error) {
-	return NewConfigFromEnvFile(ctx, ".", ".env")
-}
-
-func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, error) {
-	config, err := configparser.Parse[Config](ctx, configparser.ParseOptions{
-		EnvFilepath: path,
-		EnvFilename: filename,
-		Keys:        configKeys,
-		SetDefaults: setDefaults,
-	})
-
-	if err != nil {
 		return nil, err
 	}
 
@@ -125,13 +62,10 @@ func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, 
 		return nil, err
 	}
 
-	return config, nil
+	return &config, nil
 }
 
-func setDefaults(v *viper.Viper) error {
-	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
-	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
-	v.SetDefault(strings.ToLower(configparser.AWSRegionKey), "us-east-2")
+func setDefaults(_ context.Context, v *viper.Viper) error {
 	v.SetDefault(strings.ToLower(jwtIssuerKey), "meetup-api.opensgf.org")
 	v.Set(strings.ToLower(jwtSecretKey), []byte(v.GetString(strings.ToLower(jwtSecretKey))))
 	appUrl := v.GetString(strings.ToLower(appUrlKey))
@@ -171,18 +105,4 @@ func (config *Config) validate() error {
 	return nil
 }
 
-func NewLoggingConfig(config *Config) logging.Config {
-	return logging.Config{
-		Level: config.LogLevel,
-		Type:  config.LogType,
-	}
-}
-
-func NewDBConfig(config *Config) db.Config {
-	return db.Config{
-		Endpoint:        config.DynamoDbEndpoint,
-		Region:          config.AwsRegion,
-		AccessKey:       config.AwsAccessKey,
-		SecretAccessKey: config.AwsSecretAccessKey,
-	}
-}
+var ConfigProviders = wire.NewSet(appconfig.ConfigProviders, wire.FieldsOf(new(*Config), "Common"), NewConfig)

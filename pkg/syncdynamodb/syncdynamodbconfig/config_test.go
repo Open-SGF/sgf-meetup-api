@@ -5,14 +5,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
-	"sgf-meetup-api/pkg/shared/configparser"
+	"sgf-meetup-api/pkg/shared/appconfig"
 	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
 	t.Run("all values", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
+		tempDir, cleanup, err := appconfig.SetupTestEnv(`
 LOG_LEVEL=debug
 LOG_TYPE=json
 DYNAMODB_ENDPOINT=http://localhost:8000
@@ -37,7 +37,7 @@ AWS_SECRET_ACCESS_KEY=testsecret
 	})
 
 	t.Run("minimal with defaults", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(``)
+		tempDir, cleanup, err := appconfig.SetupTestEnv(``)
 
 		require.NoError(t, err)
 		defer cleanup()

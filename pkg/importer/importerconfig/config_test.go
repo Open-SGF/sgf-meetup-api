@@ -5,14 +5,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
-	"sgf-meetup-api/pkg/shared/configparser"
+	"sgf-meetup-api/pkg/shared/appconfig"
 	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
 	t.Run("all values", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
+		tempDir, cleanup, err := appconfig.SetupTestEnv(`
 LOG_LEVEL=debug
 LOG_TYPE=json
 SENTRY_DSN=https://sentry.example.com
@@ -49,7 +49,7 @@ GROUP_ID_DATE_TIME_INDEX_NAME=group-index
 	})
 
 	t.Run("minimal with defaults", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
+		tempDir, cleanup, err := appconfig.SetupTestEnv(`
 MEETUP_PROXY_FUNCTION_NAME=meetupproxy
 ARCHIVED_EVENTS_TABLE_NAME=archived-events
 EVENTS_TABLE_NAME=events
@@ -70,7 +70,7 @@ GROUP_ID_DATE_TIME_INDEX_NAME=group-index
 	})
 
 	t.Run("invalid missing required", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
+		tempDir, cleanup, err := appconfig.SetupTestEnv(`
 LOG_LEVEL=info
 `)
 		require.NoError(t, err)

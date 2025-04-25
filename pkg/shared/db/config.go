@@ -9,10 +9,10 @@ import (
 )
 
 type Config struct {
-	Endpoint        string
-	Region          string
-	AccessKey       string
-	SecretAccessKey string
+	Endpoint        string `mapstructure:"dynamodb_endpoint"`
+	Region          string `mapstructure:"dynamodb_aws_region"`
+	AccessKey       string `mapstructure:"dynamodb_aws_access_key"`
+	SecretAccessKey string `mapstructure:"dynamodb_aws_secret_access_key"`
 }
 
 func (c Config) ResolveEndpoint(ctx context.Context, params dynamodb.EndpointParameters) (smithyendpoints.Endpoint, error) {

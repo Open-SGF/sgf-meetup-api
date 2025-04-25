@@ -15,8 +15,8 @@ import (
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
-var CommonProviders = wire.NewSet(apiconfig.NewConfig, logging.DefaultLogger, apiconfig.NewLoggingConfig, clock.RealClockProvider)
-var DBProvider = wire.NewSet(apiconfig.NewDBConfig, db.NewClient)
+var CommonProviders = wire.NewSet(apiconfig.ConfigProviders, logging.DefaultLogger, clock.RealClockProvider)
+var DBProvider = wire.NewSet(db.NewClient)
 
 func InitRouter(ctx context.Context) (*gin.Engine, error) {
 	panic(wire.Build(

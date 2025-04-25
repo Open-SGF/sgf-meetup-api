@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"log/slog"
-	"sgf-meetup-api/pkg/shared/configparser"
+	"sgf-meetup-api/pkg/shared/appconfig"
 	"sgf-meetup-api/pkg/shared/logging"
 	"strings"
 )
@@ -54,7 +54,7 @@ func NewConfig(ctx context.Context) (*Config, error) {
 }
 
 func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, error) {
-	config, err := configparser.Parse[Config](ctx, configparser.ParseOptions{
+	config, err := appconfig.Parse[Config](ctx, appconfig.ParseOptions{
 		EnvFilepath: path,
 		EnvFilename: filename,
 		Keys:        configKeys,
@@ -73,8 +73,8 @@ func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, 
 }
 
 func setDefaults(v *viper.Viper) error {
-	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
-	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
+	appconfig.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
+	appconfig.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
 	v.SetDefault(strings.ToLower(meetupAuthUrlKey), "https://secure.meetup.com/oauth2/access")
 	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql")
 

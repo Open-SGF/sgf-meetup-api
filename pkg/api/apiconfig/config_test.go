@@ -4,113 +4,111 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"log/slog"
-	"sgf-meetup-api/pkg/shared/configparser"
-	"sgf-meetup-api/pkg/shared/logging"
+	"os"
+	"path/filepath"
+	"sgf-meetup-api/pkg/shared/appconfig"
+	"strings"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
-	t.Run("all values", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
-LOG_LEVEL=debug
-LOG_TYPE=json
-SENTRY_DSN=https://sentry.example.com
-DYNAMODB_ENDPOINT=http://localhost:8000
-AWS_REGION=us-west-2
-AWS_ACCESS_KEY=testkey
-AWS_SECRET_ACCESS_KEY=testsecret
-EVENTS_TABLE_NAME=events
-API_USERS_TABLE_NAME=users
-GROUP_ID_DATE_TIME_INDEX_NAME=group-index
-JWT_ISSUER=myapp
-JWT_SECRET=secretkey
-APP_URL=http://localhost
-`)
+	awsConfigManager := appconfig.NewAwsConfigManager()
+	ctx := context.Background()
 
+	t.Run("successful load from environment variables", func(t *testing.T) {
+		switchToTempTestDir(t)
+		t.Setenv("EVENTS_TABLE_NAME", "test_events")
+		t.Setenv("API_USERS_TABLE_NAME", "test_api_users")
+		t.Setenv("GROUP_ID_DATE_TIME_INDEX_NAME", "test_index")
+		t.Setenv("JWT_SECRET", "test_secret")
+		t.Setenv("APP_URL", "https://test.example.com")
+
+		cfg, err := NewConfig(ctx, awsConfigManager)
 		require.NoError(t, err)
-		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
-		require.NoError(t, err)
-		require.NotNil(t, cfg)
-
-		assert.Equal(t, slog.LevelDebug, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeJSON, cfg.LogType)
-		assert.Equal(t, "https://sentry.example.com", cfg.SentryDsn)
-		assert.Equal(t, "http://localhost:8000", cfg.DynamoDbEndpoint)
-		assert.Equal(t, "us-west-2", cfg.AwsRegion)
-		assert.Equal(t, "testkey", cfg.AwsAccessKey)
-		assert.Equal(t, "testsecret", cfg.AwsSecretAccessKey)
-		assert.Equal(t, "events", cfg.EventsTableName)
-		assert.Equal(t, "users", cfg.ApiUsersTableName)
-		assert.Equal(t, "group-index", cfg.GroupIDDateTimeIndexName)
-		assert.Equal(t, "myapp", cfg.JWTIssuer)
-		assert.Equal(t, []byte("secretkey"), cfg.JWTSecret)
-		assert.Equal(t, "http://localhost", cfg.AppURL.String())
+		assert.Equal(t, "test_events", cfg.EventsTableName)
+		assert.Equal(t, "test_api_users", cfg.ApiUsersTableName)
+		assert.Equal(t, "test_index", cfg.GroupIDDateTimeIndexName)
+		assert.Equal(t, []byte("test_secret"), cfg.JWTSecret)
+		assert.Equal(t, "https://test.example.com", cfg.AppURL.String())
 	})
 
-	t.Run("minimal with defaults", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
-EVENTS_TABLE_NAME=events
-API_USERS_TABLE_NAME=users
-GROUP_ID_DATE_TIME_INDEX_NAME=group-index
-JWT_SECRET=secretkey
-`)
+	t.Run("successful load from .env file", func(t *testing.T) {
+		tempDir := t.TempDir()
+		envPath := filepath.Join(tempDir, ".env")
 
+		envContent := strings.Join([]string{
+			"EVENTS_TABLE_NAME=file_events",
+			"API_USERS_TABLE_NAME=file_api_users",
+			"GROUP_ID_DATE_TIME_INDEX_NAME=file_index",
+			"JWT_SECRET=file_secret",
+			"APP_URL=https://file.example.com",
+		}, "\n")
+
+		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0600))
+
+		origDir, err := os.Getwd()
 		require.NoError(t, err)
-		defer cleanup()
+		t.Cleanup(func() { _ = os.Chdir(origDir) })
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
+		require.NoError(t, os.Chdir(tempDir))
+
+		cfg, err := NewConfig(ctx, awsConfigManager)
 		require.NoError(t, err)
-		require.NotNil(t, cfg)
 
-		assert.Equal(t, slog.LevelInfo, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeText, cfg.LogType)
-		assert.Equal(t, "us-east-2", cfg.AwsRegion)
+		assert.Equal(t, "file_events", cfg.EventsTableName)
+		assert.Equal(t, "file_api_users", cfg.ApiUsersTableName)
+		assert.Equal(t, "file_index", cfg.GroupIDDateTimeIndexName)
+		assert.Equal(t, []byte("file_secret"), cfg.JWTSecret)
+		assert.Equal(t, "https://file.example.com", cfg.AppURL.String())
+	})
+
+	t.Run("sets default values", func(t *testing.T) {
+		switchToTempTestDir(t)
+		t.Setenv("EVENTS_TABLE_NAME", "default_events")
+		t.Setenv("API_USERS_TABLE_NAME", "default_api_users")
+		t.Setenv("GROUP_ID_DATE_TIME_INDEX_NAME", "default_index")
+		t.Setenv("JWT_SECRET", "default_secret")
+
+		cfg, err := NewConfig(ctx, awsConfigManager)
+		require.NoError(t, err)
+
 		assert.Equal(t, "meetup-api.opensgf.org", cfg.JWTIssuer)
 		assert.Equal(t, "https://meetup-api.opensgf.org", cfg.AppURL.String())
 	})
 
-	t.Run("invalid missing required", func(t *testing.T) {
-		tempDir, cleanup, err := configparser.SetupTestEnv(`
-LOG_LEVEL=info
-`)
-		require.NoError(t, err)
-		defer cleanup()
+	t.Run("validation fails with missing fields", func(t *testing.T) {
+		switchToTempTestDir(t)
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
+		_, err := NewConfig(ctx, awsConfigManager)
 		require.Error(t, err)
-		assert.Nil(t, cfg)
-		assert.Contains(t, err.Error(), apiUsersTableNameKey)
-		assert.Contains(t, err.Error(), eventsTableNameKey)
-		assert.Contains(t, err.Error(), groupIDDateTimeIndexNameKey)
-		assert.Contains(t, err.Error(), jwtSecretKey)
+		assert.Contains(t, err.Error(), "EVENTS_TABLE_NAME")
+	})
+
+	t.Run("invalid app URL format", func(t *testing.T) {
+		switchToTempTestDir(t)
+		t.Setenv("EVENTS_TABLE_NAME", "invalid_url_events")
+		t.Setenv("API_USERS_TABLE_NAME", "invalid_url_api_users")
+		t.Setenv("GROUP_ID_DATE_TIME_INDEX_NAME", "invalid_url_index")
+		t.Setenv("JWT_SECRET", "invalid_url_secret")
+		t.Setenv("APP_URL", "://invalid.url")
+
+		_, err := NewConfig(ctx, awsConfigManager)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "parse")
 	})
 }
 
-func TestNewLoggingConfig(t *testing.T) {
-	cfg := &Config{
-		LogLevel: slog.LevelDebug,
-		LogType:  logging.LogTypeJSON,
-	}
+func switchToTempTestDir(t *testing.T) {
+	t.Helper()
 
-	loggingCfg := NewLoggingConfig(cfg)
-	assert.Equal(t, slog.LevelDebug, loggingCfg.Level)
-	assert.Equal(t, logging.LogTypeJSON, loggingCfg.Type)
-}
+	originalDir, err := os.Getwd()
+	require.NoError(t, err)
 
-func TestNewDBConfig(t *testing.T) {
-	cfg := &Config{
-		DynamoDbEndpoint:   "http://localhost:8000",
-		AwsRegion:          "us-west-2",
-		AwsAccessKey:       "testkey",
-		AwsSecretAccessKey: "testsecret",
-	}
+	tempDir := t.TempDir()
+	t.Cleanup(func() {
+		_ = os.Chdir(originalDir)
+	})
 
-	dbCfg := NewDBConfig(cfg)
-	assert.Equal(t, "http://localhost:8000", dbCfg.Endpoint)
-	assert.Equal(t, "us-west-2", dbCfg.Region)
-	assert.Equal(t, "testkey", dbCfg.AccessKey)
-	assert.Equal(t, "testsecret", dbCfg.SecretAccessKey)
+	require.NoError(t, os.Chdir(tempDir))
 }
