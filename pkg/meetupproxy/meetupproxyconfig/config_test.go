@@ -2,91 +2,92 @@ package meetupproxyconfig
 
 import (
 	"context"
+	"encoding/base64"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"log/slog"
+	"os"
+	"path/filepath"
 	"sgf-meetup-api/pkg/shared/appconfig"
-	"sgf-meetup-api/pkg/shared/logging"
+	"strings"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
-	t.Run("all values", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(`
-LOG_LEVEL=debug
-LOG_TYPE=json
-SENTRY_DSN=https://sentry.example.com
-MEETUP_PRIVATE_KEY_BASE64=c29tZUJhc2U2NEtleQ==
-MEETUP_USER_ID=meetupUserId
-MEETUP_CLIENT_KEY=meetupClientKey
-MEETUP_SIGNING_KEY_ID=signingKeyId
-MEETUP_AUTH_URL=https://api.example.com/auth
-MEETUP_API_URL=https://api.example.com
-`)
+	awsConfigManager := appconfig.NewAwsConfigManager()
+	ctx := context.Background()
 
+	t.Run("successful load from environment variables", func(t *testing.T) {
+		switchToTempTestDir(t)
+		validKey := base64.StdEncoding.EncodeToString([]byte("private_key"))
+		t.Setenv(meetupPrivateKeyBase64Key, validKey)
+		t.Setenv(meetupUserIdKey, "user123")
+		t.Setenv(meetupClientKeyKey, "client123")
+		t.Setenv(meetupSigningKeyIdKey, "signing123")
+
+		cfg, err := NewConfig(ctx, awsConfigManager)
 		require.NoError(t, err)
-		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
-		require.NoError(t, err)
-		require.NotNil(t, cfg)
-
-		assert.Equal(t, slog.LevelDebug, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeJSON, cfg.LogType)
-		assert.Equal(t, "https://sentry.example.com", cfg.SentryDsn)
-		assert.Equal(t, []byte("someBase64Key"), cfg.MeetupPrivateKey)
-		assert.Equal(t, "meetupUserId", cfg.MeetupUserID)
-		assert.Equal(t, "meetupClientKey", cfg.MeetupClientKey)
-		assert.Equal(t, "signingKeyId", cfg.MeetupSigningKeyID)
-		assert.Equal(t, "https://api.example.com/auth", cfg.MeetupAuthURL)
-		assert.Equal(t, "https://api.example.com", cfg.MeetupAPIURL)
-	})
-
-	t.Run("minimal with defaults", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(`
-MEETUP_PRIVATE_KEY_BASE64=c29tZUJhc2U2NEtleQ==
-MEETUP_USER_ID=meetupUserId
-MEETUP_CLIENT_KEY=meetupClientKey
-MEETUP_SIGNING_KEY_ID=signingKeyId
-`)
-
-		require.NoError(t, err)
-		defer cleanup()
-
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
-		require.NoError(t, err)
-		require.NotNil(t, cfg)
-
-		assert.Equal(t, slog.LevelInfo, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeText, cfg.LogType)
+		assert.Equal(t, "user123", cfg.MeetupUserID)
+		assert.Equal(t, []byte("private_key"), cfg.MeetupPrivateKey)
 		assert.Equal(t, "https://secure.meetup.com/oauth2/access", cfg.MeetupAuthURL)
 		assert.Equal(t, "https://api.meetup.com/gql", cfg.MeetupAPIURL)
 	})
 
-	t.Run("invalid missing required", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(`
-LOG_LEVEL=info
-`)
-		require.NoError(t, err)
-		defer cleanup()
+	t.Run("successful load from .env file", func(t *testing.T) {
+		tempDir := t.TempDir()
+		envPath := filepath.Join(tempDir, ".env")
+		validKey := base64.StdEncoding.EncodeToString([]byte("env_file_key"))
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
+		envContent := strings.Join([]string{
+			meetupPrivateKeyBase64Key + "=" + validKey,
+			meetupUserIdKey + "=env_user",
+			meetupClientKeyKey + "=env_client",
+			meetupSigningKeyIdKey + "=env_signing",
+		}, "\n")
+
+		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0600))
+		switchToTempTestDir(t, tempDir)
+
+		cfg, err := NewConfig(ctx, awsConfigManager)
+		require.NoError(t, err)
+
+		assert.Equal(t, "env_user", cfg.MeetupUserID)
+		assert.Equal(t, []byte("env_file_key"), cfg.MeetupPrivateKey)
+	})
+
+	t.Run("validation fails with missing required fields", func(t *testing.T) {
+		switchToTempTestDir(t)
+		t.Setenv(meetupPrivateKeyBase64Key, "valid_base64=")
+
+		_, err := NewConfig(ctx, awsConfigManager)
 		require.Error(t, err)
-		assert.Nil(t, cfg)
-		assert.Contains(t, err.Error(), meetupPrivateKeyBase64Key)
 		assert.Contains(t, err.Error(), meetupUserIdKey)
 		assert.Contains(t, err.Error(), meetupClientKeyKey)
-		assert.Contains(t, err.Error(), meetupSigningKeyIdKey)
+	})
+
+	t.Run("invalid base64 in private key", func(t *testing.T) {
+		switchToTempTestDir(t)
+		t.Setenv(meetupPrivateKeyBase64Key, "invalid_base64")
+		t.Setenv(meetupUserIdKey, "user123")
+		t.Setenv(meetupClientKeyKey, "client123")
+		t.Setenv(meetupSigningKeyIdKey, "signing123")
+
+		_, err := NewConfig(ctx, awsConfigManager)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), meetupPrivateKeyBase64Key)
 	})
 }
 
-func TestNewLoggingConfig(t *testing.T) {
-	cfg := &Config{
-		LogLevel: slog.LevelDebug,
-		LogType:  logging.LogTypeJSON,
+func switchToTempTestDir(t *testing.T, customDir ...string) {
+	t.Helper()
+
+	tempDir := t.TempDir()
+	if len(customDir) > 0 {
+		tempDir = customDir[0]
 	}
 
-	loggingCfg := NewLoggingConfig(cfg)
-	assert.Equal(t, slog.LevelDebug, loggingCfg.Level)
-	assert.Equal(t, logging.LogTypeJSON, loggingCfg.Type)
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.Chdir(origDir) })
+	require.NoError(t, os.Chdir(tempDir))
 }

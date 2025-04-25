@@ -12,13 +12,12 @@ import (
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
-var CommonSet = wire.NewSet(meetupproxyconfig.NewConfig, logging.DefaultLogger, clock.RealClockProvider, httpclient.DefaultClient, meetupproxyconfig.NewLoggingConfig)
-var AuthHandlerSet = wire.NewSet(wire.Bind(new(AuthHandler), new(*MeetupHttpAuthHandler)), NewMeetupAuthHandlerConfig, NewMeetupHttpAuthHandler)
+var CommonProviders = wire.NewSet(meetupproxyconfig.ConfigProviders, logging.DefaultLogger, clock.RealClockProvider, httpclient.DefaultClient)
 
 func InitService(ctx context.Context) (*Service, error) {
 	panic(wire.Build(
-		CommonSet,
-		AuthHandlerSet,
+		CommonProviders,
+		AuthHandlerProviders,
 		NewServiceConfig,
 		NewService,
 	))
