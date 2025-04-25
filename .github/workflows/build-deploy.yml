@@ -9,7 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    concurrency: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
+    environment: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
