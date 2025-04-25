@@ -23,7 +23,7 @@ type eventDTO struct {
 	Title       string     `json:"title"`
 	EventURL    string     `json:"eventUrl"`
 	Description string     `json:"description"`
-	DateTime    *time.Time `json:"dateTime"`
+	DateTime    *string    `json:"dateTime"`
 	Duration    string     `json:"duration"`
 	Venue       *venueDTO  `json:"venue"`
 	Host        *hostDTO   `json:"host"`

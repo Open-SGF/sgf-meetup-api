@@ -116,7 +116,7 @@ func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(ctx context.Context
 			events = append(events, event)
 
 			if event.DateTime.After(maxFutureDate) {
-				maxFutureDate = *event.DateTime
+				maxFutureDate = event.DateTime.Time
 			}
 		}
 

@@ -14,7 +14,7 @@ func TestMeetupFaker_CreateEvent(t *testing.T) {
 	event := faker.CreateEvent(group, now)
 
 	assert.Equal(t, group, event.GroupID)
-	assert.Equal(t, now, *event.DateTime)
+	assert.Equal(t, now, event.DateTime.Time)
 }
 
 func TestMeetupFaker_CreateEvents(t *testing.T) {
@@ -40,6 +40,6 @@ func TestMeetupFaker_CreateEventsWithDates(t *testing.T) {
 	assert.Equal(t, 2, len(events))
 	for i, event := range events {
 		assert.Equal(t, group, event.GroupID)
-		assert.Equal(t, base.Add(durations[i]), *event.DateTime)
+		assert.Equal(t, base.Add(durations[i]), event.DateTime.Time)
 	}
 }

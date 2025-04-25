@@ -20,7 +20,7 @@ func (m *MeetupFaker) CreateEvent(groupID string, dateTime time.Time) models.Mee
 	event := models.MeetupEvent{}
 	_ = m.faker.Struct(&event)
 	event.GroupID = groupID
-	event.DateTime = &dateTime
+	event.DateTime = &models.CustomTime{Time: dateTime}
 	return event
 }
 
@@ -39,7 +39,7 @@ func (m *MeetupFaker) CreateEventsWithDates(groupID string, base time.Time, date
 	for i, d := range dates {
 		date := base.Add(d)
 		events[i].GroupID = groupID
-		events[i].DateTime = &date
+		events[i].DateTime = &models.CustomTime{Time: date}
 	}
 	return events
 }

@@ -118,7 +118,7 @@ func TestController_Integration(t *testing.T) {
 		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
 
 		t.Run("before filter", func(t *testing.T) {
-			before := timeSource.Now().Add(time.Hour * 2).UTC().Format(time.RFC3339)
+			before := timeSource.Now().Add(time.Hour * 2).Add(time.Second * 1).UTC().Format(time.RFC3339)
 			w := makeRequest(router, "GET", "/groups/"+group+"/events?before="+url.QueryEscape(before), nil)
 			responseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
 

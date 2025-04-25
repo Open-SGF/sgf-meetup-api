@@ -1,10 +1,18 @@
 package groupevents
 
-import "sgf-meetup-api/pkg/shared/models"
+import (
+	"sgf-meetup-api/pkg/shared/models"
+)
 
 func meetupEventToDTO(meetupEvent *models.MeetupEvent) *eventDTO {
 	if meetupEvent == nil {
 		return nil
+	}
+
+	var date *string
+	if meetupEvent.DateTime != nil {
+		dateStr := meetupEvent.DateTime.String()
+		date = &dateStr
 	}
 
 	return &eventDTO{
@@ -14,7 +22,7 @@ func meetupEventToDTO(meetupEvent *models.MeetupEvent) *eventDTO {
 		Title:       meetupEvent.Title,
 		EventURL:    meetupEvent.EventURL,
 		Description: meetupEvent.Description,
-		DateTime:    meetupEvent.DateTime,
+		DateTime:    date,
 		Duration:    meetupEvent.Duration,
 		Venue:       meetupVenueToDTO(meetupEvent.Venue),
 		Host:        meetupHostToDTO(meetupEvent.Host),
