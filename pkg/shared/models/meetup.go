@@ -1,9 +1,11 @@
 package models
 
+import "encoding/json"
+
 type MeetupEvent struct {
 	ID          string        `json:"id" dynamodbav:"id" fake:"{uuid}"`
-	GroupID     string        `json:"group.urlname" dynamodbav:"groupId" fake:"{username}"`
-	GroupName   string        `json:"group.name" dynamodbav:"groupName" fake:"{username}"`
+	GroupID     string        `json:"-" dynamodbav:"groupId" fake:"{username}"`
+	GroupName   string        `json:"-" dynamodbav:"groupName" fake:"{username}"`
 	Title       string        `json:"title" dynamodbav:"title" fake:"{sentence:3}"`
 	EventURL    string        `json:"eventUrl" dynamodbav:"eventUrl" fake:"{url}"`
 	Description string        `json:"description" dynamodbav:"description" fake:"{paragraph:3,5,2,\n}"`
@@ -29,4 +31,26 @@ type MeetupHost struct {
 type MeetupImage struct {
 	BaseUrl string `json:"baseUrl" dynamodbav:"baseUrl" fake:"{url}.{randomstring:[jpg,jpeg,png,svg,webp]}"`
 	Preview string `json:"preview" dynamodbav:"preview" fake:"{url}.{randomstring:[jpg,jpeg,png,svg,webp]}"`
+}
+
+func (e *MeetupEvent) UnmarshalJSON(data []byte) error {
+	// Alias main type to prevent infinite loop
+	type Alias MeetupEvent
+	aux := &struct {
+		Group struct {
+			Name    string `json:"name"`
+			URLName string `json:"urlname"`
+		} `json:"group"`
+		*Alias
+	}{
+		Alias: (*Alias)(e),
+	}
+
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+
+	e.GroupName = aux.Group.Name
+	e.GroupID = aux.Group.URLName
+	return nil
 }
