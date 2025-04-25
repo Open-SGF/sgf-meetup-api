@@ -3,7 +3,6 @@ package configparser
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -117,7 +116,7 @@ func getSSMParameters(ctx context.Context, path string) (map[string]string, erro
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get SSM parameters page: %w", err)
+			return nil, err
 		}
 
 		for _, param := range page.Parameters {
