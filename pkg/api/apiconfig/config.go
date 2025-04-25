@@ -3,6 +3,7 @@ package apiconfig
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/spf13/viper"
 	"log/slog"
 	"net/url"
@@ -33,7 +34,7 @@ var configKeys = []string{
 	logTypeKey,
 	sentryDSNKey,
 	dynamoDbEndpointKey,
-	awsRegionKey,
+	configparser.AWSRegionKey,
 	awsAccessKeyKey,
 	awsSecretAccessKeyKey,
 	eventsTableNameKey,
@@ -58,6 +59,50 @@ type Config struct {
 	JWTIssuer                string          `mapstructure:"jwt_issuer"`
 	JWTSecret                []byte          `mapstructure:"jwt_secret"`
 	AppURL                   url.URL         `mapstructure:"app_url"`
+}
+
+func NewConfigV2(ctx context.Context) (*Config, *aws.Config, error) {
+	awsConfigFactory := configparser.NewAwsConfigFactory()
+	var config Config
+
+	err := configparser.NewParser().
+		WithEnvFile(".", ".env").
+		WithEnvVars().
+		WithCustomProcessor(awsConfigFactory.FromViper).
+		WithSSMParameters(func(ctx context.Context, v *viper.Viper, opts *configparser.SSMParameterOptions) {
+			opts.Config = awsConfigFactory.Config()
+			opts.SSMPath = v.GetString(configparser.SSMPathKey)
+		}).
+		WithCustomProcessor(func(ctx context.Context, v *viper.Viper) error {
+			configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
+			configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
+			v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
+			v.SetDefault(strings.ToLower(jwtIssuerKey), "meetup-api.opensgf.org")
+			v.Set(strings.ToLower(jwtSecretKey), []byte(v.GetString(strings.ToLower(jwtSecretKey))))
+			appUrl := v.GetString(strings.ToLower(appUrlKey))
+			if appUrl == "" {
+				appUrl = "https://meetup-api.opensgf.org"
+			}
+			parsedUrl, err := url.Parse(appUrl)
+
+			if err != nil {
+				return err
+			}
+			v.Set(strings.ToLower(appUrlKey), parsedUrl)
+
+			return nil
+		}).
+		Parse(ctx, &config)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err = config.validate(); err != nil {
+		return nil, nil, err
+	}
+
+	return &config, awsConfigFactory.Config(), nil
 }
 
 func NewConfig(ctx context.Context) (*Config, error) {
@@ -86,7 +131,7 @@ func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, 
 func setDefaults(v *viper.Viper) error {
 	configparser.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
 	configparser.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
-	v.SetDefault(strings.ToLower(awsRegionKey), "us-east-2")
+	v.SetDefault(strings.ToLower(configparser.AWSRegionKey), "us-east-2")
 	v.SetDefault(strings.ToLower(jwtIssuerKey), "meetup-api.opensgf.org")
 	v.Set(strings.ToLower(jwtSecretKey), []byte(v.GetString(strings.ToLower(jwtSecretKey))))
 	appUrl := v.GetString(strings.ToLower(appUrlKey))
