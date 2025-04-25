@@ -73,8 +73,8 @@ func TestNewConfig(t *testing.T) {
 		cfg, err := NewConfig(ctx, awsConfigManager)
 		require.NoError(t, err)
 
-		assert.Equal(t, "meetup-api.opensgf.org", cfg.JWTIssuer)
-		assert.Equal(t, "https://meetup-api.opensgf.org", cfg.AppURL.String())
+		assert.Equal(t, "sgf-meetup-api.opensgf.org", cfg.JWTIssuer)
+		assert.Equal(t, "https://sgf-meetup-api.opensgf.org", cfg.AppURL.String())
 	})
 
 	t.Run("validation fails with missing fields", func(t *testing.T) {

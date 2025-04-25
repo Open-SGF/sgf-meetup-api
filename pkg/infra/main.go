@@ -109,6 +109,8 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 			"EVENTS_TABLE_NAME":             &eventsTable.FullTableName,
 			"GROUP_ID_DATE_TIME_INDEX_NAME": GroupIdDateTimeIndex.IndexName,
 			"API_USERS_TABLE_NAME":          &apiUsersTable.FullTableName,
+			"APP_URL":                       jsii.String("https://" + props.DomainName),
+			"JWT_ISSUER":                    jsii.String(props.DomainName),
 			"SSM_PATH":                      jsii.String(apiSSMPath),
 		},
 	})
