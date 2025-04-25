@@ -4,17 +4,13 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/google/wire"
 	"github.com/spf13/viper"
-	"log/slog"
 	"sgf-meetup-api/pkg/shared/appconfig"
-	"sgf-meetup-api/pkg/shared/logging"
 	"strings"
 )
 
 const (
-	logLevelKey               = "LOG_LEVEL"
-	logTypeKey                = "LOG_TYPE"
-	sentryDsnKey              = "SENTRY_DSN"
 	meetupPrivateKeyBase64Key = "MEETUP_PRIVATE_KEY_BASE64"
 	meetupPrivateKeyKey       = "MEETUP_PRIVATE_KEY"
 	meetupUserIdKey           = "MEETUP_USER_ID"
@@ -25,9 +21,6 @@ const (
 )
 
 var configKeys = []string{
-	logLevelKey,
-	logTypeKey,
-	sentryDsnKey,
 	meetupPrivateKeyBase64Key,
 	meetupPrivateKeyKey,
 	meetupUserIdKey,
@@ -38,28 +31,30 @@ var configKeys = []string{
 }
 
 type Config struct {
-	LogLevel           slog.Level      `mapstructure:"log_level"`
-	LogType            logging.LogType `mapstructure:"log_type"`
-	SentryDsn          string          `mapstructure:"sentry_dsn"`
-	MeetupPrivateKey   []byte          `mapstructure:"meetup_private_key"`
-	MeetupUserID       string          `mapstructure:"meetup_user_id"`
-	MeetupClientKey    string          `mapstructure:"meetup_client_key"`
-	MeetupSigningKeyID string          `mapstructure:"meetup_signing_key_id"`
-	MeetupAuthURL      string          `mapstructure:"meetup_auth_url"`
-	MeetupAPIURL       string          `mapstructure:"meetup_api_url"`
+	appconfig.Common   `mapstructure:",squash"`
+	MeetupPrivateKey   []byte `mapstructure:"meetup_private_key"`
+	MeetupUserID       string `mapstructure:"meetup_user_id"`
+	MeetupClientKey    string `mapstructure:"meetup_client_key"`
+	MeetupSigningKeyID string `mapstructure:"meetup_signing_key_id"`
+	MeetupAuthURL      string `mapstructure:"meetup_auth_url"`
+	MeetupAPIURL       string `mapstructure:"meetup_api_url"`
 }
 
-func NewConfig(ctx context.Context) (*Config, error) {
-	return NewConfigFromEnvFile(ctx, ".", ".env")
-}
+func NewConfig(ctx context.Context, awsConfigFactory *appconfig.AwsConfigManager) (*Config, error) {
+	var config Config
 
-func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, error) {
-	config, err := appconfig.Parse[Config](ctx, appconfig.ParseOptions{
-		EnvFilepath: path,
-		EnvFilename: filename,
-		Keys:        configKeys,
-		SetDefaults: setDefaults,
-	})
+	err := appconfig.NewParser().
+		WithCommonConfig().
+		DefineKeys(configKeys).
+		WithEnvFile(".", ".env").
+		WithEnvVars().
+		WithCustomProcessor(awsConfigFactory.SetConfigFromViper).
+		WithSSMParameters(func(ctx context.Context, v *viper.Viper, opts *appconfig.SSMParameterOptions) {
+			opts.AwsConfig = awsConfigFactory.Config()
+			opts.SSMPath = v.GetString(appconfig.SSMPathKey)
+		}).
+		WithCustomProcessor(setDefaults).
+		Parse(ctx, &config)
 
 	if err != nil {
 		return nil, err
@@ -69,12 +64,10 @@ func NewConfigFromEnvFile(ctx context.Context, path, filename string) (*Config, 
 		return nil, err
 	}
 
-	return config, nil
+	return &config, nil
 }
 
-func setDefaults(v *viper.Viper) error {
-	appconfig.ParseFromKey(v, logLevelKey, logging.ParseLogLevel, slog.LevelInfo)
-	appconfig.ParseFromKey(v, logTypeKey, logging.ParseLogType, logging.LogTypeText)
+func setDefaults(_ context.Context, v *viper.Viper) error {
 	v.SetDefault(strings.ToLower(meetupAuthUrlKey), "https://secure.meetup.com/oauth2/access")
 	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql")
 
@@ -108,9 +101,4 @@ func (config *Config) validate() error {
 	return nil
 }
 
-func NewLoggingConfig(config *Config) logging.Config {
-	return logging.Config{
-		Level: config.LogLevel,
-		Type:  config.LogType,
-	}
-}
+var ConfigProviders = wire.NewSet(appconfig.ConfigProviders, wire.FieldsOf(new(*Config), "Common"), NewConfig)

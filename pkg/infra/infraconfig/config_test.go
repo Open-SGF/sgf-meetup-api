@@ -4,55 +4,61 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"log/slog"
-	"sgf-meetup-api/pkg/shared/appconfig"
-	"sgf-meetup-api/pkg/shared/logging"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
-	t.Run("all values", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(`
-LOG_LEVEL=debug
-LOG_TYPE=json
-APP_ENV=staging
-`)
+	ctx := context.Background()
 
+	t.Run("successful load from environment variables", func(t *testing.T) {
+		switchToTempTestDir(t)
+		t.Setenv(appEnvKey, "staging")
+		t.Setenv(appDomainNameEnv, "staging-meetup-api.opensgf.org")
+
+		cfg, err := NewConfig(ctx)
 		require.NoError(t, err)
-		defer cleanup()
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
-		require.NoError(t, err)
-		require.NotNil(t, cfg)
-
-		assert.Equal(t, slog.LevelDebug, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeJSON, cfg.LogType)
 		assert.Equal(t, "staging", cfg.AppEnv)
+		assert.Equal(t, "staging-meetup-api.opensgf.org", cfg.AppDomainName)
 	})
 
-	t.Run("minimal with defaults", func(t *testing.T) {
-		tempDir, cleanup, err := appconfig.SetupTestEnv(`
-`)
+	t.Run("successful load from .env file", func(t *testing.T) {
+		tempDir := t.TempDir()
+		envPath := filepath.Join(tempDir, ".env")
 
+		envContent := strings.Join([]string{
+			appEnvKey + "=staging",
+			appDomainNameEnv + "=staging-meetup-api.opensgf.org",
+		}, "\n")
+
+		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0600))
+
+		origDir, err := os.Getwd()
 		require.NoError(t, err)
-		defer cleanup()
+		t.Cleanup(func() { _ = os.Chdir(origDir) })
+		require.NoError(t, os.Chdir(tempDir))
 
-		cfg, err := NewConfigFromEnvFile(context.Background(), tempDir, ".env")
+		cfg, err := NewConfig(ctx)
 		require.NoError(t, err)
-		require.NotNil(t, cfg)
 
-		assert.Equal(t, slog.LevelInfo, cfg.LogLevel)
-		assert.Equal(t, logging.LogTypeText, cfg.LogType)
+		assert.Equal(t, "staging", cfg.AppEnv)
+		assert.Equal(t, "staging-meetup-api.opensgf.org", cfg.AppDomainName)
 	})
 }
 
-func TestNewLoggingConfig(t *testing.T) {
-	cfg := &Config{
-		LogLevel: slog.LevelDebug,
-		LogType:  logging.LogTypeJSON,
-	}
+func switchToTempTestDir(t *testing.T) {
+	t.Helper()
 
-	loggingCfg := NewLoggingConfig(cfg)
-	assert.Equal(t, slog.LevelDebug, loggingCfg.Level)
-	assert.Equal(t, logging.LogTypeJSON, loggingCfg.Type)
+	originalDir, err := os.Getwd()
+	require.NoError(t, err)
+
+	tempDir := t.TempDir()
+	t.Cleanup(func() {
+		_ = os.Chdir(originalDir)
+	})
+
+	require.NoError(t, os.Chdir(tempDir))
 }

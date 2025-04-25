@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/wire"
 	"io"
 	"log/slog"
 	"net/http"
@@ -163,3 +164,5 @@ func (ah *MeetupHttpAuthHandler) parseAuthToken(r io.Reader) (*authToken, error)
 
 	return &newToken, nil
 }
+
+var AuthHandlerProviders = wire.NewSet(wire.Bind(new(AuthHandler), new(*MeetupHttpAuthHandler)), NewMeetupAuthHandlerConfig, NewMeetupHttpAuthHandler)
