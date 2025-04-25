@@ -7,7 +7,7 @@ on:
       - develop
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     concurrency: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
     environment: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
@@ -32,4 +32,3 @@ jobs:
           APP_ENV: ${{ vars.APP_ENV }}
           APP_DOMAIN_NAME: ${{ vars.APP_DOMAIN_NAME }}
         run: npm run cdk deploy -- --require-approval never
-
