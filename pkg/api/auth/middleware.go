@@ -24,12 +24,14 @@ func (m *Middleware) Handler(ctx *gin.Context) {
 	authHeader := ctx.GetHeader("Authorization")
 	if authHeader == "" {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusUnauthorized)
+		ctx.Abort()
 		return
 	}
 
 	tokenParts := strings.Split(authHeader, " ")
 	if len(tokenParts) != 2 || strings.ToLower(tokenParts[0]) != "bearer" {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusUnauthorized)
+		ctx.Abort()
 		return
 	}
 
@@ -37,11 +39,13 @@ func (m *Middleware) Handler(ctx *gin.Context) {
 
 	if errors.Is(err, ErrInvalidCredentials) {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusUnauthorized)
+		ctx.Abort()
 		return
 	}
 
 	if err != nil {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusInternalServerError)
+		ctx.Abort()
 		return
 	}
 

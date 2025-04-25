@@ -12,6 +12,7 @@ import (
 )
 
 func TestMiddleware_Handler(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	timeSource := clock.NewMockTimeSource(time.Now())
 	tokenManager := NewTokenManager(TokenManagerConfig{
 		JWTIssuer: "issuer",
@@ -27,6 +28,7 @@ func TestMiddleware_Handler(t *testing.T) {
 		middleware.Handler(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.True(t, c.IsAborted())
 	})
 
 	t.Run("should return 401 when authorization header is invalid format", func(t *testing.T) {
@@ -37,6 +39,7 @@ func TestMiddleware_Handler(t *testing.T) {
 		middleware.Handler(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.True(t, c.IsAborted())
 	})
 
 	t.Run("should return 401 when token is invalid", func(t *testing.T) {
@@ -47,6 +50,7 @@ func TestMiddleware_Handler(t *testing.T) {
 		middleware.Handler(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.True(t, c.IsAborted())
 	})
 
 	t.Run("should set client ID in context when token is valid", func(t *testing.T) {
@@ -63,6 +67,7 @@ func TestMiddleware_Handler(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		clientID, _ := c.Get(ClientIDKey)
 		assert.Equal(t, "test_client", clientID)
+		assert.False(t, c.IsAborted())
 	})
 
 }
