@@ -19,8 +19,8 @@ import (
 // Injectors from wire.go:
 
 func InitService(ctx context.Context) (*Service, error) {
-	awsConfigManager := appconfig.NewAwsConfigManager()
-	config, err := meetupproxyconfig.NewConfig(ctx, awsConfigManager)
+	awsConfigManagerImpl := appconfig.NewAwsConfigManager()
+	config, err := meetupproxyconfig.NewConfig(ctx, awsConfigManagerImpl)
 	if err != nil {
 		return nil, err
 	}

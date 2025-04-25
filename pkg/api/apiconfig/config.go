@@ -38,7 +38,7 @@ type Config struct {
 	AppURL                   url.URL `mapstructure:"app_url"`
 }
 
-func NewConfig(ctx context.Context, awsConfigFactory *appconfig.AwsConfigManager) (*Config, error) {
+func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager) (*Config, error) {
 	var config Config
 
 	err := appconfig.NewParser().

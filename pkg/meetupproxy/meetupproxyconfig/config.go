@@ -40,7 +40,7 @@ type Config struct {
 	MeetupAPIURL       string `mapstructure:"meetup_api_url"`
 }
 
-func NewConfig(ctx context.Context, awsConfigFactory *appconfig.AwsConfigManager) (*Config, error) {
+func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager) (*Config, error) {
 	var config Config
 
 	err := appconfig.NewParser().

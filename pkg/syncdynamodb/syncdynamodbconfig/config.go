@@ -10,7 +10,7 @@ type Config struct {
 	appconfig.Common `mapstructure:",squash"`
 }
 
-func NewConfig(ctx context.Context, awsConfigFactory *appconfig.AwsConfigManager) (*Config, error) {
+func NewConfig(ctx context.Context, awsConfigFactory *appconfig.AwsConfigManagerImpl) (*Config, error) {
 	var config Config
 
 	err := appconfig.NewParser().

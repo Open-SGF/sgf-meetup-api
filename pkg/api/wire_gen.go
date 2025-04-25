@@ -26,8 +26,8 @@ import (
 // Injectors from wire.go:
 
 func InitRouter(ctx context.Context) (*gin.Engine, error) {
-	awsConfigManager := appconfig.NewAwsConfigManager()
-	config, err := apiconfig.NewConfig(ctx, awsConfigManager)
+	awsConfigManagerImpl := appconfig.NewAwsConfigManager()
+	config, err := apiconfig.NewConfig(ctx, awsConfigManagerImpl)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,8 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 	realTimeSource := clock.NewRealTimeSource()
 	dynamoDBAPIUserRepositoryConfig := auth.NewDynamoDBAPIUserRepositoryConfig(config)
 	dbConfig := common.DynamoDB
-	client, err := db.NewClient(ctx, dbConfig, logger)
+	awsConfig := appconfig.AwsConfigProvider(awsConfigManagerImpl)
+	client, err := db.NewClient(ctx, dbConfig, awsConfig, logger)
 	if err != nil {
 		return nil, err
 	}
