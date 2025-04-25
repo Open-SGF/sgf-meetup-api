@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"fmt"
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager"
@@ -34,23 +35,24 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 
 	meetupProxyFunctionName := customconstructs.NewFunctionName(namespace, "MeetupProxy")
 
-	meetupPrivateKey := awsssm.StringParameter_ValueForStringParameter(stack, jsii.String("/sgf-meetup-api/meetup-private-key-base64"), nil)
-	meetupUserId := awsssm.StringParameter_ValueForStringParameter(stack, jsii.String("/sgf-meetup-api/meetup-user-id"), nil)
-	meetupClientId := awsssm.StringParameter_ValueForStringParameter(stack, jsii.String("/sgf-meetup-api/meetup-client-key"), nil)
-	meetupSigningKeyId := awsssm.StringParameter_ValueForStringParameter(stack, jsii.String("/sgf-meetup-api/meetup-signing-key-id"), nil)
+	meetupProxySSMPath := "/sgf-meetup-api/" + *meetupProxyFunctionName.PrefixedName()
 
 	meetupProxyFunction := customconstructs.NewGoLambdaFunction(stack, meetupProxyFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/meetupproxy"),
 		FunctionName: meetupProxyFunctionName.PrefixedName(),
 		Environment: &map[string]*string{
-			"LOG_LEVEL":                 jsii.String("debug"),
-			"LOG_TYPE":                  jsii.String("json"),
-			"MEETUP_PRIVATE_KEY_BASE64": meetupPrivateKey,
-			"MEETUP_USER_ID":            meetupUserId,
-			"MEETUP_CLIENT_KEY":         meetupClientId,
-			"MEETUP_SIGNING_KEY_ID":     meetupSigningKeyId,
+			"LOG_LEVEL": jsii.String("debug"),
+			"LOG_TYPE":  jsii.String("json"),
+			"SSM_PATH":  jsii.String(meetupProxySSMPath),
 		},
 	})
+
+	//nolint:staticcheck
+	meetupProxyFunction.Function.AddToRolePolicy(awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Effect:    awsiam.Effect_ALLOW,
+		Actions:   jsii.Strings("ssm:GetParameter", "ssm:GetParametersByPath"),
+		Resources: jsii.Strings(fmt.Sprintf("arn:aws:ssm:%s:%s:parameter%s*", *awscdk.Aws_REGION(), *awscdk.Aws_ACCOUNT_ID(), meetupProxySSMPath)),
+	}))
 
 	meetupProxyFunctionInvokePolicy := awsiam.NewManagedPolicy(stack, jsii.String("MeetupProxyFunctionInvokePolicy"), &awsiam.ManagedPolicyProps{
 		ManagedPolicyName: jsii.String(namespace + "meetupProxyFunctionInvokePolicy"),
@@ -70,6 +72,8 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 
 	importerFunctionName := customconstructs.NewFunctionName(namespace, "Importer")
 
+	importerSSMPath := "/sgf-meetup-api/" + *importerFunctionName.PrefixedName()
+
 	importerFunction := customconstructs.NewGoLambdaFunction(stack, importerFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/importer"),
 		FunctionName: importerFunctionName.PrefixedName(),
@@ -81,8 +85,16 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 			"EVENTS_TABLE_NAME":             &eventsTable.FullTableName,
 			"GROUP_ID_DATE_TIME_INDEX_NAME": GroupIdDateTimeIndex.IndexName,
 			"ARCHIVED_EVENTS_TABLE_NAME":    &archivedEventsTable.FullTableName,
+			"SSM_PATH":                      jsii.String(importerSSMPath),
 		},
 	})
+
+	//nolint:staticcheck
+	importerFunction.Function.AddToRolePolicy(awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Effect:    awsiam.Effect_ALLOW,
+		Actions:   jsii.Strings("ssm:GetParameter", "ssm:GetParametersByPath"),
+		Resources: jsii.Strings(fmt.Sprintf("arn:aws:ssm:%s:%s:parameter%s*", *awscdk.Aws_REGION(), *awscdk.Aws_ACCOUNT_ID(), importerSSMPath)),
+	}))
 
 	apiFunctionName := customconstructs.NewFunctionName(namespace, "Api")
 
@@ -115,8 +127,9 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 	))
 
 	api := awsapigateway.NewLambdaRestApi(stack, jsii.String("EventsGateway"), &awsapigateway.LambdaRestApiProps{
-		Handler: apiFunction.Function,
-		Proxy:   jsii.Bool(true),
+		Handler:       apiFunction.Function,
+		Proxy:         jsii.Bool(true),
+		EndpointTypes: &[]awsapigateway.EndpointType{awsapigateway.EndpointType_REGIONAL},
 	})
 
 	certificate := awscertificatemanager.NewCertificate(stack, jsii.String("ApiCert"), &awscertificatemanager.CertificateProps{
@@ -127,7 +140,7 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 	domain := awsapigateway.NewDomainName(stack, jsii.String("EventsGatewayDomain"), &awsapigateway.DomainNameProps{
 		DomainName:   jsii.String(props.DomainName),
 		Certificate:  certificate,
-		EndpointType: awsapigateway.EndpointType_EDGE,
+		EndpointType: awsapigateway.EndpointType_REGIONAL,
 	})
 
 	awsapigateway.NewBasePathMapping(stack, jsii.String("EventsGatewayBasePathMapping"), &awsapigateway.BasePathMappingProps{
