@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/google/wire"
 	"log/slog"
 	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/clock"
@@ -205,3 +206,5 @@ func (er *DynamoDBEventRepository) deleteIds(ctx context.Context, ids []string) 
 func (er *DynamoDBEventRepository) createKey(id string) map[string]types.AttributeValue {
 	return map[string]types.AttributeValue{"id": &types.AttributeValueMemberS{Value: id}}
 }
+
+var EventRepositoryProviders = wire.NewSet(wire.Bind(new(EventRepository), new(*DynamoDBEventRepository)), NewDynamoDBEventRepositoryConfig, NewDynamoDBEventRepository)

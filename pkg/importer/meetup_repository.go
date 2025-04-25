@@ -3,6 +3,7 @@ package importer
 import (
 	"context"
 	"encoding/json"
+	"github.com/google/wire"
 	"log/slog"
 	"sgf-meetup-api/pkg/shared/models"
 	"time"
@@ -146,3 +147,5 @@ func executeGraphQLQuery[T any](r *GraphQLMeetupRepository, ctx context.Context,
 
 	return &response, nil
 }
+
+var MeetupRepositoryProviders = wire.NewSet(wire.Bind(new(MeetupRepository), new(*GraphQLMeetupRepository)), NewGraphQLMeetupRepository)
