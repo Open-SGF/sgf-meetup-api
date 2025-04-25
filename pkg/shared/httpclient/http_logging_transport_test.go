@@ -30,7 +30,7 @@ func TestHttpLoggingTransport_SuccessfulRequest(t *testing.T) {
 
 	defer func() { _ = resp.Body.Close() }()
 
-	infoEntries := mockHandler.Entries(slog.LevelInfo)
+	infoEntries := mockHandler.Entries(slog.LevelDebug)
 
 	require.Len(t, infoEntries, 1)
 
