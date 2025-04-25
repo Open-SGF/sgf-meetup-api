@@ -97,9 +97,9 @@ func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(ctx context.Context
 
 	for {
 		variables := map[string]any{
-			"urlname": group,
-			"count":   20,
-			"cursor":  cursor,
+			"urlname":  group,
+			"itemsNum": 50,
+			"cursor":   cursor,
 		}
 
 		response, err := executeGraphQLQuery[MeetupFutureEventsResponse](r, ctx, getFutureEventsQuery, variables)
