@@ -12,6 +12,7 @@ import (
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 	"sgf-meetup-api/pkg/infra/customconstructs"
+	"sgf-meetup-api/pkg/shared/resource"
 )
 
 type AppStackProps struct {
@@ -21,25 +22,21 @@ type AppStackProps struct {
 }
 
 func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscdk.Stack {
-	namespace := props.AppEnv
-	if namespace != "" {
-		namespace = namespace + "-"
-	}
+	stackName := resource.NewNamer(props.AppEnv, id)
 
-	stackId := namespace + id
-	stack := awscdk.NewStack(scope, &stackId, &props.StackProps)
+	stack := awscdk.NewStack(scope, jsii.String(stackName.FullName()), &props.StackProps)
 
-	eventsTable := customconstructs.NewDynamoTable(stack, namespace, EventsTableProps)
-	archivedEventsTable := customconstructs.NewDynamoTable(stack, namespace, ArchivedEventsTableProps)
-	apiUsersTable := customconstructs.NewDynamoTable(stack, namespace, ApiUsersTableProps)
+	eventsTable := customconstructs.NewDynamoTable(stack, props.AppEnv, EventsTableProps)
+	archivedEventsTable := customconstructs.NewDynamoTable(stack, props.AppEnv, ArchivedEventsTableProps)
+	apiUsersTable := customconstructs.NewDynamoTable(stack, props.AppEnv, ApiUsersTableProps)
 
-	meetupProxyFunctionName := customconstructs.NewFunctionName(namespace, "MeetupProxy")
+	meetupProxyFunctionName := resource.NewNamer(props.AppEnv, "MeetupProxy")
 
-	meetupProxySSMPath := "/sgf-meetup-api/" + *meetupProxyFunctionName.PrefixedName()
+	meetupProxySSMPath := "/sgf-meetup-api/" + meetupProxyFunctionName.FullName()
 
-	meetupProxyFunction := customconstructs.NewGoLambdaFunction(stack, meetupProxyFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
+	meetupProxyFunction := customconstructs.NewGoLambdaFunction(stack, jsii.String(meetupProxyFunctionName.Name()), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/meetupproxy"),
-		FunctionName: meetupProxyFunctionName.PrefixedName(),
+		FunctionName: jsii.String(meetupProxyFunctionName.FullName()),
 		Environment: &map[string]*string{
 			"LOG_LEVEL": jsii.String("debug"),
 			"LOG_TYPE":  jsii.String("json"),
@@ -54,8 +51,9 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		Resources: jsii.Strings(fmt.Sprintf("arn:aws:ssm:%s:%s:parameter%s*", *awscdk.Aws_REGION(), *awscdk.Aws_ACCOUNT_ID(), meetupProxySSMPath)),
 	}))
 
-	meetupProxyFunctionInvokePolicy := awsiam.NewManagedPolicy(stack, jsii.String("MeetupProxyFunctionInvokePolicy"), &awsiam.ManagedPolicyProps{
-		ManagedPolicyName: jsii.String(namespace + "meetupProxyFunctionInvokePolicy"),
+	meetupProxyFunctionPolicyNamer := resource.NewNamer(props.AppEnv, "MeetupProxyFunctionInvokePolicy")
+	meetupProxyFunctionInvokePolicy := awsiam.NewManagedPolicy(stack, jsii.String(meetupProxyFunctionPolicyNamer.Name()), &awsiam.ManagedPolicyProps{
+		ManagedPolicyName: jsii.String(meetupProxyFunctionPolicyNamer.FullName()),
 		Statements: &[]awsiam.PolicyStatement{awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
 			Actions:   jsii.Strings("lambda:InvokeFunction"),
 			Resources: jsii.Strings(*meetupProxyFunction.Function.FunctionArn()), //nolint:staticcheck
@@ -70,18 +68,18 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 
 	meetupGroupNames := awsssm.StringParameter_ValueForStringParameter(stack, jsii.String("/sgf-meetup-api/meetup-group-names"), nil)
 
-	importerFunctionName := customconstructs.NewFunctionName(namespace, "Importer")
+	importerFunctionName := resource.NewNamer(props.AppEnv, "Importer")
 
-	importerSSMPath := "/sgf-meetup-api/" + *importerFunctionName.PrefixedName()
+	importerSSMPath := "/sgf-meetup-api/" + importerFunctionName.FullName()
 
-	importerFunction := customconstructs.NewGoLambdaFunction(stack, importerFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
+	importerFunction := customconstructs.NewGoLambdaFunction(stack, jsii.String(importerFunctionName.Name()), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/importer"),
-		FunctionName: importerFunctionName.PrefixedName(),
+		FunctionName: jsii.String(importerFunctionName.FullName()),
 		Environment: &map[string]*string{
 			"LOG_LEVEL":                     jsii.String("debug"),
 			"LOG_TYPE":                      jsii.String("json"),
 			"MEETUP_GROUP_NAMES":            meetupGroupNames,
-			"MEETUP_PROXY_FUNCTION_NAME":    meetupProxyFunctionName.PrefixedName(),
+			"MEETUP_PROXY_FUNCTION_NAME":    jsii.String(meetupProxyFunctionName.FullName()),
 			"EVENTS_TABLE_NAME":             &eventsTable.FullTableName,
 			"GROUP_ID_DATE_TIME_INDEX_NAME": GroupIdDateTimeIndex.IndexName,
 			"ARCHIVED_EVENTS_TABLE_NAME":    &archivedEventsTable.FullTableName,
@@ -96,13 +94,13 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		Resources: jsii.Strings(fmt.Sprintf("arn:aws:ssm:%s:%s:parameter%s*", *awscdk.Aws_REGION(), *awscdk.Aws_ACCOUNT_ID(), importerSSMPath)),
 	}))
 
-	apiFunctionName := customconstructs.NewFunctionName(namespace, "Api")
+	apiFunctionName := resource.NewNamer(props.AppEnv, "Api")
 
-	apiSSMPath := "/sgf-meetup-api/" + *apiFunctionName.PrefixedName()
+	apiSSMPath := "/sgf-meetup-api/" + apiFunctionName.FullName()
 
-	apiFunction := customconstructs.NewGoLambdaFunction(stack, apiFunctionName.Name(), &customconstructs.GoLambdaFunctionProps{
+	apiFunction := customconstructs.NewGoLambdaFunction(stack, jsii.String(apiFunctionName.Name()), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/api"),
-		FunctionName: apiFunctionName.PrefixedName(),
+		FunctionName: jsii.String(apiFunctionName.FullName()),
 		Environment: &map[string]*string{
 			"LOG_LEVEL":                     jsii.String("debug"),
 			"LOG_TYPE":                      jsii.String("json"),

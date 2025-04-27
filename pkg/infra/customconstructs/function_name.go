@@ -1,23 +1,27 @@
 package customconstructs
 
-import "github.com/aws/jsii-runtime-go"
-
-type FunctionName struct {
+type ResourceNamer struct {
 	prefix string
 	name   string
 }
 
-func NewFunctionName(prefix, name string) *FunctionName {
-	return &FunctionName{
+func NewResourceNamer(prefix, name string) *ResourceNamer {
+	if prefix != "" {
+		prefix += "-"
+	}
+
+	return &ResourceNamer{
 		prefix: prefix,
 		name:   name,
 	}
 }
 
-func (f *FunctionName) Name() *string {
-	return jsii.String(f.name)
+func (f *ResourceNamer) Name() *string {
+	name := f.name
+	return &name
 }
 
-func (f *FunctionName) PrefixedName() *string {
-	return jsii.String(f.prefix + f.name)
+func (f *ResourceNamer) FullName() *string {
+	name := f.prefix + f.name
+	return &name
 }

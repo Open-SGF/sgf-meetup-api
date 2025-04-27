@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
+	"sgf-meetup-api/pkg/shared/resource"
 )
 
 type DynamoTableProps struct {
@@ -18,15 +19,11 @@ type DynamoTable struct {
 
 func NewDynamoTable(scope constructs.Construct, prefix string, props *DynamoTableProps) *DynamoTable {
 	tableProps := props.TableProps
-	tableName := *tableProps.TableName
-	fullTableName := tableName
+	tableNamer := resource.NewNamer(prefix, *tableProps.TableName)
 
-	if prefix != "" {
-		fullTableName = prefix + tableName
-		tableProps.TableName = jsii.String(fullTableName)
-	}
+	tableProps.TableName = jsii.String(tableNamer.FullName())
 
-	table := awsdynamodb.NewTable(scope, jsii.String(tableName), &tableProps)
+	table := awsdynamodb.NewTable(scope, jsii.String(tableNamer.Name()), &tableProps)
 
 	for _, gsi := range props.GlobalSecondaryIndexes {
 		table.AddGlobalSecondaryIndex(&gsi)
@@ -34,6 +31,6 @@ func NewDynamoTable(scope constructs.Construct, prefix string, props *DynamoTabl
 
 	return &DynamoTable{
 		Table:         table,
-		FullTableName: fullTableName,
+		FullTableName: tableNamer.FullName(),
 	}
 }
