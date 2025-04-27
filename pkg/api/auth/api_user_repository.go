@@ -18,12 +18,12 @@ type APIUserRepository interface {
 }
 
 type DynamoDBAPIUserRepositoryConfig struct {
-	ApiUserTable string
+	APIUserTable string
 }
 
 func NewDynamoDBAPIUserRepositoryConfig(config *apiconfig.Config) DynamoDBAPIUserRepositoryConfig {
 	return DynamoDBAPIUserRepositoryConfig{
-		ApiUserTable: config.ApiUsersTableName,
+		APIUserTable: config.APIUsersTableName,
 	}
 }
 
@@ -41,7 +41,7 @@ func NewDynamoDBAPIUserRepository(config DynamoDBAPIUserRepositoryConfig, db *db
 
 func (r *DynamoDBAPIUserRepository) GetAPIUser(ctx context.Context, clientID string) (*models.APIUser, error) {
 	result, err := r.db.GetItem(ctx, &dynamodb.GetItemInput{
-		TableName: aws.String(r.config.ApiUserTable),
+		TableName: aws.String(r.config.APIUserTable),
 		Key: map[string]types.AttributeValue{
 			"clientId": &types.AttributeValueMemberS{Value: clientID},
 		},

@@ -8,9 +8,9 @@ import (
 
 func TestNewDynamoDBAPIUserRepositoryConfig(t *testing.T) {
 	cfg := &apiconfig.Config{
-		ApiUsersTableName: "apiUsers",
+		APIUsersTableName: "apiUsers",
 	}
 
 	userRepoConfig := NewDynamoDBAPIUserRepositoryConfig(cfg)
-	assert.Equal(t, cfg.ApiUsersTableName, userRepoConfig.ApiUserTable)
+	assert.Equal(t, cfg.APIUsersTableName, userRepoConfig.APIUserTable)
 }

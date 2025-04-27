@@ -104,8 +104,8 @@ func (s *Service) getAuthResult(clientID string) (*models.AuthResult, error) {
 	}, nil
 }
 
-func (s *Service) verifyClientSecret(clientSecret, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(clientSecret))
+func (s *Service) verifyClientSecret(clientSecret string, hash []byte) bool {
+	err := bcrypt.CompareHashAndPassword(hash, []byte(clientSecret))
 	return err == nil
 }
 

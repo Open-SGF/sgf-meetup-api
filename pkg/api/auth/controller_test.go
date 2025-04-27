@@ -30,7 +30,7 @@ func TestController_Integration(t *testing.T) {
 	defer testDB.Close()
 	timeSource := clock.NewMockTimeSource(time.Now())
 	apiUserRepo := NewDynamoDBAPIUserRepository(DynamoDBAPIUserRepositoryConfig{
-		ApiUserTable: *infra.ApiUsersTableProps.TableName,
+		APIUserTable: *infra.ApiUsersTableProps.TableName,
 	}, testDB.Client)
 	tokenSecret := []byte("some-secret-value")
 	tokenValidator := NewTokenManager(TokenManagerConfig{
@@ -223,7 +223,7 @@ func addAPIUser(t *testing.T, ctx context.Context, client *db.Client, id, secret
 
 	apiUser := models.APIUser{
 		ClientID:           id,
-		HashedClientSecret: string(bytes),
+		HashedClientSecret: bytes,
 	}
 
 	av, err := attributevalue.MarshalMap(apiUser) // Use Marshal to convert struct to AttributeValues

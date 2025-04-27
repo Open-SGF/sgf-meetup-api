@@ -34,7 +34,7 @@ var configKeys = []string{
 type Config struct {
 	appconfig.Common         `mapstructure:",squash"`
 	EventsTableName          string  `mapstructure:"events_table_name"`
-	ApiUsersTableName        string  `mapstructure:"api_users_table_name"`
+	APIUsersTableName        string  `mapstructure:"api_users_table_name"`
 	GroupIDDateTimeIndexName string  `mapstructure:"group_id_date_time_index_name"`
 	JWTIssuer                string  `mapstructure:"jwt_issuer"`
 	JWTSecret                []byte  `mapstructure:"jwt_secret"`
@@ -98,7 +98,7 @@ func (config *Config) validate() error {
 	if config.EventsTableName == "" {
 		missing = append(missing, eventsTableNameKey)
 	}
-	if config.ApiUsersTableName == "" {
+	if config.APIUsersTableName == "" {
 		missing = append(missing, apiUsersTableNameKey)
 	}
 	if config.GroupIDDateTimeIndexName == "" {

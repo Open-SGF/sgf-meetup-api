@@ -27,7 +27,7 @@ func TestNewConfig(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, "test_events", cfg.EventsTableName)
-		assert.Equal(t, "test_api_users", cfg.ApiUsersTableName)
+		assert.Equal(t, "test_api_users", cfg.APIUsersTableName)
 		assert.Equal(t, "test_index", cfg.GroupIDDateTimeIndexName)
 		assert.Equal(t, []byte("test_base64"), cfg.JWTSecret)
 		assert.Equal(t, "https://test.example.com", cfg.AppURL.String())
@@ -57,7 +57,7 @@ func TestNewConfig(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, "file_events", cfg.EventsTableName)
-		assert.Equal(t, "file_api_users", cfg.ApiUsersTableName)
+		assert.Equal(t, "file_api_users", cfg.APIUsersTableName)
 		assert.Equal(t, "file_index", cfg.GroupIDDateTimeIndexName)
 		assert.Equal(t, []byte("test_base64"), cfg.JWTSecret)
 		assert.Equal(t, "https://file.example.com", cfg.AppURL.String())

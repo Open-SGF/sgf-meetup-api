@@ -63,8 +63,8 @@ func TestNewTestDB(t *testing.T) {
 		defer func() { _ = testDB.Reset(ctx) }()
 
 		items := []models.APIUser{
-			{ClientID: "1", HashedClientSecret: "test"},
-			{ClientID: "3", HashedClientSecret: "test"},
+			{ClientID: "1", HashedClientSecret: []byte("test")},
+			{ClientID: "3", HashedClientSecret: []byte("test")},
 		}
 
 		testDB.InsertTestItems(ctx, *infra.ApiUsersTableProps.TableName, items)
