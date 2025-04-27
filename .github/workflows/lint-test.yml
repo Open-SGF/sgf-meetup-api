@@ -1,13 +1,17 @@
-name: "Lint & Build PR"
+name: Lint and Test
 on:
   pull_request:
+  push:
     branches:
       - main
       - develop
+
 jobs:
   lint-test:
-    name: Lint & Test
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      !contains('main,develop', github.event.pull_request.head.ref)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -29,13 +33,3 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: coverage.out
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-      - run: npm ci
-      - run: npm run synth

@@ -1,13 +1,17 @@
-name: Build & Deploy
+name: Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Lint and Test"]
+    types:
+      - completed
     branches:
       - main
       - develop
 
 jobs:
   deploy:
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     concurrency: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
     environment: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
