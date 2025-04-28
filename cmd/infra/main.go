@@ -20,7 +20,7 @@ func main() {
 
 	app := awscdk.NewApp(nil)
 
-	infra.NewStack(app, "SgfMeetupApiGo", &infra.AppStackProps{
+	infra.NewStack(app, "SgfMeetupApi", &infra.AppStackProps{
 		StackProps: awscdk.StackProps{
 			Env: env(),
 		},

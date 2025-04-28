@@ -11,6 +11,7 @@ The SGF Meetup API lists Meetup event details for local tech groups in the Sprin
 - [Contributing](#contributing)
 	- [First Time Setup](#first-time-setup)
 	- [Running the Project](#running-the-project)
+    - [Running Tests](#running-testsc)
 	- [Shutting Down](#shutting-down)
 	- [Troubleshooting](#troubleshooting)
     - [Project Structure](#project-structure)
@@ -108,7 +109,11 @@ cp .lambda-env.json.example .lambda-env.json
   - [http://localhost:3000/swagger/index.html](http://localhost:3000/swagger/index.html)
 
 > **Note:** Valid AWS creds must be present to run either of the above commands.
-The easiest way to handle this would be to have a valid aws profile and add the `--profile <profile name>` to the above commands 
+The easiest way to handle this would be to have a valid aws profile and add the `--profile <profile name>` to the above commands
+
+### Running Tests
+- Ensure docker is running
+- `go test ./cmd/... ./pkg/...`
 
 ### Shutting down
 - CTRL + C to shut down API
