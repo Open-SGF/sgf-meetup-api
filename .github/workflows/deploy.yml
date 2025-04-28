@@ -1,4 +1,4 @@
-name: Deploy
+name: Lint Test Deploy
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
       - name: Bootstrap CDK
         run: npm run cdk bootstrap
-      - name: Deploy
+      - name: CDK Deploy
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           APP_ENV: ${{ vars.APP_ENV }}
