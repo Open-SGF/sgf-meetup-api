@@ -1,17 +1,12 @@
 name: Lint and Test
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - develop
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
 
 jobs:
   lint-test:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'push' ||
-      !contains('main,develop', github.event.pull_request.head.ref)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
