@@ -27,8 +27,8 @@ The SGF Meetup API lists Meetup event details for local tech groups in the Sprin
 
 ### Documentation
 
-- Swagger playground: [/swagger/index.html](https://staging-sgf-meetup-api.opensgf.org/swagger/index.html)
-- OpenAPI document: [/swagger/doc.json](https://staging-sgf-meetup-api.opensgf.org/swagger/doc.json)
+- Swagger playground: [/swagger/index.html](https://sgf-meetup-api.opensgf.org/swagger/index.html)
+- OpenAPI document: [/swagger/doc.json](https://sgf-meetup-api.opensgf.org/swagger/doc.json)
 
 ### Requesting Credentials
 
