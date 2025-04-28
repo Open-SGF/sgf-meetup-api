@@ -1,5 +1,7 @@
 # SGF Meetup API
 
+[![codecov](https://codecov.io/gh/Open-SGF/sgf-meetup-api/graph/badge.svg?token=1OICD52I00)](https://codecov.io/gh/Open-SGF/sgf-meetup-api)
+
 The SGF Meetup API lists Meetup event details for local tech groups in the Springfield, MO area.
 
 ## Table of Contents
