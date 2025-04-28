@@ -7,7 +7,6 @@ updates:
     groups:
       gomod-deps:
         patterns: ["*"]
-
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -15,3 +14,17 @@ updates:
     groups:
       npm-deps:
         patterns: ["*"]
+  - package-ecosystem: docker
+    directory: /pkg/infra
+    schedule:
+      interval: weekly
+    groups:
+      docker-deps:
+        patterns: [ "*" ]
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      docker-deps:
+        patterns: [ "*" ]
