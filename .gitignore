@@ -1,3 +1,7 @@
+# OS Files
+.DS_Store
+Thumbs.db
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -25,3 +29,5 @@ cdk.out
 
 
 .env
+.lambda-env.json
+

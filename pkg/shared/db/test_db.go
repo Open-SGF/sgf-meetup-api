@@ -30,7 +30,7 @@ func NewTestDB(ctx context.Context) (*TestDB, error) {
 		return nil, err
 	}
 
-	if err = SyncTables(ctx, testDB.logger, testDB.Client, infra.Tables); err != nil {
+	if err = SyncTables(ctx, testDB.logger, testDB.Client, "", infra.Tables); err != nil {
 		return nil, err
 	}
 

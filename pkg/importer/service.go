@@ -70,19 +70,15 @@ func (s *Service) importWorker(ctx context.Context, group string, beforeDate tim
 
 	err := s.importForGroup(ctx, group, beforeDate)
 	if err != nil {
-		s.logger.Error("error fetching events", "group", group)
+		s.logger.Error("error fetching events", slog.String("group", group))
 		results <- err
 	} else {
-		s.logger.Info("successfully imported events for group", "group", group)
 		results <- nil
 	}
 }
 
 func (s *Service) importForGroup(ctx context.Context, group string, beforeDate time.Time) error {
-	groupLogger := s.logger.With(slog.String("group", group))
-
 	savedEvents, err := s.eventRepository.GetUpcomingEventsForGroup(ctx, group)
-	groupLogger.Info("got saved events", slog.Int("savedEventCount", len(savedEvents)))
 
 	if err != nil {
 		return err
@@ -90,7 +86,6 @@ func (s *Service) importForGroup(ctx context.Context, group string, beforeDate t
 
 	missingEventIds := make([]string, 0)
 	incomingEvents, err := s.meetupRepository.GetEventsUntilDateForGroup(ctx, group, beforeDate)
-	groupLogger.Info("got events from meetup", slog.Int("incomingEventsCount", len(missingEventIds)))
 
 	if err != nil {
 		return err
@@ -111,14 +106,16 @@ func (s *Service) importForGroup(ctx context.Context, group string, beforeDate t
 		return err
 	}
 
-	groupLogger.Info("event upsert complete")
-	groupLogger.Info("archiving missing events", slog.Int("missingEventsCount", len(missingEventIds)))
-
 	if err = s.eventRepository.ArchiveEvents(ctx, missingEventIds); err != nil {
 		return err
 	}
 
-	groupLogger.Info("archiving missing events complete")
+	s.logger.Info("successfully imported events for group",
+		slog.String("group", group),
+		slog.Int("eventsInDb", len(savedEvents)),
+		slog.Int("eventsFromMeetup", len(incomingEvents)),
+		slog.Int("archivedEvents", len(missingEventIds)),
+	)
 
 	return nil
 }

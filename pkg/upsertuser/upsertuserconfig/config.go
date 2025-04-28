@@ -6,17 +6,8 @@ import (
 	"sgf-meetup-api/pkg/shared/appconfig"
 )
 
-const (
-	appEnvKey = "APP_ENV"
-)
-
-var configKeys = []string{
-	appEnvKey,
-}
-
 type Config struct {
 	appconfig.Common `mapstructure:",squash"`
-	AppEnv           string `mapstructure:"app_env"`
 }
 
 func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager) (*Config, error) {
@@ -24,7 +15,6 @@ func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager)
 
 	err := appconfig.NewParser().
 		WithCommonConfig().
-		DefineKeys(configKeys).
 		WithEnvFile(".", ".env").
 		WithEnvVars().
 		WithCustomProcessor(awsConfigFactory.SetConfigFromViper).

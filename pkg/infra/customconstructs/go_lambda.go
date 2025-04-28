@@ -68,8 +68,7 @@ func NewGoLambdaFunction(
 				Image: awscdk.DockerImage_FromBuild(jsii.String("./pkg/infra"), nil),
 				Command: jsii.Strings(
 					"bash", "-c",
-					"go build -o /asset-output/bootstrap "+*props.CodePath+"/main.go && "+
-						"if [ -f .env ]; then cp .env /asset-output/; fi",
+					"go build -o /asset-output/bootstrap "+*props.CodePath+"/main.go",
 				),
 				Volumes: &[]*awscdk.DockerVolume{
 					{

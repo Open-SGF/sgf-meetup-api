@@ -1,0 +1,24 @@
+{
+	"Parameters": {
+		"DYNAMODB_ENDPOINT": "http://dynamodb-local:8000",
+		"DYNAMODB_REGION": "us-east-2",
+		"DYNAMODB_AWS_ACCESS_KEY": "test",
+		"DYNAMODB_AWS_SECRET_ACCESS_KEY": "test",
+
+		"MEETUP_GROUP_NAMES": "open-sgf,sgfdevs",
+		"MEETUP_PROXY_FUNCTION_NAME": "Staging-MeetupProxy",
+		"EVENTS_TABLE_NAME": "MeetupEvents",
+		"GROUP_ID_DATE_TIME_INDEX_NAME": "GroupIdDateTimeIndex",
+		"ARCHIVED_EVENTS_TABLE_NAME": "MeetupArchivedEvents",
+		"API_USERS_TABLE_NAME": "MeetupApiUsers",
+		"APP_URL": "http://localhost:3000",
+		"JWT_ISSUER": "localhost:3000",
+		"JWT_SECRET": "some-super-secret-value",
+
+		"MEETUP_PRIVATE_KEY": "",
+		"MEETUP_USER_ID": "",
+		"MEETUP_CLIENT_KEY":  "",
+		"MEETUP_SIGNING_KEY_ID": "",
+		"MEETUP_AUTH_URL":  ""
+	}
+}

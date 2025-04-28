@@ -1,6 +1,7 @@
 package appconfig
 
 import (
+	"context"
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
@@ -10,6 +11,7 @@ const (
 	LogLevelKey                   = "LOG_LEVEL"
 	LogTypeKey                    = "LOG_TYPE"
 	SentryDSNKey                  = "SENTRY_DSN"
+	appEnvKey                     = "APP_ENV"
 	SSMPathKey                    = "SSM_PATH"
 	AWSRegionKey                  = "AWS_REGION"
 	AWSAccessKeyKey               = "AWS_ACCESS_KEY"
@@ -28,6 +30,7 @@ var CommonKeys = []string{
 	LogLevelKey,
 	LogTypeKey,
 	SentryDSNKey,
+	appEnvKey,
 	SSMPathKey,
 	AWSRegionKey,
 	AWSAccessKeyKey,
@@ -58,6 +61,7 @@ type DynamoDB struct {
 type Common struct {
 	Logging   logging.Config `mapstructure:",squash"`
 	SentryDSN string         `mapstructure:"sentry_dsn"`
+	AppEnv    string         `mapstructure:"app_env"`
 	Aws       Aws            `mapstructure:",squash"`
 	DynamoDB  db.Config      `mapstructure:",squash"`
 }
@@ -68,3 +72,19 @@ var ConfigProviders = wire.NewSet(
 	AwsConfigProvider,
 	wire.FieldsOf(new(Common), "Logging", "Aws", "DynamoDB"),
 )
+
+func NewCommonConfig(ctx context.Context) (*Common, error) {
+	var config Common
+
+	err := NewParser().
+		WithCommonConfig().
+		WithEnvFile(".", ".env").
+		WithEnvVars().
+		Parse(ctx, &config)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}

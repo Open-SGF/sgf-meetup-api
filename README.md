@@ -4,38 +4,51 @@ The SGF Meetup API lists Meetup event details for local tech groups in the Sprin
 
 ## Table of Contents
 - [How to Use This API](#how-to-use-this-api)
-	- [Requesting an API Key](#requesting-an-api-key)
-	- [Authentication](#authentication)
-- [For Contributors](#for-contributors)
-	- [Prerequisites](#prerequisites)
+    - [URLs](#urls)
+	- [Documentation](#documentation)
+	- [Requesting Credentials](#requesting-credentials)
+- [Architecture](#architecture)
+- [Contributing](#contributing)
 	- [First Time Setup](#first-time-setup)
 	- [Running the Project](#running-the-project)
 	- [Shutting Down](#shutting-down)
 	- [Troubleshooting](#troubleshooting)
+    - [Project Structure](#project-structure)
 
 ## How to Use This API
 
-### Requesting an API Key
+### URLs
 
-Request an API key by opening a GitHub Issue in the [SGF Meetup API repo](https://github.com/Open-SGF/sgf-meetup-api/issues/).
+- Production: https://sgf-meetup-api.opensgf.org
+- Staging: https://staging-sgf-meetup-api.opensgf.org
+
+### Documentation
+
+- Swagger playground: [/swagger/index.html](https://staging-sgf-meetup-api.opensgf.org/swagger/index.html)
+- OpenAPI document: [/swagger/doc.json](https://staging-sgf-meetup-api.opensgf.org/swagger/doc.json)
+
+### Requesting Credentials
+
+Request API credentials by opening a GitHub Issue in the [SGF Meetup API repo](https://github.com/Open-SGF/sgf-meetup-api/issues/).
 
 In the GitHub Issue, submit a username for the API and contact information.  We will assign a password to the username and send it to the contact information listed.
 
-### Authentication
+## Architecture
 
+See [docs/architecture.md](./docs/architecture.md)
 
+## Contributing
 
-## For Contributors
+### First Time Setup
 
-### Prerequisites
-- [Node 18.x](https://nodejs.org) (Ideally using [nvm](https://github.com/nvm-sh/nvm))
+#### Required Tools
+- [Go 1.24](https://go.dev/dl/)
+- [Node 22.x](https://nodejs.org) (Ideally using [nvm](https://github.com/nvm-sh/nvm))
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 - An Open SGF AWS Account
-  - Message a project organizer to get one set up 
-
-### First Time Setup
+	- Message a project organizer to get one set up
 
 #### Sign in to the AWS CLI
 - `aws configure sso`
@@ -62,35 +75,43 @@ Including the commands in npm scripts.
 ```bash
 nvm install # if using nvm
 npm install
+go mod download
 ```
 
-#### Create `.env`
+#### Create `.env` and `.lambda-env.json`
+
+`.lambda-env.json` is used when running the application with the SAM cli.
+
+`.env` is used for other instances where programs run directly on a developers machine. 
+
 ```bash
-cp lambdas/.env.example lambdas/.env
+cp .env.example .env
+cp .lambda-env.json.example .lambda-env.json
 ```
 
 #### Populate additional env variables
 - `MEETUP_GROUP_NAMES` should be a comma seperated list of meetup group names to import events from
   - This value can be pulled from the url of a Meetup groups page e.g. with meetup.com/sgfdevs, sgfdevs is the group name
-- `API_KEYS` should be a comma seperated list of strings you'll use to locally call the API
 
-#### Setup initial database
+#### Database/User Setup
 - `docker compose up -d`
-  - If you are on linux or WSL there will likely be permission issues with a folder used by docker
-  - You can fix those with `sudo chown -R 1000:1000 docker/dynamodb`
-- `npm run dev:sync-dynamodb`
+- `go run ./cmd/syncdynamodb`
+- `go run ./cmd/upsertuser -clientId <ID> -clientSecret <SECRET>`
 
 ### Running the project
 - `docker compose up -d` (if not already running)
-- `nvm use` (if using nvm)
 - Run importer script
-  - `npm run dev:importer`
+  - `go run ./cmd/localsamrunner importer`
 - Run API
-  - `npm run dev:api`
-  - Use an API client (like [Postman](https://www.postman.com/)) to send requests to `http://localhost/events`
-    - You'll need to make sure the `Authorization` header is set to one of your `API_KEYS` from your `.env`
+  - `go run ./cmd/localsamrunner api`
+- Open Swagger docs
+  - [http://localhost:3000/swagger/index.html](http://localhost:3000/swagger/index.html)
+
+> **Note:** Valid AWS creds must be present to run either of the above commands.
+The easiest way to handle this would be to have a valid aws profile and add the `--profile <profile name>` to the above commands 
 
 ### Shutting down
+- CTRL + C to shut down API
 - `docker compose down`
 
 ### Troubleshooting
@@ -100,15 +121,3 @@ If it's been awhile since you've last run the project, your SSO session in the A
 To fix it:
 - `aws sso login`
 - Open the link in a browser and follow the prompts
-
-#### `npm run dev:sync-dynamodb` Hangs in Linux Environments (Including WSL)
-This can be caused by permissions errors with the `./docker` folder that docker compose creates.
-To fix it change the permissions of that folder to your local user
-```bash
-sudo chown $USER ./docker -R
-```
-
-### `npm run dev:sync-dynamodb` Causes "UnrecognizedClientException: The security token included in the request is invalid."
-Specify a DYNAMODB_ENDPOINT environment variable pointing to localhost.
-
-Example: `DYNAMODB_ENDPOINT=http://localhost:8000 npm run dev:sync-dynamodb`

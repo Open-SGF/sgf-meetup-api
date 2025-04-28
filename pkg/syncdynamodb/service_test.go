@@ -6,6 +6,7 @@ import (
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
+	"sgf-meetup-api/pkg/syncdynamodb/syncdynamodbconfig"
 	"testing"
 )
 
@@ -18,7 +19,8 @@ func TestService_Run(t *testing.T) {
 
 	logger := logging.NewMockLogger()
 
-	service := NewService(testDB.Client, logger)
+	config := &syncdynamodbconfig.Config{}
+	service := NewService(config, testDB.Client, logger)
 
 	err = service.Run(ctx, infra.Tables)
 

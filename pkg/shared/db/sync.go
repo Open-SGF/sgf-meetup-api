@@ -9,28 +9,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"log/slog"
 	"sgf-meetup-api/pkg/infra/customconstructs"
+	"sgf-meetup-api/pkg/shared/resource"
 )
 
-func SyncTables(ctx context.Context, logger *slog.Logger, client *Client, tables []customconstructs.DynamoTableProps) error {
+func SyncTables(ctx context.Context, logger *slog.Logger, client *Client, prefix string, tables []customconstructs.DynamoTableProps) error {
 
 	for _, tableProps := range tables {
-		tableName := *tableProps.TableName
+		tableNamer := resource.NewNamer(prefix, *tableProps.TableName)
 
-		exists, err := tableExists(ctx, client, logger, tableName)
+		exists, err := tableExists(ctx, client, logger, tableNamer.FullName())
 		if err != nil {
 			return err
 		}
 
 		if exists {
-			logger.Info("Table already exists", "tableName", tableName)
+			logger.Info("Table already exists", "tableName", tableNamer.FullName())
 			continue
 		}
 
-		if err := createTable(ctx, client, tableProps); err != nil {
+		if err := createTable(ctx, client, prefix, tableProps); err != nil {
 			return err
 		}
 
-		logger.Info("Created table", "tableName", tableName)
+		logger.Info("Created table", "tableName", tableNamer.FullName())
 	}
 
 	return nil
@@ -53,7 +54,7 @@ func tableExists(ctx context.Context, client *Client, logger *slog.Logger, table
 	return true, nil
 }
 
-func createTable(ctx context.Context, client *Client, tableProps customconstructs.DynamoTableProps) error {
+func createTable(ctx context.Context, client *Client, prefix string, tableProps customconstructs.DynamoTableProps) error {
 	attrMap := make(map[string]types.ScalarAttributeType)
 
 	partitionKeyName := *tableProps.PartitionKey.Name
@@ -122,8 +123,10 @@ func createTable(ctx context.Context, client *Client, tableProps customconstruct
 		})
 	}
 
+	tableNamer := resource.NewNamer(prefix, *tableProps.TableName)
+
 	input := &dynamodb.CreateTableInput{
-		TableName:            tableProps.TableName,
+		TableName:            aws.String(tableNamer.FullName()),
 		AttributeDefinitions: attrDefs,
 		KeySchema:            keySchema,
 		ProvisionedThroughput: &types.ProvisionedThroughput{

@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "cdk": "cdk",
-    "synth": "rimraf ./cdk.out && cdk synth"
+    "synth": "rimraf ./cdk.out && cdk synth",
+    "dev:importer": "npm run synth && sam local invoke -t ./cdk.out/SgfMeetupApiGo.template.json --docker-network sgf-meetup-api importer"
   },
   "author": "",
   "license": "ISC",

@@ -30,6 +30,15 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 	archivedEventsTable := customconstructs.NewDynamoTable(stack, props.AppEnv, ArchivedEventsTableProps)
 	apiUsersTable := customconstructs.NewDynamoTable(stack, props.AppEnv, ApiUsersTableProps)
 
+	commonEnvVars := map[string]*string{
+		"LOG_LEVEL":                      jsii.String("debug"),
+		"LOG_TYPE":                       jsii.String("json"),
+		"DYNAMODB_ENDPOINT":              jsii.String(""),
+		"DYNAMODB_AWS_REGION":            jsii.String(""),
+		"DYNAMODB_AWS_ACCESS_KEY":        jsii.String(""),
+		"DYNAMODB_AWS_SECRET_ACCESS_KEY": jsii.String(""),
+	}
+
 	meetupProxyFunctionName := resource.NewNamer(props.AppEnv, "MeetupProxy")
 
 	meetupProxySSMPath := "/sgf-meetup-api/" + meetupProxyFunctionName.FullName()
@@ -38,9 +47,13 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		CodePath:     jsii.String("./cmd/meetupproxy"),
 		FunctionName: jsii.String(meetupProxyFunctionName.FullName()),
 		Environment: &map[string]*string{
-			"LOG_LEVEL": jsii.String("debug"),
-			"LOG_TYPE":  jsii.String("json"),
-			"SSM_PATH":  jsii.String(meetupProxySSMPath),
+			"MEETUP_PRIVATE_KEY_BASE64": jsii.String(""),
+			"MEETUP_USER_ID":            jsii.String(""),
+			"MEETUP_CLIENT_KEY":         jsii.String(""),
+			"MEETUP_SIGNING_KEY_ID":     jsii.String(""),
+			"MEETUP_AUTH_URL":           jsii.String(""),
+			"MEETUP_API_URL":            jsii.String(""),
+			"SSM_PATH":                  jsii.String(meetupProxySSMPath),
 		},
 	})
 
@@ -75,16 +88,14 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 	importerFunction := customconstructs.NewGoLambdaFunction(stack, jsii.String(importerFunctionName.Name()), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/importer"),
 		FunctionName: jsii.String(importerFunctionName.FullName()),
-		Environment: &map[string]*string{
-			"LOG_LEVEL":                     jsii.String("debug"),
-			"LOG_TYPE":                      jsii.String("json"),
+		Environment: mergeMaps(commonEnvVars, map[string]*string{
 			"MEETUP_GROUP_NAMES":            meetupGroupNames,
 			"MEETUP_PROXY_FUNCTION_NAME":    jsii.String(meetupProxyFunctionName.FullName()),
 			"EVENTS_TABLE_NAME":             &eventsTable.FullTableName,
 			"GROUP_ID_DATE_TIME_INDEX_NAME": GroupIdDateTimeIndex.IndexName,
 			"ARCHIVED_EVENTS_TABLE_NAME":    &archivedEventsTable.FullTableName,
 			"SSM_PATH":                      jsii.String(importerSSMPath),
-		},
+		}),
 	})
 
 	//nolint:staticcheck
@@ -101,16 +112,15 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 	apiFunction := customconstructs.NewGoLambdaFunction(stack, jsii.String(apiFunctionName.Name()), &customconstructs.GoLambdaFunctionProps{
 		CodePath:     jsii.String("./cmd/api"),
 		FunctionName: jsii.String(apiFunctionName.FullName()),
-		Environment: &map[string]*string{
-			"LOG_LEVEL":                     jsii.String("debug"),
-			"LOG_TYPE":                      jsii.String("json"),
+		Environment: mergeMaps(commonEnvVars, map[string]*string{
 			"EVENTS_TABLE_NAME":             &eventsTable.FullTableName,
 			"GROUP_ID_DATE_TIME_INDEX_NAME": GroupIdDateTimeIndex.IndexName,
 			"API_USERS_TABLE_NAME":          &apiUsersTable.FullTableName,
 			"APP_URL":                       jsii.String("https://" + props.DomainName),
 			"JWT_ISSUER":                    jsii.String(props.DomainName),
+			"JWT_SECRET":                    jsii.String(""),
 			"SSM_PATH":                      jsii.String(apiSSMPath),
-		},
+		}),
 	})
 
 	//nolint:staticcheck
@@ -165,4 +175,14 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 	})
 
 	return stack
+}
+
+func mergeMaps[M ~map[K]V, K comparable, V any](maps ...M) *M {
+	merged := make(M)
+	for _, m := range maps {
+		for k, v := range m {
+			merged[k] = v
+		}
+	}
+	return &merged
 }

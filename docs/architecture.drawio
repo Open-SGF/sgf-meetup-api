@@ -1,0 +1,70 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.15 Chrome/134.0.6998.205 Electron/35.2.1 Safari/537.36" version="26.2.15">
+  <diagram name="Page-1" id="h7a4USh2CO4sRyCAYE8R">
+    <mxGraphModel dx="2066" dy="1219" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-2" value="Meetup API" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="261" y="110" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="v0BFZ6OObwXRyGVg_hsL-3" target="v0BFZ6OObwXRyGVg_hsL-13" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startFill=0;" parent="1" source="v0BFZ6OObwXRyGVg_hsL-3" target="v0BFZ6OObwXRyGVg_hsL-4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="v0BFZ6OObwXRyGVg_hsL-3" target="v0BFZ6OObwXRyGVg_hsL-16" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-3" value="Importer Lambda&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.lambda;fillColor=#F58534;gradientColor=none;" parent="1" vertex="1">
+          <mxGeometry x="288" y="430" width="76.5" height="93" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-4" value="MeetupEvents&lt;div&gt;Dynamo Table&lt;/div&gt;" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.dynamo_db;fillColor=#2E73B8;gradientColor=none;" parent="1" vertex="1">
+          <mxGeometry x="469" y="560" width="72" height="81" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startFill=0;" parent="1" source="v0BFZ6OObwXRyGVg_hsL-6" target="v0BFZ6OObwXRyGVg_hsL-20" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-6" value="API Gateway" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.api_gateway;fillColor=#D9A741;gradientColor=none;" parent="1" vertex="1">
+          <mxGeometry x="697" y="780" width="76.5" height="93" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-8" value="" style="group" parent="1" vertex="1" connectable="0">
+          <mxGeometry x="77" y="436" width="110" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-5" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;fillColor=#FF6A00;strokeColor=none;shape=mxgraph.alibaba_cloud.eventbridge;" parent="v0BFZ6OObwXRyGVg_hsL-8" vertex="1">
+          <mxGeometry x="15" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-7" value="EventBridge&lt;div&gt;Schedule Rule)&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="v0BFZ6OObwXRyGVg_hsL-8" vertex="1">
+          <mxGeometry y="84" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="v0BFZ6OObwXRyGVg_hsL-5" target="v0BFZ6OObwXRyGVg_hsL-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-13" value="ArchivedMeetupEvents&lt;div&gt;Dynamo Table&lt;/div&gt;" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.dynamo_db;fillColor=#2E73B8;gradientColor=none;" parent="1" vertex="1">
+          <mxGeometry x="469" y="300" width="72" height="81" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-16" value="&lt;div&gt;MeetupProxy Lambda&lt;/div&gt;" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.lambda;fillColor=#F58534;gradientColor=none;" parent="1" vertex="1">
+          <mxGeometry x="288" y="240" width="76.5" height="93" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.55;entryY=0.95;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=none;startFill=0;" parent="1" source="v0BFZ6OObwXRyGVg_hsL-16" target="v0BFZ6OObwXRyGVg_hsL-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startFill=0;" parent="1" source="v0BFZ6OObwXRyGVg_hsL-20" target="v0BFZ6OObwXRyGVg_hsL-4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-20" value="Api Lambda&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.lambda;fillColor=#F58534;gradientColor=none;" parent="1" vertex="1">
+          <mxGeometry x="466.75" y="780" width="76.5" height="93" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-21" value="ApiUsers&lt;div&gt;Dynamo Table&lt;/div&gt;" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.dynamo_db;fillColor=#2E73B8;gradientColor=none;" parent="1" vertex="1">
+          <mxGeometry x="261" y="786" width="72" height="81" as="geometry" />
+        </mxCell>
+        <mxCell id="v0BFZ6OObwXRyGVg_hsL-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=none;startFill=0;" parent="1" source="v0BFZ6OObwXRyGVg_hsL-20" target="v0BFZ6OObwXRyGVg_hsL-21" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z65fETyMFsFm8YY1pCC6-1" value="&amp;nbsp;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="785" y="878" width="30" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

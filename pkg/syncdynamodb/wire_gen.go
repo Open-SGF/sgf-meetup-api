@@ -32,7 +32,7 @@ func InitService(ctx context.Context) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	service := NewService(client, logger)
+	service := NewService(config, client, logger)
 	return service, nil
 }
 
