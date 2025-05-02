@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.71.2
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.58.2
 	github.com/aws/constructs-go/constructs/v10 v10.4.2
-	github.com/aws/jsii-runtime-go v1.110.0
+	github.com/aws/jsii-runtime-go v1.111.0
 	github.com/aws/smithy-go v1.22.3
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.2
 	github.com/brianvoe/gofakeit/v7 v7.2.1
