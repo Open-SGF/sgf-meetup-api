@@ -40,7 +40,7 @@ func NewTestDB(ctx context.Context) (*TestDB, error) {
 func NewTestDBWithoutMigrations(ctx context.Context) (*TestDB, error) {
 	ctr, err := tcdynamodb.Run(
 		ctx,
-		"amazon/dynamodb-local:2.6.0",
+		"amazon/dynamodb-local:2.6.1",
 		tcdynamodb.WithDisableTelemetry(),
 	)
 
