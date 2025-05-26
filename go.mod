@@ -3,7 +3,7 @@ module sgf-meetup-api
 go 1.24
 
 require (
-	github.com/aws/aws-cdk-go/awscdk/v2 v2.196.0
+	github.com/aws/aws-cdk-go/awscdk/v2 v2.198.0
 	github.com/aws/aws-lambda-go v1.48.0
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.14
@@ -20,7 +20,7 @@ require (
 	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/getsentry/sentry-go v0.33.0
 	github.com/getsentry/sentry-go/slog v0.33.0
-	github.com/gin-gonic/gin v1.10.0
+	github.com/gin-gonic/gin v1.10.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
@@ -58,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.19 // indirect
 	github.com/bytedance/sonic v1.11.9 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
-	github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2 v2.2.236 // indirect
+	github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2 v2.2.237 // indirect
 	github.com/cdklabs/awscdk-asset-node-proxy-agent-go/nodeproxyagentv6/v2 v2.1.0 // indirect
 	github.com/cdklabs/cloud-assembly-schema-go/awscdkcloudassemblyschema/v41 v41.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
