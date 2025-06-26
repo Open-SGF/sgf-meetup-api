@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"context"
 	"github.com/getsentry/sentry-go"
 	slogSentry "github.com/getsentry/sentry-go/slog"
 	slogmulti "github.com/samber/slog-multi"
@@ -13,7 +14,7 @@ type Config struct {
 	Type  LogType    `mapstructure:"log_type"`
 }
 
-func DefaultLogger(config Config) *slog.Logger {
+func DefaultLogger(context context.Context, config Config) *slog.Logger {
 
 	handlers := make([]slog.Handler, 0, 2)
 
@@ -32,9 +33,9 @@ func DefaultLogger(config Config) *slog.Logger {
 
 	if sentry.CurrentHub().Client() != nil {
 		handlers = append(handlers, slogSentry.Option{
-			Level:     slog.LevelError,
-			AddSource: true,
-		}.NewSentryHandler())
+			EventLevel: []slog.Level{slog.LevelError},
+			AddSource:  true,
+		}.NewSentryHandler(context))
 	}
 
 	return slog.New(slogmulti.Fanout(handlers...))

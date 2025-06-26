@@ -61,7 +61,7 @@ func NewTestDBWithoutMigrations(ctx context.Context) (*TestDB, error) {
 		AccessKey:       "test",
 	}
 
-	logger := logging.DefaultLogger(logging.Config{Level: slog.LevelError, Type: logging.LogTypeText})
+	logger := logging.DefaultLogger(ctx, logging.Config{Level: slog.LevelError, Type: logging.LogTypeText})
 
 	client, err := NewClient(ctx, dbOptions, nil, logger)
 
