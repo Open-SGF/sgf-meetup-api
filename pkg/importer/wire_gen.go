@@ -29,7 +29,7 @@ func InitService(ctx context.Context) (*Service, error) {
 	realTimeSource := clock.NewRealTimeSource()
 	common := config.Common
 	loggingConfig := common.Logging
-	logger := logging.DefaultLogger(loggingConfig)
+	logger := logging.DefaultLogger(ctx, loggingConfig)
 	dynamoDBEventRepositoryConfig := NewDynamoDBEventRepositoryConfig(config)
 	dbConfig := common.DynamoDB
 	awsConfig := appconfig.AwsConfigProvider(awsConfigManagerImpl)

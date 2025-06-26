@@ -28,7 +28,7 @@ func InitService(ctx context.Context) (*Service, error) {
 	realTimeSource := clock.NewRealTimeSource()
 	common := config.Common
 	loggingConfig := common.Logging
-	logger := logging.DefaultLogger(loggingConfig)
+	logger := logging.DefaultLogger(ctx, loggingConfig)
 	client := httpclient.DefaultClient(realTimeSource, logger)
 	meetupHttpAuthHandlerConfig := NewMeetupAuthHandlerConfig(config)
 	meetupHttpAuthHandler := NewMeetupHttpAuthHandler(meetupHttpAuthHandlerConfig, client, logger)

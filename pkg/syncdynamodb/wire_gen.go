@@ -27,7 +27,7 @@ func InitService(ctx context.Context) (*Service, error) {
 	dbConfig := common.DynamoDB
 	awsConfig := appconfig.AwsConfigProvider(awsConfigManagerImpl)
 	loggingConfig := common.Logging
-	logger := logging.DefaultLogger(loggingConfig)
+	logger := logging.DefaultLogger(ctx, loggingConfig)
 	client, err := db.NewClient(ctx, dbConfig, awsConfig, logger)
 	if err != nil {
 		return nil, err

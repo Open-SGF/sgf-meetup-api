@@ -33,7 +33,7 @@ func InitRouter(ctx context.Context) (*gin.Engine, error) {
 	}
 	common := config.Common
 	loggingConfig := common.Logging
-	logger := logging.DefaultLogger(loggingConfig)
+	logger := logging.DefaultLogger(ctx, loggingConfig)
 	serviceConfig := auth.NewServiceConfig(config)
 	realTimeSource := clock.NewRealTimeSource()
 	dynamoDBAPIUserRepositoryConfig := auth.NewDynamoDBAPIUserRepositoryConfig(config)
