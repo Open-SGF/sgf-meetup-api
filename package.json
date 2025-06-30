@@ -12,7 +12,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "aws-cdk": "^2.1017.1",
+    "aws-cdk": "^2.1019.2",
     "rimraf": "^6.0.1"
   }
 }
