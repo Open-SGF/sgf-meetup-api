@@ -17,7 +17,7 @@ require (
 	github.com/aws/jsii-runtime-go v1.112.0
 	github.com/aws/smithy-go v1.22.4
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.2
-	github.com/brianvoe/gofakeit/v7 v7.2.1
+	github.com/brianvoe/gofakeit/v7 v7.3.0
 	github.com/getsentry/sentry-go v0.34.0
 	github.com/getsentry/sentry-go/slog v0.34.0
 	github.com/gin-gonic/gin v1.10.1
