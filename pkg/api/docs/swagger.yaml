@@ -45,10 +45,8 @@ definitions:
         type: string
       eventUrl:
         type: string
-      group.name:
-        type: string
-      group.urlname:
-        type: string
+      group:
+        $ref: '#/definitions/groupevents.groupDTO'
       host:
         $ref: '#/definitions/groupevents.hostDTO'
       id:
@@ -61,6 +59,13 @@ definitions:
         type: string
       venue:
         $ref: '#/definitions/groupevents.venueDTO'
+    type: object
+  groupevents.groupDTO:
+    properties:
+      name:
+        type: string
+      urlname:
+        type: string
     type: object
   groupevents.groupEventsResponseDTO:
     properties:

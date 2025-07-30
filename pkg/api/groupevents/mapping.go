@@ -16,9 +16,11 @@ func meetupEventToDTO(meetupEvent *models.MeetupEvent) *eventDTO {
 	}
 
 	return &eventDTO{
-		ID:          meetupEvent.ID,
-		GroupID:     meetupEvent.GroupID,
-		GroupName:   meetupEvent.GroupName,
+		ID: meetupEvent.ID,
+		Group: groupDTO{
+			URLName: meetupEvent.GroupID,
+			Name:    meetupEvent.GroupName,
+		},
 		Title:       meetupEvent.Title,
 		EventURL:    meetupEvent.EventURL,
 		Description: meetupEvent.Description,
@@ -69,7 +71,7 @@ func meetupImageToDTO(meetupImage *models.MeetupImage) *imageDTO {
 	}
 
 	return &imageDTO{
-		BaseUrl: meetupImage.BaseUrl,
+		BaseURL: meetupImage.BaseUrl,
 		Preview: meetupImage.Preview,
 	}
 }
