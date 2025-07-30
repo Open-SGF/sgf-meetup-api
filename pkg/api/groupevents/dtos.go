@@ -18,8 +18,7 @@ type groupEventsResponseDTO struct {
 
 type eventDTO struct {
 	ID          string     `json:"id"`
-	GroupID     string     `json:"group.urlname"`
-	GroupName   string     `json:"group.name"`
+	Group       groupDTO   `json:"group"`
 	Title       string     `json:"title"`
 	EventURL    string     `json:"eventUrl"`
 	Description string     `json:"description"`
@@ -28,6 +27,11 @@ type eventDTO struct {
 	Venue       *venueDTO  `json:"venue"`
 	Host        *hostDTO   `json:"host"`
 	Images      []imageDTO `json:"images"`
+}
+
+type groupDTO struct {
+	URLName string `json:"urlname"`
+	Name    string `json:"name"`
 }
 
 type venueDTO struct {
@@ -43,6 +47,6 @@ type hostDTO struct {
 }
 
 type imageDTO struct {
-	BaseUrl string `json:"baseUrl"`
+	BaseURL string `json:"baseUrl"`
 	Preview string `json:"preview"`
 }

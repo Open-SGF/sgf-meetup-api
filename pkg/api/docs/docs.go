@@ -402,11 +402,8 @@ const docTemplate = `{
                 "eventUrl": {
                     "type": "string"
                 },
-                "group.name": {
-                    "type": "string"
-                },
-                "group.urlname": {
-                    "type": "string"
+                "group": {
+                    "$ref": "#/definitions/groupevents.groupDTO"
                 },
                 "host": {
                     "$ref": "#/definitions/groupevents.hostDTO"
@@ -425,6 +422,17 @@ const docTemplate = `{
                 },
                 "venue": {
                     "$ref": "#/definitions/groupevents.venueDTO"
+                }
+            }
+        },
+        "groupevents.groupDTO": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "urlname": {
+                    "type": "string"
                 }
             }
         },
