@@ -2,6 +2,7 @@ package groupevents
 
 import (
 	"sgf-meetup-api/pkg/shared/models"
+	"time"
 )
 
 func meetupEventToDTO(meetupEvent *models.MeetupEvent) *eventDTO {
@@ -9,10 +10,9 @@ func meetupEventToDTO(meetupEvent *models.MeetupEvent) *eventDTO {
 		return nil
 	}
 
-	var date *string
+	var date *time.Time
 	if meetupEvent.DateTime != nil {
-		dateStr := meetupEvent.DateTime.String()
-		date = &dateStr
+		date = &meetupEvent.DateTime.Time
 	}
 
 	return &eventDTO{
