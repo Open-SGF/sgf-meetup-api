@@ -50,7 +50,7 @@ func main() {
 }
 
 func startAPI(appEnv string, samArgs ...string) *exec.Cmd {
-	templateNamer := resource.NewNamer(appEnv, "SgfMeetupApiGo.template.json")
+	templateNamer := resource.NewNamer(appEnv, "SgfMeetupApi.template.json")
 
 	templatePath := filepath.Join(
 		"./cdk.out",
@@ -70,7 +70,7 @@ func startAPI(appEnv string, samArgs ...string) *exec.Cmd {
 }
 
 func invokeImporter(appEnv string, samArgs ...string) *exec.Cmd {
-	templateNamer := resource.NewNamer(appEnv, "SgfMeetupApiGo.template.json")
+	templateNamer := resource.NewNamer(appEnv, "SgfMeetupApi.template.json")
 
 	templatePath := filepath.Join(
 		"./cdk.out",
