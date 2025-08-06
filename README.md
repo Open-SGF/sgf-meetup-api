@@ -100,6 +100,7 @@ cp .lambda-env.json.example .lambda-env.json
 - `docker compose up -d`
 - `go run ./cmd/syncdynamodb`
 - `go run ./cmd/upsertuser -clientId <ID> -clientSecret <SECRET>`
+  - This creates a new user for the API, pick your own id and secret
 
 ### Running the project
 - `docker compose up -d` (if not already running)
