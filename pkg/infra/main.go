@@ -45,7 +45,7 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		"DYNAMODB_AWS_SECRET_ACCESS_KEY": jsii.String(""),
 	}
 
-	meetupProxyFunctionName := resource.NewNamer(props.AppEnv, "MeetupProxy")
+	meetupProxyFunctionName := resource.NewNamer(stackName.FullName(), "MeetupProxy")
 
 	meetupProxySSMPath := "/sgf-meetup-api/" + meetupProxyFunctionName.FullName()
 
@@ -119,7 +119,7 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		nil,
 	)
 
-	importerFunctionName := resource.NewNamer(props.AppEnv, "Importer")
+	importerFunctionName := resource.NewNamer(stackName.FullName(), "Importer")
 
 	importerSSMPath := "/sgf-meetup-api/" + importerFunctionName.FullName()
 
@@ -156,7 +156,7 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 		}),
 	)
 
-	apiFunctionName := resource.NewNamer(props.AppEnv, "Api")
+	apiFunctionName := resource.NewNamer(stackName.FullName(), "Api")
 
 	apiSSMPath := "/sgf-meetup-api/" + apiFunctionName.FullName()
 
