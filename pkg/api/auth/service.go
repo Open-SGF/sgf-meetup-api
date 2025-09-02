@@ -3,11 +3,13 @@ package auth
 import (
 	"context"
 	"errors"
-	"golang.org/x/crypto/bcrypt"
+	"time"
+
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/models"
-	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ServiceConfig struct {
@@ -43,7 +45,10 @@ func NewService(
 	}
 }
 
-func (s *Service) AuthClientCredentials(ctx context.Context, clientID, clientSecret string) (*models.AuthResult, error) {
+func (s *Service) AuthClientCredentials(
+	ctx context.Context,
+	clientID, clientSecret string,
+) (*models.AuthResult, error) {
 	user, err := s.apiUserRepository.GetAPIUser(ctx, clientID)
 
 	if errors.Is(err, ErrAPIUserNotFound) {
@@ -61,9 +66,11 @@ func (s *Service) AuthClientCredentials(ctx context.Context, clientID, clientSec
 	return s.getAuthResult(clientID)
 }
 
-func (s *Service) RefreshCredentials(ctx context.Context, refreshToken string) (*models.AuthResult, error) {
+func (s *Service) RefreshCredentials(
+	ctx context.Context,
+	refreshToken string,
+) (*models.AuthResult, error) {
 	token, err := s.tokenManager.Validate(refreshToken)
-
 	if err != nil {
 		return nil, err
 	}

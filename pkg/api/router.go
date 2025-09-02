@@ -4,14 +4,16 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
-	sloggin "github.com/samber/slog-gin"
-	"github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
 	"log/slog"
+
 	"sgf-meetup-api/pkg/api/auth"
 	_ "sgf-meetup-api/pkg/api/docs"
 	"sgf-meetup-api/pkg/api/groupevents"
+
+	"github.com/gin-gonic/gin"
+	sloggin "github.com/samber/slog-gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 //	@title		SGF Meetup API

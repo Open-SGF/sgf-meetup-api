@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"net/url"
+	"strings"
+
+	"sgf-meetup-api/pkg/shared/appconfig"
+
 	"github.com/google/wire"
 	"github.com/spf13/viper"
-	"net/url"
-	"sgf-meetup-api/pkg/shared/appconfig"
-	"strings"
 )
 
 const (
@@ -56,7 +58,6 @@ func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager)
 		}).
 		WithCustomProcessor(setDefaults).
 		Parse(ctx, &config)
-
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +84,6 @@ func setDefaults(_ context.Context, v *viper.Viper) error {
 		appUrl = "https://sgf-meetup-api.opensgf.org"
 	}
 	parsedUrl, err := url.Parse(appUrl)
-
 	if err != nil {
 		return err
 	}
@@ -115,4 +115,8 @@ func (config *Config) validate() error {
 	return nil
 }
 
-var ConfigProviders = wire.NewSet(appconfig.ConfigProviders, wire.FieldsOf(new(*Config), "Common"), NewConfig)
+var ConfigProviders = wire.NewSet(
+	appconfig.ConfigProviders,
+	wire.FieldsOf(new(*Config), "Common"),
+	NewConfig,
+)

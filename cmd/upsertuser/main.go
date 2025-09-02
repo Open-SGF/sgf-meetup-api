@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sgf-meetup-api/pkg/infra"
-	"sgf-meetup-api/pkg/upsertuser"
 	"strings"
 	"time"
+
+	"sgf-meetup-api/pkg/infra"
+	"sgf-meetup-api/pkg/upsertuser"
 )
 
 const (
@@ -47,7 +48,11 @@ func main() {
 
 func createUsageFunc() func() {
 	return func() {
-		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s -clientId <ID> -clientSecret <SECRET>\n\n", os.Args[0])
+		_, _ = fmt.Fprintf(
+			flag.CommandLine.Output(),
+			"Usage: %s -clientId <ID> -clientSecret <SECRET>\n\n",
+			os.Args[0],
+		)
 		_, _ = fmt.Fprintln(flag.CommandLine.Output(), "Required flags:")
 		flag.VisitAll(func(f *flag.Flag) {
 			_, _ = fmt.Fprintf(flag.CommandLine.Output(), "  -%-12s%s\n", f.Name, f.Usage)
@@ -64,7 +69,11 @@ func validateRequiredFlags(flags ...string) {
 	}
 
 	if len(missing) > 0 {
-		_, _ = fmt.Fprintf(os.Stderr, "missing required parameters: %s\n\n", strings.Join(missing, ", "))
+		_, _ = fmt.Fprintf(
+			os.Stderr,
+			"missing required parameters: %s\n\n",
+			strings.Join(missing, ", "),
+		)
 		flag.Usage()
 		os.Exit(1)
 	}

@@ -7,13 +7,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
 	"sgf-meetup-api/pkg/shared/appconfig"
 	"sgf-meetup-api/pkg/shared/resource"
 )
 
 func main() {
 	config, err := appconfig.NewCommonConfig(context.Background())
-
 	if err != nil {
 		log.Fatal("unable to create config")
 	}

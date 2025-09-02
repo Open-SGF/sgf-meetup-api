@@ -3,19 +3,21 @@ package importer
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"slices"
+	"time"
+
+	"sgf-meetup-api/pkg/importer/importerconfig"
+	"sgf-meetup-api/pkg/shared/clock"
+	"sgf-meetup-api/pkg/shared/db"
+	"sgf-meetup-api/pkg/shared/models"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/google/wire"
-	"log/slog"
-	"sgf-meetup-api/pkg/importer/importerconfig"
-	"sgf-meetup-api/pkg/shared/clock"
-	"sgf-meetup-api/pkg/shared/db"
-	"sgf-meetup-api/pkg/shared/models"
-	"slices"
-	"time"
 )
 
 type EventRepository interface {
@@ -45,7 +47,12 @@ type DynamoDBEventRepository struct {
 	logger     *slog.Logger
 }
 
-func NewDynamoDBEventRepository(config DynamoDBEventRepositoryConfig, db *db.Client, timeSource clock.TimeSource, logger *slog.Logger) *DynamoDBEventRepository {
+func NewDynamoDBEventRepository(
+	config DynamoDBEventRepositoryConfig,
+	db *db.Client,
+	timeSource clock.TimeSource,
+	logger *slog.Logger,
+) *DynamoDBEventRepository {
 	return &DynamoDBEventRepository{
 		config:     config,
 		db:         db,
@@ -54,7 +61,10 @@ func NewDynamoDBEventRepository(config DynamoDBEventRepositoryConfig, db *db.Cli
 	}
 }
 
-func (er *DynamoDBEventRepository) GetUpcomingEventsForGroup(ctx context.Context, group string) ([]models.MeetupEvent, error) {
+func (er *DynamoDBEventRepository) GetUpcomingEventsForGroup(
+	ctx context.Context,
+	group string,
+) ([]models.MeetupEvent, error) {
 	now := er.timeSource.Now().UTC().Format(time.RFC3339)
 
 	keyCond := expression.Key("groupId").
@@ -63,7 +73,6 @@ func (er *DynamoDBEventRepository) GetUpcomingEventsForGroup(ctx context.Context
 			GreaterThan(expression.Value(now)))
 
 	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
-
 	if err != nil {
 		return nil, err
 	}
@@ -120,11 +129,18 @@ func (er *DynamoDBEventRepository) ArchiveEvents(ctx context.Context, eventIds [
 	return nil
 }
 
-func (er *DynamoDBEventRepository) UpsertEvents(ctx context.Context, events []models.MeetupEvent) error {
+func (er *DynamoDBEventRepository) UpsertEvents(
+	ctx context.Context,
+	events []models.MeetupEvent,
+) error {
 	return er.upsertEventsToTable(ctx, events, er.config.EventsTableName)
 }
 
-func (er *DynamoDBEventRepository) upsertEventsToTable(ctx context.Context, events []models.MeetupEvent, table string) error {
+func (er *DynamoDBEventRepository) upsertEventsToTable(
+	ctx context.Context,
+	events []models.MeetupEvent,
+	table string,
+) error {
 	if len(events) == 0 {
 		return nil
 	}
@@ -134,7 +150,6 @@ func (er *DynamoDBEventRepository) upsertEventsToTable(ctx context.Context, even
 
 		for _, event := range chunk {
 			av, err := attributevalue.MarshalMap(event)
-
 			if err != nil {
 				return err
 			}
@@ -149,7 +164,6 @@ func (er *DynamoDBEventRepository) upsertEventsToTable(ctx context.Context, even
 				table: writeRequests,
 			},
 		})
-
 		if err != nil {
 			return err
 		}
@@ -158,7 +172,10 @@ func (er *DynamoDBEventRepository) upsertEventsToTable(ctx context.Context, even
 	return nil
 }
 
-func (er *DynamoDBEventRepository) getItems(ctx context.Context, ids []string) ([]map[string]types.AttributeValue, error) {
+func (er *DynamoDBEventRepository) getItems(
+	ctx context.Context,
+	ids []string,
+) ([]map[string]types.AttributeValue, error) {
 	keys := make([]map[string]types.AttributeValue, len(ids))
 	for i, id := range ids {
 		keys[i] = er.createKey(id)
@@ -175,7 +192,10 @@ func (er *DynamoDBEventRepository) getItems(ctx context.Context, ids []string) (
 	return res.Responses[er.config.EventsTableName], nil
 }
 
-func (er *DynamoDBEventRepository) writeToArchive(ctx context.Context, items []map[string]types.AttributeValue) error {
+func (er *DynamoDBEventRepository) writeToArchive(
+	ctx context.Context,
+	items []map[string]types.AttributeValue,
+) error {
 	writes := make([]types.WriteRequest, len(items))
 	for i, item := range items {
 		writes[i] = types.WriteRequest{PutRequest: &types.PutRequest{Item: item}}
@@ -207,4 +227,8 @@ func (er *DynamoDBEventRepository) createKey(id string) map[string]types.Attribu
 	return map[string]types.AttributeValue{"id": &types.AttributeValueMemberS{Value: id}}
 }
 
-var EventRepositoryProviders = wire.NewSet(wire.Bind(new(EventRepository), new(*DynamoDBEventRepository)), NewDynamoDBEventRepositoryConfig, NewDynamoDBEventRepository)
+var EventRepositoryProviders = wire.NewSet(
+	wire.Bind(new(EventRepository), new(*DynamoDBEventRepository)),
+	NewDynamoDBEventRepositoryConfig,
+	NewDynamoDBEventRepository,
+)

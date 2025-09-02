@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"log"
+	"time"
+
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/syncdynamodb"
-	"time"
 )
 
 var service *syncdynamodb.Service
@@ -15,7 +16,6 @@ func init() {
 	defer cancel()
 
 	newService, err := syncdynamodb.InitService(ctx)
-
 	if err != nil {
 		log.Fatalf("Failed to init syncdynamdb service: %v", err)
 	}

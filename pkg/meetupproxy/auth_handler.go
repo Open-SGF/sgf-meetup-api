@@ -4,16 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/wire"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
-	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
 	"strings"
 	"sync"
 	"time"
+
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/wire"
 )
 
 type AuthHandler interface {
@@ -46,7 +48,11 @@ type MeetupHttpAuthHandler struct {
 	logger     *slog.Logger
 }
 
-func NewMeetupHttpAuthHandler(config MeetupHttpAuthHandlerConfig, httpClient *http.Client, logger *slog.Logger) *MeetupHttpAuthHandler {
+func NewMeetupHttpAuthHandler(
+	config MeetupHttpAuthHandlerConfig,
+	httpClient *http.Client,
+	logger *slog.Logger,
+) *MeetupHttpAuthHandler {
 	return &MeetupHttpAuthHandler{
 		config:     config,
 		httpClient: httpClient,
@@ -69,7 +75,6 @@ func (ah *MeetupHttpAuthHandler) GetAccessToken(ctx context.Context) (string, er
 	if ah.token == nil || ah.token.isExpiring(time.Now()) {
 		ah.logger.Info("fetching new access token from meetup")
 		newToken, err := ah.getNewAccessToken(ctx)
-
 		if err != nil {
 			ah.logger.Error("Error fetching token", "err", err)
 			return "", err
@@ -83,7 +88,6 @@ func (ah *MeetupHttpAuthHandler) GetAccessToken(ctx context.Context) (string, er
 
 func (ah *MeetupHttpAuthHandler) getNewAccessToken(ctx context.Context) (*authToken, error) {
 	signedJwt, err := ah.createSignedJWT()
-
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +102,6 @@ func (ah *MeetupHttpAuthHandler) getNewAccessToken(ctx context.Context) (*authTo
 		ah.config.URL,
 		strings.NewReader(form.Encode()),
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +112,6 @@ func (ah *MeetupHttpAuthHandler) getNewAccessToken(ctx context.Context) (*authTo
 	req.Header.Add("User-Agent", userAgent)
 
 	resp, err := ah.httpClient.Do(req)
-
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +123,6 @@ func (ah *MeetupHttpAuthHandler) getNewAccessToken(ctx context.Context) (*authTo
 	}
 
 	token, err := ah.parseAuthToken(resp.Body)
-
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +142,6 @@ func (ah *MeetupHttpAuthHandler) createSignedJWT() (string, error) {
 	signedJwt.Header["kid"] = ah.config.SigningKeyID
 
 	key, err := jwt.ParseRSAPrivateKeyFromPEM(ah.config.PrivateKey)
-
 	if err != nil {
 		return "", err
 	}
@@ -165,4 +165,8 @@ func (ah *MeetupHttpAuthHandler) parseAuthToken(r io.Reader) (*authToken, error)
 	return &newToken, nil
 }
 
-var AuthHandlerProviders = wire.NewSet(wire.Bind(new(AuthHandler), new(*MeetupHttpAuthHandler)), NewMeetupAuthHandlerConfig, NewMeetupHttpAuthHandler)
+var AuthHandlerProviders = wire.NewSet(
+	wire.Bind(new(AuthHandler), new(*MeetupHttpAuthHandler)),
+	NewMeetupAuthHandlerConfig,
+	NewMeetupHttpAuthHandler,
+)

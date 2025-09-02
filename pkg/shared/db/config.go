@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"net/url"
 	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 )
 
 type Config struct {
@@ -15,7 +16,10 @@ type Config struct {
 	SecretAccessKey string `mapstructure:"dynamodb_aws_secret_access_key"`
 }
 
-func (c Config) ResolveEndpoint(ctx context.Context, params dynamodb.EndpointParameters) (smithyendpoints.Endpoint, error) {
+func (c Config) ResolveEndpoint(
+	ctx context.Context,
+	params dynamodb.EndpointParameters,
+) (smithyendpoints.Endpoint, error) {
 	scheme, rest := c.splitEndpoint()
 
 	return smithyendpoints.Endpoint{

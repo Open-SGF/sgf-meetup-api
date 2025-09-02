@@ -2,13 +2,15 @@ package db
 
 import (
 	"context"
+	"testing"
+
+	"sgf-meetup-api/pkg/infra"
+	"sgf-meetup-api/pkg/shared/models"
+
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sgf-meetup-api/pkg/infra"
-	"sgf-meetup-api/pkg/shared/models"
-	"testing"
 )
 
 func TestNewTestDB(t *testing.T) {

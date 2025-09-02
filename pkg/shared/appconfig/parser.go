@@ -3,12 +3,14 @@ package appconfig
 import (
 	"context"
 	"errors"
+	"log/slog"
+	"strings"
+
+	"sgf-meetup-api/pkg/shared/logging"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/spf13/viper"
-	"log/slog"
-	"sgf-meetup-api/pkg/shared/logging"
-	"strings"
 )
 
 type configProcessor func(ctx context.Context, v *viper.Viper) error
@@ -68,7 +70,9 @@ func (p *Parser) WithEnvVars() *Parser {
 	return p
 }
 
-func (p *Parser) WithCustomProcessor(processor func(ctx context.Context, v *viper.Viper) error) *Parser {
+func (p *Parser) WithCustomProcessor(
+	processor func(ctx context.Context, v *viper.Viper) error,
+) *Parser {
 	p.processors = append(p.processors, processor)
 	return p
 }
@@ -78,7 +82,9 @@ type SSMParameterOptions struct {
 	SSMPath   string
 }
 
-func (p *Parser) WithSSMParameters(configure func(ctx context.Context, v *viper.Viper, opts *SSMParameterOptions)) *Parser {
+func (p *Parser) WithSSMParameters(
+	configure func(ctx context.Context, v *viper.Viper, opts *SSMParameterOptions),
+) *Parser {
 	p.processors = append(p.processors, func(ctx context.Context, v *viper.Viper) error {
 		ssmOptions := SSMParameterOptions{}
 		configure(ctx, v, &ssmOptions)
@@ -148,7 +154,6 @@ func ParseFromKey[T any](v *viper.Viper, key string, parser func(string) (T, err
 	normalizedKey := strings.ToLower(key)
 	str := v.GetString(normalizedKey)
 	value, err := parser(str)
-
 	if err != nil {
 		v.Set(normalizedKey, fallback)
 		return

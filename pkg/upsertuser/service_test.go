@@ -3,12 +3,14 @@ package upsertuser
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"testing"
+
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/upsertuser/upsertuserconfig"
-	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestService_UpsertUser(t *testing.T) {

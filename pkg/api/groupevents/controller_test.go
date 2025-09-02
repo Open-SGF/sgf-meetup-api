@@ -3,21 +3,23 @@ package groupevents
 import (
 	"context"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"testing"
+	"time"
+
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/fakers"
 	"sgf-meetup-api/pkg/shared/models"
-	"testing"
-	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewControllerConfig(t *testing.T) {
@@ -85,7 +87,10 @@ func TestController_Integration(t *testing.T) {
 		events := make([]models.MeetupEvent, 15)
 
 		for i := range events {
-			events[i] = meetupFaker.CreateEvent(group, timeSource.Now().Add(time.Hour*time.Duration(i+1)))
+			events[i] = meetupFaker.CreateEvent(
+				group,
+				timeSource.Now().Add(time.Hour*time.Duration(i+1)),
+			)
 		}
 
 		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
@@ -118,16 +123,34 @@ func TestController_Integration(t *testing.T) {
 		testDB.InsertTestItems(ctx, *infra.EventsTableProps.TableName, events)
 
 		t.Run("before filter", func(t *testing.T) {
-			before := timeSource.Now().Add(time.Hour * 2).Add(time.Second * 1).UTC().Format(time.RFC3339)
-			w := makeRequest(router, "GET", "/groups/"+group+"/events?before="+url.QueryEscape(before), nil)
+			before := timeSource.Now().
+				Add(time.Hour * 2).
+				Add(time.Second * 1).
+				UTC().
+				Format(time.RFC3339)
+			w := makeRequest(
+				router,
+				"GET",
+				"/groups/"+group+"/events?before="+url.QueryEscape(before),
+				nil,
+			)
 			responseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
 
 			assert.Equal(t, 4, len(responseDTO.Items))
 		})
 
 		t.Run("after filter", func(t *testing.T) {
-			after := timeSource.Now().Add(time.Hour * 2).Add(time.Second * -1).UTC().Format(time.RFC3339)
-			w := makeRequest(router, "GET", "/groups/"+group+"/events?after="+url.QueryEscape(after), nil)
+			after := timeSource.Now().
+				Add(time.Hour * 2).
+				Add(time.Second * -1).
+				UTC().
+				Format(time.RFC3339)
+			w := makeRequest(
+				router,
+				"GET",
+				"/groups/"+group+"/events?after="+url.QueryEscape(after),
+				nil,
+			)
 			responseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
 
 			assert.Equal(t, 2, len(responseDTO.Items))
@@ -135,8 +158,21 @@ func TestController_Integration(t *testing.T) {
 
 		t.Run("before and after filter", func(t *testing.T) {
 			before := timeSource.Now().Add(time.Hour * 2).UTC().Format(time.RFC3339)
-			after := timeSource.Now().Add(time.Hour * -1).Add(time.Second * -1).UTC().Format(time.RFC3339)
-			w := makeRequest(router, "GET", "/groups/"+group+"/events?after="+url.QueryEscape(after)+"&before="+url.QueryEscape(before), nil)
+			after := timeSource.Now().
+				Add(time.Hour * -1).
+				Add(time.Second * -1).
+				UTC().
+				Format(time.RFC3339)
+			w := makeRequest(
+				router,
+				"GET",
+				"/groups/"+group+"/events?after="+url.QueryEscape(
+					after,
+				)+"&before="+url.QueryEscape(
+					before,
+				),
+				nil,
+			)
 			responseDTO := getDTOWhenStatus[groupEventsResponseDTO](t, w, http.StatusOK)
 
 			assert.Equal(t, 3, len(responseDTO.Items))
@@ -202,11 +238,14 @@ func TestController_Integration(t *testing.T) {
 
 			assert.Equal(t, http.StatusNotFound, w.Code)
 		})
-
 	})
 }
 
-func makeRequest(router *gin.Engine, method, url string, body io.Reader) *httptest.ResponseRecorder {
+func makeRequest(
+	router *gin.Engine,
+	method, url string,
+	body io.Reader,
+) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, url, body)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)

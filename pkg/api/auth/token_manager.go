@@ -1,11 +1,13 @@
 package auth
 
 import (
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/wire"
+	"time"
+
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/shared/clock"
-	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/wire"
 )
 
 type TokenManagerConfig struct {
@@ -42,12 +44,17 @@ type ParsedToken struct {
 }
 
 func (tm *TokenManagerImpl) Validate(tokenStr string) (*ParsedToken, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, jwt.ErrSignatureInvalid
-		}
-		return tm.config.JWTSecret, nil
-	}, jwt.WithTimeFunc(tm.timeSource.Now))
+	token, err := jwt.ParseWithClaims(
+		tokenStr,
+		&jwt.RegisteredClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return tm.config.JWTSecret, nil
+		},
+		jwt.WithTimeFunc(tm.timeSource.Now),
+	)
 
 	if err != nil || !token.Valid {
 		return nil, ErrInvalidCredentials
@@ -67,7 +74,10 @@ func (tm *TokenManagerImpl) Validate(tokenStr string) (*ParsedToken, error) {
 	}, nil
 }
 
-func (tm *TokenManagerImpl) CreateSignedToken(clientID string, expiration time.Time) (string, error) {
+func (tm *TokenManagerImpl) CreateSignedToken(
+	clientID string,
+	expiration time.Time,
+) (string, error) {
 	claims := jwt.RegisteredClaims{
 		Issuer:    tm.config.JWTIssuer,
 		Subject:   clientID,

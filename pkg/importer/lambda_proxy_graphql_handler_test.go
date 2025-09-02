@@ -3,13 +3,15 @@ package importer
 import (
 	"context"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
+	"testing"
+
 	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/logging"
-	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewLambdaProxyGraphQLHandlerConfig(t *testing.T) {
@@ -47,7 +49,10 @@ func TestExecuteQuery_Success(t *testing.T) {
 	})
 	defer testServer.Close()
 
-	handler := NewLambdaProxyGraphQLHandler(LambdaProxyGraphQLHandlerConfig{"test-function"}, logging.NewMockLogger())
+	handler := NewLambdaProxyGraphQLHandler(
+		LambdaProxyGraphQLHandlerConfig{"test-function"},
+		logging.NewMockLogger(),
+	)
 
 	result, err := handler.ExecuteQuery(context.Background(), "query {}", nil)
 
@@ -67,7 +72,10 @@ func TestExecuteQuery_LambdaExecutionError(t *testing.T) {
 	})
 	defer testServer.Close()
 
-	handler := NewLambdaProxyGraphQLHandler(LambdaProxyGraphQLHandlerConfig{"test-function"}, logging.NewMockLogger())
+	handler := NewLambdaProxyGraphQLHandler(
+		LambdaProxyGraphQLHandlerConfig{"test-function"},
+		logging.NewMockLogger(),
+	)
 
 	_, err := handler.ExecuteQuery(context.Background(), "query {}", nil)
 	if err == nil {
@@ -83,7 +91,10 @@ func TestExecuteQuery_LambdaInvokeError(t *testing.T) {
 	})
 	defer testServer.Close()
 
-	handler := NewLambdaProxyGraphQLHandler(LambdaProxyGraphQLHandlerConfig{"test-function"}, logging.NewMockLogger())
+	handler := NewLambdaProxyGraphQLHandler(
+		LambdaProxyGraphQLHandlerConfig{"test-function"},
+		logging.NewMockLogger(),
+	)
 
 	_, err := handler.ExecuteQuery(context.Background(), "query {}", nil)
 
@@ -91,7 +102,10 @@ func TestExecuteQuery_LambdaInvokeError(t *testing.T) {
 }
 
 func TestExecuteQuery_MarshalError(t *testing.T) {
-	handler := NewLambdaProxyGraphQLHandler(LambdaProxyGraphQLHandlerConfig{"test-function"}, logging.NewMockLogger())
+	handler := NewLambdaProxyGraphQLHandler(
+		LambdaProxyGraphQLHandlerConfig{"test-function"},
+		logging.NewMockLogger(),
+	)
 
 	invalidVariables := map[string]any{
 		"channel": make(chan int), // Channels can't be JSON marshaled

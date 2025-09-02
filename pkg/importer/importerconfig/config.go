@@ -3,10 +3,12 @@ package importerconfig
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"sgf-meetup-api/pkg/shared/appconfig"
+
 	"github.com/google/wire"
 	"github.com/spf13/viper"
-	"sgf-meetup-api/pkg/shared/appconfig"
-	"strings"
 )
 
 const (
@@ -26,7 +28,7 @@ var configKeys = []string{
 }
 
 type Config struct {
-	appconfig.Common         `mapstructure:",squash"`
+	appconfig.Common         `         mapstructure:",squash"`
 	MeetupGroupNames         []string `mapstructure:"meetup_group_names"`
 	ProxyFunctionName        string   `mapstructure:"meetup_proxy_function_name"`
 	ArchivedEventsTableName  string   `mapstructure:"archived_events_table_name"`
@@ -49,7 +51,6 @@ func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager)
 		}).
 		WithCustomProcessor(setDefaults).
 		Parse(ctx, &config)
-
 	if err != nil {
 		return nil, err
 	}
@@ -89,4 +90,8 @@ func (config *Config) validate() error {
 	return nil
 }
 
-var ConfigProviders = wire.NewSet(appconfig.ConfigProviders, wire.FieldsOf(new(*Config), "Common"), NewConfig)
+var ConfigProviders = wire.NewSet(
+	appconfig.ConfigProviders,
+	wire.FieldsOf(new(*Config), "Common"),
+	NewConfig,
+)

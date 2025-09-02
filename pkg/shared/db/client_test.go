@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
+
+	"sgf-meetup-api/pkg/shared/logging"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

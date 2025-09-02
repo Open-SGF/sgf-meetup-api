@@ -1,9 +1,10 @@
 package models
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 var customTimeFormat = "2006-01-02T15:04-07:00"

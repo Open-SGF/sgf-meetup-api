@@ -1,9 +1,11 @@
 package groupevents
 
 import (
-	"github.com/stretchr/testify/assert"
-	"sgf-meetup-api/pkg/api/apiconfig"
 	"testing"
+
+	"sgf-meetup-api/pkg/api/apiconfig"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewDynamoDBGroupEventRepositoryConfig(t *testing.T) {

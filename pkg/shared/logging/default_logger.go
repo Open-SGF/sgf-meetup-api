@@ -2,11 +2,12 @@ package logging
 
 import (
 	"context"
+	"log/slog"
+	"os"
+
 	"github.com/getsentry/sentry-go"
 	slogSentry "github.com/getsentry/sentry-go/slog"
 	slogmulti "github.com/samber/slog-multi"
-	"log/slog"
-	"os"
 )
 
 type Config struct {
@@ -15,7 +16,6 @@ type Config struct {
 }
 
 func DefaultLogger(context context.Context, config Config) *slog.Logger {
-
 	handlers := make([]slog.Handler, 0, 2)
 
 	opts := &slog.HandlerOptions{

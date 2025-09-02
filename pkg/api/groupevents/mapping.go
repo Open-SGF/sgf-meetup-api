@@ -1,8 +1,9 @@
 package groupevents
 
 import (
-	"sgf-meetup-api/pkg/shared/models"
 	"time"
+
+	"sgf-meetup-api/pkg/shared/models"
 )
 
 func meetupEventToDTO(meetupEvent *models.MeetupEvent) *eventDTO {

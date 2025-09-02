@@ -3,13 +3,15 @@ package meetupproxyconfig
 import (
 	"context"
 	"encoding/base64"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
-	"sgf-meetup-api/pkg/shared/appconfig"
 	"strings"
 	"testing"
+
+	"sgf-meetup-api/pkg/shared/appconfig"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -45,7 +47,7 @@ func TestNewConfig(t *testing.T) {
 			meetupSigningKeyIdKey + "=env_signing",
 		}, "\n")
 
-		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0600))
+		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0o600))
 		switchToTempTestDir(t, tempDir)
 
 		cfg, err := NewConfig(ctx, awsConfigManager)

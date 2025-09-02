@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"time"
+
 	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/clock"
-	"time"
 )
 
 type ServiceConfig struct {
@@ -65,7 +66,13 @@ func (s *Service) Import(ctx context.Context) error {
 	return multiErr
 }
 
-func (s *Service) importWorker(ctx context.Context, group string, beforeDate time.Time, results chan<- error, signal <-chan struct{}) {
+func (s *Service) importWorker(
+	ctx context.Context,
+	group string,
+	beforeDate time.Time,
+	results chan<- error,
+	signal <-chan struct{},
+) {
 	defer func() { <-signal }()
 
 	err := s.importForGroup(ctx, group, beforeDate)
@@ -79,14 +86,12 @@ func (s *Service) importWorker(ctx context.Context, group string, beforeDate tim
 
 func (s *Service) importForGroup(ctx context.Context, group string, beforeDate time.Time) error {
 	savedEvents, err := s.eventRepository.GetUpcomingEventsForGroup(ctx, group)
-
 	if err != nil {
 		return err
 	}
 
 	missingEventIds := make([]string, 0)
 	incomingEvents, err := s.meetupRepository.GetEventsUntilDateForGroup(ctx, group, beforeDate)
-
 	if err != nil {
 		return err
 	}

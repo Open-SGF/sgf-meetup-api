@@ -2,9 +2,11 @@ package appconfig
 
 import (
 	"context"
-	"github.com/google/wire"
+
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
+
+	"github.com/google/wire"
 )
 
 const (
@@ -81,7 +83,6 @@ func NewCommonConfig(ctx context.Context) (*Common, error) {
 		WithEnvFile(".", ".env").
 		WithEnvVars().
 		Parse(ctx, &config)
-
 	if err != nil {
 		return nil, err
 	}

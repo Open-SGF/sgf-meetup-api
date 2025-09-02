@@ -3,18 +3,20 @@ package appconfig
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
+
+	"sgf-meetup-api/pkg/shared/logging"
+
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParser_DefineKeys(t *testing.T) {
@@ -37,7 +39,7 @@ func TestParser_DefineKeys(t *testing.T) {
 func TestParser_WithEnvFile(t *testing.T) {
 	dir := t.TempDir()
 	envPath := filepath.Join(dir, "test.env")
-	_ = os.WriteFile(envPath, []byte("KEY=env_value"), 0644)
+	_ = os.WriteFile(envPath, []byte("KEY=env_value"), 0o644)
 
 	p := NewParser().WithEnvFile(dir, "test")
 	var cfg struct {
@@ -74,8 +76,11 @@ func TestParser_WithSSMParameters(t *testing.T) {
 
 	t.Setenv("AWS_ENDPOINT_URL_SSM", ts.URL)
 
-	awsCfg, err := config.LoadDefaultConfig(ctx,
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("test", "test", "")),
+	awsCfg, err := config.LoadDefaultConfig(
+		ctx,
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider("test", "test", ""),
+		),
 	)
 
 	require.NoError(t, err)
@@ -97,7 +102,7 @@ func TestParser_WithSSMParameters(t *testing.T) {
 func TestParser_ProcessorOrderPrecedence(t *testing.T) {
 	t.Setenv("CONFIG_KEY", "env_var_value")
 	dir := t.TempDir()
-	_ = os.WriteFile(filepath.Join(dir, "test.env"), []byte("CONFIG_KEY=file_value"), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "test.env"), []byte("CONFIG_KEY=file_value"), 0o644)
 
 	p := NewParser().
 		DefineKeys([]string{"CONFIG_KEY"}).

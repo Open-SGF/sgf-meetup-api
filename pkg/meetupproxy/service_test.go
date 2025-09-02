@@ -4,15 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
-	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 	"time"
+
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
+	"sgf-meetup-api/pkg/shared/logging"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewServiceConfig(t *testing.T) {
@@ -45,7 +47,12 @@ func TestService_HandleRequest_Success(t *testing.T) {
 
 	defer ts.Close()
 
-	proxy := NewService(ServiceConfig{ts.URL}, &http.Client{}, &mockAuth{token: "valid-token"}, logging.NewMockLogger())
+	proxy := NewService(
+		ServiceConfig{ts.URL},
+		&http.Client{},
+		&mockAuth{token: "valid-token"},
+		logging.NewMockLogger(),
+	)
 
 	resp, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
@@ -56,7 +63,12 @@ func TestService_HandleRequest_Success(t *testing.T) {
 
 func TestService_HandleRequest_AuthFailure(t *testing.T) {
 	auth := &mockAuth{err: fmt.Errorf("auth error")}
-	proxy := NewService(ServiceConfig{"https://testurl"}, &http.Client{}, auth, logging.NewMockLogger())
+	proxy := NewService(
+		ServiceConfig{"https://testurl"},
+		&http.Client{},
+		auth,
+		logging.NewMockLogger(),
+	)
 
 	_, err := proxy.HandleRequest(context.Background(), Request{})
 
@@ -72,7 +84,12 @@ func TestService_HandleRequest_InvalidJSONResponse(t *testing.T) {
 
 	defer ts.Close()
 
-	proxy := NewService(ServiceConfig{ts.URL}, &http.Client{}, &mockAuth{token: "valid"}, logging.NewMockLogger())
+	proxy := NewService(
+		ServiceConfig{ts.URL},
+		&http.Client{},
+		&mockAuth{token: "valid"},
+		logging.NewMockLogger(),
+	)
 
 	_, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
@@ -103,13 +120,22 @@ func TestService_HandleRequest_InvalidStatus(t *testing.T) {
 
 			defer ts.Close()
 
-			proxy := NewService(ServiceConfig{ts.URL}, &http.Client{}, &mockAuth{token: "valid"}, slog.New(handler))
+			proxy := NewService(
+				ServiceConfig{ts.URL},
+				&http.Client{},
+				&mockAuth{token: "valid"},
+				slog.New(handler),
+			)
 
 			_, err := proxy.HandleRequest(context.Background(), Request{Query: "query() {}"})
 
 			require.Error(t, err)
 
-			assert.ErrorContains(t, err, fmt.Sprintf("expected status code 200, got %v", tt.statusCode))
+			assert.ErrorContains(
+				t,
+				err,
+				fmt.Sprintf("expected status code 200, got %v", tt.statusCode),
+			)
 
 			assert.Len(t, handler.Entries(slog.LevelError), 1)
 		})
@@ -126,7 +152,12 @@ func TestService_HandleRequest_Timeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
-	proxy := NewService(ServiceConfig{ts.URL}, &http.Client{}, &mockAuth{token: "valid-token"}, logging.NewMockLogger())
+	proxy := NewService(
+		ServiceConfig{ts.URL},
+		&http.Client{},
+		&mockAuth{token: "valid-token"},
+		logging.NewMockLogger(),
+	)
 
 	_, err := proxy.HandleRequest(ctx, Request{
 		Query: "query() {}",

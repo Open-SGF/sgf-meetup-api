@@ -8,18 +8,19 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
-	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
-	"sgf-meetup-api/pkg/shared/logging"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
+	"sgf-meetup-api/pkg/shared/logging"
+
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewMeetupAuthHandlerConfig(t *testing.T) {
@@ -211,14 +212,23 @@ func TestAuthHandler_TestParseAuthToken(t *testing.T) {
 		"token_type": "Bearer"
 	}`
 
-	ah := NewMeetupHttpAuthHandler(MeetupHttpAuthHandlerConfig{}, &http.Client{}, logging.NewMockLogger())
+	ah := NewMeetupHttpAuthHandler(
+		MeetupHttpAuthHandlerConfig{},
+		&http.Client{},
+		logging.NewMockLogger(),
+	)
 
 	token, err := ah.parseAuthToken(strings.NewReader(jsonResponse))
 
 	require.NoError(t, err)
 
 	expectedExpiry := time.Now().Add(300 * time.Second)
-	assert.WithinRange(t, token.ExpiresAt, expectedExpiry.Add(-5*time.Second), expectedExpiry.Add(5*time.Second))
+	assert.WithinRange(
+		t,
+		token.ExpiresAt,
+		expectedExpiry.Add(-5*time.Second),
+		expectedExpiry.Add(5*time.Second),
+	)
 }
 
 func TestIsExpiring(t *testing.T) {

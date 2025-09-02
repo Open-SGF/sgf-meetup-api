@@ -1,9 +1,11 @@
 package fakers
 
 import (
-	"github.com/brianvoe/gofakeit/v7"
-	"sgf-meetup-api/pkg/shared/models"
 	"time"
+
+	"sgf-meetup-api/pkg/shared/models"
+
+	"github.com/brianvoe/gofakeit/v7"
 )
 
 type MeetupFaker struct {
@@ -33,7 +35,11 @@ func (m *MeetupFaker) CreateEvents(groupID string, count int) []models.MeetupEve
 	return events
 }
 
-func (m *MeetupFaker) CreateEventsWithDates(groupID string, base time.Time, dates ...time.Duration) []models.MeetupEvent {
+func (m *MeetupFaker) CreateEventsWithDates(
+	groupID string,
+	base time.Time,
+	dates ...time.Duration,
+) []models.MeetupEvent {
 	events := make([]models.MeetupEvent, len(dates))
 	m.faker.Slice(&events)
 	for i, d := range dates {

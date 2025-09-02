@@ -3,17 +3,24 @@ package db
 import (
 	"context"
 	"errors"
+	"log/slog"
+
+	"sgf-meetup-api/pkg/infra/customconstructs"
+	"sgf-meetup-api/pkg/shared/resource"
+
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"log/slog"
-	"sgf-meetup-api/pkg/infra/customconstructs"
-	"sgf-meetup-api/pkg/shared/resource"
 )
 
-func SyncTables(ctx context.Context, logger *slog.Logger, client *Client, prefix string, tables []customconstructs.DynamoTableProps) error {
-
+func SyncTables(
+	ctx context.Context,
+	logger *slog.Logger,
+	client *Client,
+	prefix string,
+	tables []customconstructs.DynamoTableProps,
+) error {
 	for _, tableProps := range tables {
 		tableNamer := resource.NewNamer(prefix, *tableProps.TableName)
 
@@ -37,12 +44,16 @@ func SyncTables(ctx context.Context, logger *slog.Logger, client *Client, prefix
 	return nil
 }
 
-func tableExists(ctx context.Context, client *Client, logger *slog.Logger, tableName string) (bool, error) {
+func tableExists(
+	ctx context.Context,
+	client *Client,
+	logger *slog.Logger,
+	tableName string,
+) (bool, error) {
 	logger.Info("checking table", "tableName", tableName)
 	_, err := client.DescribeTable(ctx, &dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
 	})
-
 	if err != nil {
 		var notFoundErr *types.ResourceNotFoundException
 		if errors.As(err, &notFoundErr) {
@@ -54,7 +65,12 @@ func tableExists(ctx context.Context, client *Client, logger *slog.Logger, table
 	return true, nil
 }
 
-func createTable(ctx context.Context, client *Client, prefix string, tableProps customconstructs.DynamoTableProps) error {
+func createTable(
+	ctx context.Context,
+	client *Client,
+	prefix string,
+	tableProps customconstructs.DynamoTableProps,
+) error {
 	attrMap := make(map[string]types.ScalarAttributeType)
 
 	partitionKeyName := *tableProps.PartitionKey.Name

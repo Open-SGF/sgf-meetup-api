@@ -3,14 +3,16 @@ package auth
 import (
 	"context"
 	"errors"
+
+	"sgf-meetup-api/pkg/api/apiconfig"
+	"sgf-meetup-api/pkg/shared/db"
+	"sgf-meetup-api/pkg/shared/models"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/google/wire"
-	"sgf-meetup-api/pkg/api/apiconfig"
-	"sgf-meetup-api/pkg/shared/db"
-	"sgf-meetup-api/pkg/shared/models"
 )
 
 type APIUserRepository interface {
@@ -32,21 +34,26 @@ type DynamoDBAPIUserRepository struct {
 	db     *db.Client
 }
 
-func NewDynamoDBAPIUserRepository(config DynamoDBAPIUserRepositoryConfig, db *db.Client) *DynamoDBAPIUserRepository {
+func NewDynamoDBAPIUserRepository(
+	config DynamoDBAPIUserRepositoryConfig,
+	db *db.Client,
+) *DynamoDBAPIUserRepository {
 	return &DynamoDBAPIUserRepository{
 		config: config,
 		db:     db,
 	}
 }
 
-func (r *DynamoDBAPIUserRepository) GetAPIUser(ctx context.Context, clientID string) (*models.APIUser, error) {
+func (r *DynamoDBAPIUserRepository) GetAPIUser(
+	ctx context.Context,
+	clientID string,
+) (*models.APIUser, error) {
 	result, err := r.db.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(r.config.APIUserTable),
 		Key: map[string]types.AttributeValue{
 			"clientId": &types.AttributeValueMemberS{Value: clientID},
 		},
 	})
-
 	if err != nil {
 		return nil, err
 	}

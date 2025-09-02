@@ -3,14 +3,20 @@ package importer
 import (
 	"context"
 	"encoding/json"
-	"github.com/google/wire"
 	"log/slog"
-	"sgf-meetup-api/pkg/shared/models"
 	"time"
+
+	"sgf-meetup-api/pkg/shared/models"
+
+	"github.com/google/wire"
 )
 
 type MeetupRepository interface {
-	GetEventsUntilDateForGroup(ctx context.Context, group string, beforeDate time.Time) ([]models.MeetupEvent, error)
+	GetEventsUntilDateForGroup(
+		ctx context.Context,
+		group string,
+		beforeDate time.Time,
+	) ([]models.MeetupEvent, error)
 }
 
 type GraphQLHandler interface {
@@ -22,7 +28,10 @@ type GraphQLMeetupRepository struct {
 	logger  *slog.Logger
 }
 
-func NewGraphQLMeetupRepository(handler GraphQLHandler, logger *slog.Logger) *GraphQLMeetupRepository {
+func NewGraphQLMeetupRepository(
+	handler GraphQLHandler,
+	logger *slog.Logger,
+) *GraphQLMeetupRepository {
 	return &GraphQLMeetupRepository{
 		handler: handler,
 		logger:  logger,
@@ -90,7 +99,11 @@ type MeetupEdge struct {
 	Node models.MeetupEvent `json:"node"`
 }
 
-func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(ctx context.Context, group string, beforeDate time.Time) ([]models.MeetupEvent, error) {
+func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(
+	ctx context.Context,
+	group string,
+	beforeDate time.Time,
+) ([]models.MeetupEvent, error) {
 	events := make([]models.MeetupEvent, 0)
 	cursor := ""
 	var maxFutureDate time.Time
@@ -105,8 +118,12 @@ func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(ctx context.Context
 			variables["cursor"] = cursor
 		}
 
-		response, err := executeGraphQLQuery[MeetupFutureEventsResponse](r, ctx, getFutureEventsQuery, variables)
-
+		response, err := executeGraphQLQuery[MeetupFutureEventsResponse](
+			r,
+			ctx,
+			getFutureEventsQuery,
+			variables,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -136,9 +153,13 @@ func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(ctx context.Context
 	return events, nil
 }
 
-func executeGraphQLQuery[T any](r *GraphQLMeetupRepository, ctx context.Context, query string, variables map[string]any) (*T, error) {
+func executeGraphQLQuery[T any](
+	r *GraphQLMeetupRepository,
+	ctx context.Context,
+	query string,
+	variables map[string]any,
+) (*T, error) {
 	responseBytes, err := r.handler.ExecuteQuery(ctx, query, variables)
-
 	if err != nil {
 		return nil, err
 	}
@@ -151,4 +172,7 @@ func executeGraphQLQuery[T any](r *GraphQLMeetupRepository, ctx context.Context,
 	return &response, nil
 }
 
-var MeetupRepositoryProviders = wire.NewSet(wire.Bind(new(MeetupRepository), new(*GraphQLMeetupRepository)), NewGraphQLMeetupRepository)
+var MeetupRepositoryProviders = wire.NewSet(
+	wire.Bind(new(MeetupRepository), new(*GraphQLMeetupRepository)),
+	NewGraphQLMeetupRepository,
+)
