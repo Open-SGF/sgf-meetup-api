@@ -3,6 +3,7 @@ package syncdynamodb
 import (
 	"context"
 	"log/slog"
+
 	"sgf-meetup-api/pkg/infra/customconstructs"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/syncdynamodb/syncdynamodbconfig"

@@ -1,8 +1,9 @@
 package apierrors
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ProblemDetailer interface {
@@ -17,7 +18,10 @@ type ProblemDetails struct {
 	Instance string `json:"instance,omitempty"`
 }
 
-func NewProblemDetails(statusCode int, problemType, title, detail, instance string) *ProblemDetails {
+func NewProblemDetails(
+	statusCode int,
+	problemType, title, detail, instance string,
+) *ProblemDetails {
 	if problemType == "" {
 		problemType = "about:blank"
 	}

@@ -1,15 +1,16 @@
 package httpclient
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"sgf-meetup-api/pkg/shared/clock"
-	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"sgf-meetup-api/pkg/shared/clock"
+	"sgf-meetup-api/pkg/shared/logging"
 )
 
 func TestHttpLoggingTransport_SuccessfulRequest(t *testing.T) {

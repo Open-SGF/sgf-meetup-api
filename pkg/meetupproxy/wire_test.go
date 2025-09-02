@@ -2,8 +2,9 @@ package meetupproxy
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestInitService(t *testing.T) {

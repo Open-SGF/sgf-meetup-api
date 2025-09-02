@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"sgf-meetup-api/pkg/shared/logging"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sgf-meetup-api/pkg/shared/logging"
 )
 
 func TestNew_WithMinimumValidConfig(t *testing.T) {

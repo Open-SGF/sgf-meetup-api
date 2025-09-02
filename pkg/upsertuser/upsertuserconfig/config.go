@@ -2,6 +2,7 @@ package upsertuserconfig
 
 import (
 	"context"
+
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/appconfig"
 )
@@ -19,7 +20,6 @@ func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager)
 		WithEnvVars().
 		WithCustomProcessor(awsConfigFactory.SetConfigFromViper).
 		Parse(ctx, &config)
-
 	if err != nil {
 		return nil, err
 	}
@@ -27,4 +27,8 @@ func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager)
 	return &config, nil
 }
 
-var ConfigProviders = wire.NewSet(appconfig.ConfigProviders, wire.FieldsOf(new(*Config), "Common"), NewConfig)
+var ConfigProviders = wire.NewSet(
+	appconfig.ConfigProviders,
+	wire.FieldsOf(new(*Config), "Common"),
+	NewConfig,
+)

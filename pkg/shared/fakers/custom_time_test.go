@@ -1,12 +1,13 @@
 package fakers
 
 import (
+	"testing"
+	"time"
+
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sgf-meetup-api/pkg/shared/models"
-	"testing"
-	"time"
 )
 
 func TestFutureCustomTime(t *testing.T) {

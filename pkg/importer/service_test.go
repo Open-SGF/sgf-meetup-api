@@ -3,17 +3,17 @@ package importer
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/fakers"
 	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/shared/models"
-	"testing"
-	"time"
-
-	"github.com/stretchr/testify/mock"
 )
 
 func TestNewServiceConfig(t *testing.T) {
@@ -30,7 +30,10 @@ type MockEventRepository struct {
 	mock.Mock
 }
 
-func (m *MockEventRepository) GetUpcomingEventsForGroup(ctx context.Context, group string) ([]models.MeetupEvent, error) {
+func (m *MockEventRepository) GetUpcomingEventsForGroup(
+	ctx context.Context,
+	group string,
+) ([]models.MeetupEvent, error) {
 	args := m.Called(ctx, group)
 	return args.Get(0).([]models.MeetupEvent), args.Error(1)
 }
@@ -49,7 +52,11 @@ type MockMeetupRepository struct {
 	mock.Mock
 }
 
-func (m *MockMeetupRepository) GetEventsUntilDateForGroup(ctx context.Context, group string, beforeDate time.Time) ([]models.MeetupEvent, error) {
+func (m *MockMeetupRepository) GetEventsUntilDateForGroup(
+	ctx context.Context,
+	group string,
+	beforeDate time.Time,
+) ([]models.MeetupEvent, error) {
 	args := m.Called(ctx, group, beforeDate)
 	return args.Get(0).([]models.MeetupEvent), args.Error(1)
 }

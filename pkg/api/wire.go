@@ -5,6 +5,7 @@ package api
 
 import (
 	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/api/apiconfig"
@@ -15,7 +16,12 @@ import (
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
-var CommonProviders = wire.NewSet(apiconfig.ConfigProviders, logging.DefaultLogger, clock.RealClockProvider, db.Providers)
+var CommonProviders = wire.NewSet(
+	apiconfig.ConfigProviders,
+	logging.DefaultLogger,
+	clock.RealClockProvider,
+	db.Providers,
+)
 
 func InitRouter(ctx context.Context) (*gin.Engine, error) {
 	panic(wire.Build(

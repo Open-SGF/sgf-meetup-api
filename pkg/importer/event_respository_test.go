@@ -2,6 +2,9 @@ package importer
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -14,8 +17,6 @@ import (
 	"sgf-meetup-api/pkg/shared/fakers"
 	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/shared/models"
-	"testing"
-	"time"
 )
 
 func TestNewDynamoDBEventRepositoryConfig(t *testing.T) {
@@ -156,8 +157,16 @@ func TestDynamoDBEventRepository_ArchiveEvents(t *testing.T) {
 		require.NoError(t, repo.ArchiveEvents(ctx, eventIDs))
 
 		for _, id := range eventIDs {
-			assert.False(t, testDB.CheckItemExists(ctx, repoConfig.EventsTableName, "id", id), "event should be deleted from main table")
-			assert.True(t, testDB.CheckItemExists(ctx, repoConfig.ArchivedEventsTableName, "id", id), "event should exist in archive table")
+			assert.False(
+				t,
+				testDB.CheckItemExists(ctx, repoConfig.EventsTableName, "id", id),
+				"event should be deleted from main table",
+			)
+			assert.True(
+				t,
+				testDB.CheckItemExists(ctx, repoConfig.ArchivedEventsTableName, "id", id),
+				"event should exist in archive table",
+			)
 		}
 	})
 
@@ -177,8 +186,14 @@ func TestDynamoDBEventRepository_ArchiveEvents(t *testing.T) {
 		err = repo.ArchiveEvents(ctx, []string{validEvent.ID, "non-existent-id"})
 		require.NoError(t, err)
 
-		assert.False(t, testDB.CheckItemExists(ctx, repoConfig.EventsTableName, "id", validEvent.ID))
-		assert.True(t, testDB.CheckItemExists(ctx, repoConfig.ArchivedEventsTableName, "id", validEvent.ID))
+		assert.False(
+			t,
+			testDB.CheckItemExists(ctx, repoConfig.EventsTableName, "id", validEvent.ID),
+		)
+		assert.True(
+			t,
+			testDB.CheckItemExists(ctx, repoConfig.ArchivedEventsTableName, "id", validEvent.ID),
+		)
 	})
 
 	t.Run("handles large batches with chunking", func(t *testing.T) {
@@ -197,7 +212,10 @@ func TestDynamoDBEventRepository_ArchiveEvents(t *testing.T) {
 
 		for _, id := range eventIDs {
 			assert.False(t, testDB.CheckItemExists(ctx, repoConfig.EventsTableName, "id", id))
-			assert.True(t, testDB.CheckItemExists(ctx, repoConfig.ArchivedEventsTableName, "id", id))
+			assert.True(
+				t,
+				testDB.CheckItemExists(ctx, repoConfig.ArchivedEventsTableName, "id", id),
+			)
 		}
 	})
 }

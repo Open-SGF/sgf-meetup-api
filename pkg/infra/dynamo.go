@@ -61,4 +61,8 @@ var ApiUsersTableProps = &customconstructs.DynamoTableProps{
 	},
 }
 
-var Tables = []customconstructs.DynamoTableProps{*EventsTableProps, *ArchivedEventsTableProps, *ApiUsersTableProps}
+var Tables = []customconstructs.DynamoTableProps{
+	*EventsTableProps,
+	*ArchivedEventsTableProps,
+	*ApiUsersTableProps,
+}

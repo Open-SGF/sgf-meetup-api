@@ -5,6 +5,7 @@ package importer
 
 import (
 	"context"
+
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/importer/importerconfig"
 	"sgf-meetup-api/pkg/shared/clock"
@@ -13,7 +14,13 @@ import (
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
-var CommonProviders = wire.NewSet(importerconfig.ConfigProviders, logging.DefaultLogger, clock.RealClockProvider, httpclient.DefaultClient, db.Providers)
+var CommonProviders = wire.NewSet(
+	importerconfig.ConfigProviders,
+	logging.DefaultLogger,
+	clock.RealClockProvider,
+	httpclient.DefaultClient,
+	db.Providers,
+)
 
 func InitService(ctx context.Context) (*Service, error) {
 	panic(wire.Build(

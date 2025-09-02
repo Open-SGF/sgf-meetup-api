@@ -5,6 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gin-gonic/gin"
@@ -12,14 +17,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
-	"net/http"
-	"net/http/httptest"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/models"
-	"testing"
-	"time"
 )
 
 func TestController_Integration(t *testing.T) {
@@ -77,7 +78,10 @@ func TestController_Integration(t *testing.T) {
 		assert.True(t, accessToken.Valid)
 		assert.Equal(t, accessTokenClaims.Subject, requestDTO.ClientID)
 
-		refreshToken, refreshTokenClaims, err := parseJWTToken(responseDTO.RefreshToken, tokenSecret)
+		refreshToken, refreshTokenClaims, err := parseJWTToken(
+			responseDTO.RefreshToken,
+			tokenSecret,
+		)
 		require.NoError(t, err)
 		assert.True(t, refreshToken.Valid)
 		assert.Equal(t, refreshTokenClaims.Subject, requestDTO.ClientID)
@@ -190,7 +194,10 @@ func TestController_Integration(t *testing.T) {
 		assert.True(t, accessToken.Valid)
 		assert.Equal(t, accessTokenClaims.Subject, clientID)
 
-		refreshToken, refreshTokenClaims, err := parseJWTToken(responseDTO.RefreshToken, tokenSecret)
+		refreshToken, refreshTokenClaims, err := parseJWTToken(
+			responseDTO.RefreshToken,
+			tokenSecret,
+		)
 		require.NoError(t, err)
 		assert.True(t, refreshToken.Valid)
 		assert.Equal(t, refreshTokenClaims.Subject, clientID)
@@ -226,7 +233,9 @@ func addAPIUser(t *testing.T, ctx context.Context, client *db.Client, id, secret
 		HashedClientSecret: bytes,
 	}
 
-	av, err := attributevalue.MarshalMap(apiUser) // Use Marshal to convert struct to AttributeValues
+	av, err := attributevalue.MarshalMap(
+		apiUser,
+	) // Use Marshal to convert struct to AttributeValues
 	require.NoError(t, err)
 
 	_, err = client.PutItem(ctx, &dynamodb.PutItemInput{
@@ -238,14 +247,17 @@ func addAPIUser(t *testing.T, ctx context.Context, client *db.Client, id, secret
 }
 
 func parseJWTToken(tokenString string, secret []byte) (*jwt.Token, *jwt.RegisteredClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, jwt.ErrSignatureInvalid
-		}
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		&jwt.RegisteredClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
 
-		return secret, nil
-	})
-
+			return secret, nil
+		},
+	)
 	if err != nil {
 		return nil, nil, err
 	}

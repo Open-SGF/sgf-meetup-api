@@ -5,6 +5,7 @@ package meetupproxy
 
 import (
 	"context"
+
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
 	"sgf-meetup-api/pkg/shared/clock"
@@ -12,7 +13,12 @@ import (
 	"sgf-meetup-api/pkg/shared/logging"
 )
 
-var CommonProviders = wire.NewSet(meetupproxyconfig.ConfigProviders, logging.DefaultLogger, clock.RealClockProvider, httpclient.DefaultClient)
+var CommonProviders = wire.NewSet(
+	meetupproxyconfig.ConfigProviders,
+	logging.DefaultLogger,
+	clock.RealClockProvider,
+	httpclient.DefaultClient,
+)
 
 func InitService(ctx context.Context) (*Service, error) {
 	panic(wire.Build(

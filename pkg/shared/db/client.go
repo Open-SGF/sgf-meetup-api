@@ -3,12 +3,13 @@ package db
 import (
 	"context"
 	"fmt"
+	"log/slog"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/google/wire"
-	"log/slog"
 )
 
 const (
@@ -19,11 +20,15 @@ type Client struct {
 	*dynamodb.Client
 }
 
-func NewClient(ctx context.Context, cfg Config, awsCfg *aws.Config, logger *slog.Logger) (*Client, error) {
+func NewClient(
+	ctx context.Context,
+	cfg Config,
+	awsCfg *aws.Config,
+	logger *slog.Logger,
+) (*Client, error) {
 	var clientOpts []func(*dynamodb.Options)
 
 	awsCfg, err := getAwsConfig(ctx, cfg, awsCfg)
-
 	if err != nil {
 		logger.Error("Failed to create dynamo db instance", "err", err)
 		return nil, err
@@ -64,7 +69,6 @@ func getAwsConfig(ctx context.Context, cfg Config, awsCfg *aws.Config) (*aws.Con
 	}
 
 	newAwsCfg, err := config.LoadDefaultConfig(ctx, cfgOpts...)
-
 	if err != nil {
 		return nil, err
 	}

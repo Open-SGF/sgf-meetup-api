@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
@@ -14,8 +17,6 @@ import (
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/models"
-	"strings"
-	"time"
 )
 
 type PaginatedEventsFilters struct {
@@ -26,7 +27,11 @@ type PaginatedEventsFilters struct {
 }
 
 type GroupEventRepository interface {
-	PaginatedEvents(ctx context.Context, groupID string, filters PaginatedEventsFilters) ([]models.MeetupEvent, *PaginatedEventsFilters, error)
+	PaginatedEvents(
+		ctx context.Context,
+		groupID string,
+		filters PaginatedEventsFilters,
+	) ([]models.MeetupEvent, *PaginatedEventsFilters, error)
 	NextEvent(ctx context.Context, groupID string) (*models.MeetupEvent, error)
 	EventByID(ctx context.Context, groupID, eventID string) (*models.MeetupEvent, error)
 }
@@ -36,7 +41,9 @@ type DynamoDBGroupEventRepositoryConfig struct {
 	GroupDateIndexName string
 }
 
-func NewDynamoDBGroupEventRepositoryConfig(config *apiconfig.Config) DynamoDBGroupEventRepositoryConfig {
+func NewDynamoDBGroupEventRepositoryConfig(
+	config *apiconfig.Config,
+) DynamoDBGroupEventRepositoryConfig {
 	return DynamoDBGroupEventRepositoryConfig{
 		EventsTableName:    config.EventsTableName,
 		GroupDateIndexName: config.GroupIDDateTimeIndexName,
@@ -61,7 +68,11 @@ func NewDynamoDBGroupEventRepository(
 	}
 }
 
-func (r *DynamoDBGroupEventRepository) PaginatedEvents(ctx context.Context, groupID string, filters PaginatedEventsFilters) ([]models.MeetupEvent, *PaginatedEventsFilters, error) {
+func (r *DynamoDBGroupEventRepository) PaginatedEvents(
+	ctx context.Context,
+	groupID string,
+	filters PaginatedEventsFilters,
+) ([]models.MeetupEvent, *PaginatedEventsFilters, error) {
 	keyCond := expression.Key("groupId").
 		Equal(expression.Value(groupID))
 
@@ -72,9 +83,13 @@ func (r *DynamoDBGroupEventRepository) PaginatedEvents(ctx context.Context, grou
 			expression.Value(*filters.Before),
 		))
 	case filters.After != nil:
-		keyCond = keyCond.And(expression.Key("dateTime").GreaterThan(expression.Value(*filters.After)))
+		keyCond = keyCond.And(
+			expression.Key("dateTime").GreaterThan(expression.Value(*filters.After)),
+		)
 	case filters.Before != nil:
-		keyCond = keyCond.And(expression.Key("dateTime").LessThan(expression.Value(*filters.Before)))
+		keyCond = keyCond.And(
+			expression.Key("dateTime").LessThan(expression.Value(*filters.Before)),
+		)
 	default:
 		now := r.timeSource.Now().UTC()
 		keyCond = keyCond.And(expression.Key("dateTime").GreaterThan(expression.Value(now)))
@@ -132,7 +147,10 @@ func (r *DynamoDBGroupEventRepository) PaginatedEvents(ctx context.Context, grou
 	return events, nextCursor, nil
 }
 
-func (r *DynamoDBGroupEventRepository) NextEvent(ctx context.Context, groupID string) (*models.MeetupEvent, error) {
+func (r *DynamoDBGroupEventRepository) NextEvent(
+	ctx context.Context,
+	groupID string,
+) (*models.MeetupEvent, error) {
 	now := r.timeSource.Now().UTC()
 
 	keyCond := expression.Key("groupId").
@@ -171,7 +189,10 @@ func (r *DynamoDBGroupEventRepository) NextEvent(ctx context.Context, groupID st
 	return &event, nil
 }
 
-func (r *DynamoDBGroupEventRepository) EventByID(ctx context.Context, groupID, eventID string) (*models.MeetupEvent, error) {
+func (r *DynamoDBGroupEventRepository) EventByID(
+	ctx context.Context,
+	groupID, eventID string,
+) (*models.MeetupEvent, error) {
 	getInput := &dynamodb.GetItemInput{
 		TableName: aws.String(r.config.EventsTableName),
 		Key: map[string]types.AttributeValue{
@@ -200,7 +221,9 @@ func (r *DynamoDBGroupEventRepository) EventByID(ctx context.Context, groupID, e
 	return &event, nil
 }
 
-func (r *DynamoDBGroupEventRepository) encodeCursor(lastKey map[string]types.AttributeValue) (string, error) {
+func (r *DynamoDBGroupEventRepository) encodeCursor(
+	lastKey map[string]types.AttributeValue,
+) (string, error) {
 	var id string
 	if err := attributevalue.Unmarshal(lastKey["id"], &id); err != nil {
 		return "", err
@@ -222,7 +245,9 @@ func (r *DynamoDBGroupEventRepository) encodeCursor(lastKey map[string]types.Att
 	return encodedID + "." + encodedGroup + "." + encodedTime, nil
 }
 
-func (r *DynamoDBGroupEventRepository) decodeCursor(cursorStr string) (map[string]types.AttributeValue, error) {
+func (r *DynamoDBGroupEventRepository) decodeCursor(
+	cursorStr string,
+) (map[string]types.AttributeValue, error) {
 	parts := strings.Split(cursorStr, ".")
 	if len(parts) != 3 {
 		return nil, ErrInvalidCursor
@@ -250,9 +275,11 @@ func (r *DynamoDBGroupEventRepository) decodeCursor(cursorStr string) (map[strin
 	}, nil
 }
 
-var ErrInvalidCursor = errors.New("invalid cursor")
-var ErrEventNotFound = errors.New("event not found")
-var ErrGroupNotFound = errors.New("group not found")
+var (
+	ErrInvalidCursor = errors.New("invalid cursor")
+	ErrEventNotFound = errors.New("event not found")
+	ErrGroupNotFound = errors.New("group not found")
+)
 
 var GroupEventRepositoryProviders = wire.NewSet(
 	wire.Bind(new(GroupEventRepository), new(*DynamoDBGroupEventRepository)),

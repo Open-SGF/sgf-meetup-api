@@ -5,8 +5,9 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"sgf-meetup-api/pkg/shared/clock"
 	"time"
+
+	"sgf-meetup-api/pkg/shared/clock"
 )
 
 func NewHttpLoggingTransport(timeSource clock.TimeSource, logger *slog.Logger) http.RoundTripper {

@@ -2,12 +2,13 @@ package syncdynamodb
 
 import (
 	"context"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/syncdynamodb/syncdynamodbconfig"
-	"testing"
 )
 
 func TestService_Run(t *testing.T) {

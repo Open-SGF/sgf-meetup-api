@@ -17,7 +17,11 @@ type DynamoTable struct {
 	FullTableName string
 }
 
-func NewDynamoTable(scope constructs.Construct, prefix string, props *DynamoTableProps) *DynamoTable {
+func NewDynamoTable(
+	scope constructs.Construct,
+	prefix string,
+	props *DynamoTableProps,
+) *DynamoTable {
 	tableProps := props.TableProps
 	tableNamer := resource.NewNamer(prefix, *tableProps.TableName)
 

@@ -2,13 +2,14 @@ package apiconfig
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
-	"sgf-meetup-api/pkg/shared/appconfig"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"sgf-meetup-api/pkg/shared/appconfig"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -45,7 +46,7 @@ func TestNewConfig(t *testing.T) {
 			appUrlKey + "=https://file.example.com",
 		}, "\n")
 
-		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0600))
+		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0o600))
 
 		origDir, err := os.Getwd()
 		require.NoError(t, err)

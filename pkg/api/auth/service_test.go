@@ -1,9 +1,10 @@
 package auth
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"sgf-meetup-api/pkg/api/apiconfig"
-	"testing"
 )
 
 func TestNewServiceConfig(t *testing.T) {

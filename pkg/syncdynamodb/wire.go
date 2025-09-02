@@ -5,6 +5,7 @@ package syncdynamodb
 
 import (
 	"context"
+
 	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"

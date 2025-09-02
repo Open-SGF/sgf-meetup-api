@@ -2,12 +2,13 @@ package appconfig
 
 import (
 	"context"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAwsConfigManager(t *testing.T) {
@@ -58,10 +59,10 @@ func TestAwsConfigManager(t *testing.T) {
 
 		configContent := "[profile test_profile]\nregion = us-east-1"
 		configPath := filepath.Join(tmpDir, "config")
-		require.NoError(t, os.WriteFile(configPath, []byte(configContent), 0600))
+		require.NoError(t, os.WriteFile(configPath, []byte(configContent), 0o600))
 
 		credsPath := filepath.Join(tmpDir, "credentials")
-		require.NoError(t, os.WriteFile(credsPath, []byte{}, 0600))
+		require.NoError(t, os.WriteFile(credsPath, []byte{}, 0o600))
 
 		v := viper.New()
 		v.Set(AWSProfileKey, "test_profile")

@@ -2,10 +2,11 @@ package auth
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"net/http"
-	"sgf-meetup-api/pkg/api/apierrors"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"sgf-meetup-api/pkg/api/apierrors"
 )
 
 const ClientIDKey = "clientId"

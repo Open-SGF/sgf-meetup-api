@@ -2,9 +2,10 @@ package api
 
 import (
 	"context"
+	"testing"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInitRouter(t *testing.T) {

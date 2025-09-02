@@ -3,18 +3,19 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
+	"log/slog"
+	"reflect"
+	"slices"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/testcontainers/testcontainers-go"
 	tcdynamodb "github.com/testcontainers/testcontainers-go/modules/dynamodb"
-	"log"
-	"log/slog"
-	"reflect"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/logging"
-	"slices"
 )
 
 type TestDB struct {
@@ -25,7 +26,6 @@ type TestDB struct {
 
 func NewTestDB(ctx context.Context) (*TestDB, error) {
 	testDB, err := NewTestDBWithoutMigrations(ctx)
-
 	if err != nil {
 		return nil, err
 	}
@@ -43,13 +43,11 @@ func NewTestDBWithoutMigrations(ctx context.Context) (*TestDB, error) {
 		"amazon/dynamodb-local:3.0.0",
 		tcdynamodb.WithDisableTelemetry(),
 	)
-
 	if err != nil {
 		return nil, err
 	}
 
 	connectionString, err := ctr.ConnectionString(ctx)
-
 	if err != nil {
 		return nil, err
 	}
@@ -61,10 +59,12 @@ func NewTestDBWithoutMigrations(ctx context.Context) (*TestDB, error) {
 		AccessKey:       "test",
 	}
 
-	logger := logging.DefaultLogger(ctx, logging.Config{Level: slog.LevelError, Type: logging.LogTypeText})
+	logger := logging.DefaultLogger(
+		ctx,
+		logging.Config{Level: slog.LevelError, Type: logging.LogTypeText},
+	)
 
 	client, err := NewClient(ctx, dbOptions, nil, logger)
-
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,6 @@ func (ctr *TestDB) InsertTestItems(ctx context.Context, tableName string, testIt
 
 		for _, event := range chunk {
 			av, err := attributevalue.MarshalMap(event)
-
 			if err != nil {
 				panic("error marshaling item")
 			}
@@ -172,7 +171,6 @@ func (ctr *TestDB) InsertTestItems(ctx context.Context, tableName string, testIt
 				tableName: writeRequests,
 			},
 		})
-
 		if err != nil {
 			panic("error writing item")
 		}
@@ -186,7 +184,6 @@ func (ctr *TestDB) CheckItemExists(ctx context.Context, tableName, keyName, key 
 			keyName: &types.AttributeValueMemberS{Value: key},
 		},
 	})
-
 	if err != nil {
 		panic("error while checking if item exists")
 	}
@@ -201,7 +198,6 @@ func (ctr *TestDB) GetItemCount(ctx context.Context, tableName string) int {
 	count := 0
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
-
 		if err != nil {
 			panic("error getting item count")
 		}

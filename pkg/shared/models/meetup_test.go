@@ -2,9 +2,10 @@ package models
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestMeetupEvent_UnmarshalJSON(t *testing.T) {
@@ -57,5 +58,9 @@ func TestMeetupEvent_UnmarshalJSON(t *testing.T) {
 	assert.Equal(t, "open-sgf", event.GroupID)
 	assert.Equal(t, "Levi Zitting", event.Host.Name)
 	assert.Len(t, event.Images, 1)
-	assert.Equal(t, "https://secure-content.meetupstatic.com/images/classic-events/", event.Images[0].BaseUrl)
+	assert.Equal(
+		t,
+		"https://secure-content.meetupstatic.com/images/classic-events/",
+		event.Images[0].BaseUrl,
+	)
 }

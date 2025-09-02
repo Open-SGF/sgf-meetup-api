@@ -2,12 +2,13 @@ package infraconfig
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -34,7 +35,7 @@ func TestNewConfig(t *testing.T) {
 			appDomainNameEnv + "=staging-meetup-api.opensgf.org",
 		}, "\n")
 
-		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0600))
+		require.NoError(t, os.WriteFile(envPath, []byte(envContent), 0o600))
 
 		origDir, err := os.Getwd()
 		require.NoError(t, err)

@@ -4,11 +4,12 @@
 package api
 
 import (
+	"log/slog"
+
 	"github.com/gin-gonic/gin"
 	sloggin "github.com/samber/slog-gin"
-	"github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
-	"log/slog"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"sgf-meetup-api/pkg/api/auth"
 	_ "sgf-meetup-api/pkg/api/docs"
 	"sgf-meetup-api/pkg/api/groupevents"

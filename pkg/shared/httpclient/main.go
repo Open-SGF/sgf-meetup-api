@@ -3,6 +3,7 @@ package httpclient
 import (
 	"log/slog"
 	"net/http"
+
 	"sgf-meetup-api/pkg/shared/clock"
 )
 

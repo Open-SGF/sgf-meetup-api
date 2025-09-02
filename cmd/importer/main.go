@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/aws/aws-lambda-go/lambda"
 	"log"
-	"sgf-meetup-api/pkg/importer"
 	"time"
+
+	"github.com/aws/aws-lambda-go/lambda"
+	"sgf-meetup-api/pkg/importer"
 )
 
 var service *importer.Service
@@ -15,7 +16,6 @@ func init() {
 	defer cancel()
 
 	newService, err := importer.InitService(ctx)
-
 	if err != nil {
 		log.Fatal(err)
 	}

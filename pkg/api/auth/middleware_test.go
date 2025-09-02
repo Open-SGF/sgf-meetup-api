@@ -1,14 +1,15 @@
 package auth
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
 	"sgf-meetup-api/pkg/shared/clock"
-	"testing"
-	"time"
 )
 
 func TestMiddleware_Handler(t *testing.T) {
@@ -69,5 +70,4 @@ func TestMiddleware_Handler(t *testing.T) {
 		assert.Equal(t, "test_client", clientID)
 		assert.False(t, c.IsAborted())
 	})
-
 }

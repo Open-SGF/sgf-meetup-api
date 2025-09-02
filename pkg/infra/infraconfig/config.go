@@ -2,6 +2,7 @@ package infraconfig
 
 import (
 	"context"
+
 	"sgf-meetup-api/pkg/shared/appconfig"
 )
 
@@ -28,7 +29,6 @@ func NewConfig(ctx context.Context) (*Config, error) {
 		WithEnvFile(".", ".env").
 		WithEnvVars().
 		Parse(ctx, &config)
-
 	if err != nil {
 		return nil, err
 	}

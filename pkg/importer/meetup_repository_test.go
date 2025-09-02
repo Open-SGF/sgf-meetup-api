@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sgf-meetup-api/pkg/shared/fakers"
 	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/shared/models"
-	"testing"
-	"time"
 )
 
 func TestMeetupRepository_GetEventsUntilDateForGroup(t *testing.T) {
@@ -97,7 +98,6 @@ func (m *mockGraphQLHandler) ExecuteQuery(
 	handler := m.handlers[m.callCount]
 
 	resp, err := handler()
-
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,10 @@ func mockPaginationHandler(faker *fakers.MeetupFaker, pages [][]time.Duration) *
 	return &mockGraphQLHandler{handlers: handlers}
 }
 
-func generateMeetupResponse(events []models.MeetupEvent, cursor string) *MeetupFutureEventsResponse {
+func generateMeetupResponse(
+	events []models.MeetupEvent,
+	cursor string,
+) *MeetupFutureEventsResponse {
 	response := &MeetupFutureEventsResponse{}
 	response.Data.Events.UnifiedEvents.Count = len(events)
 	response.Data.Events.UnifiedEvents.PageInfo.EndCursor = cursor

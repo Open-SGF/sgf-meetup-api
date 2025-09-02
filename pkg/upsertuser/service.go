@@ -3,11 +3,12 @@ package upsertuser
 import (
 	"context"
 	"fmt"
+	"regexp"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"golang.org/x/crypto/bcrypt"
-	"regexp"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/models"
 	"sgf-meetup-api/pkg/shared/resource"
@@ -32,7 +33,6 @@ func (s *Service) UpsertUser(ctx context.Context, tableName, clientID, clientSec
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(clientSecret), bcrypt.DefaultCost)
-
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,6 @@ func (s *Service) UpsertUser(ctx context.Context, tableName, clientID, clientSec
 	}
 
 	av, err := attributevalue.MarshalMap(user)
-
 	if err != nil {
 		return err
 	}
@@ -89,11 +88,17 @@ func (s *Service) validateClientSecret(clientSecret string) error {
 	}
 
 	if !hasSpecial.MatchString(clientSecret) {
-		return fmt.Errorf("client secret must contain at least one special character (%s)", allowedSpecial)
+		return fmt.Errorf(
+			"client secret must contain at least one special character (%s)",
+			allowedSpecial,
+		)
 	}
 
 	if !validChars.MatchString(clientSecret) {
-		return fmt.Errorf("client secret contains invalid characters - only alphanumerics and %s are allowed", allowedSpecial)
+		return fmt.Errorf(
+			"client secret contains invalid characters - only alphanumerics and %s are allowed",
+			allowedSpecial,
+		)
 	}
 	return nil
 }

@@ -2,9 +2,10 @@ package auth
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
-	"net/http"
 	"sgf-meetup-api/pkg/api/apierrors"
 )
 
@@ -41,7 +42,11 @@ func (c *Controller) auth(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.service.AuthClientCredentials(ctx, requestDTO.ClientID, requestDTO.ClientSecret)
+	result, err := c.service.AuthClientCredentials(
+		ctx,
+		requestDTO.ClientID,
+		requestDTO.ClientSecret,
+	)
 
 	if errors.Is(err, ErrInvalidCredentials) {
 		apierrors.WriteProblemDetailsFromStatus(ctx, http.StatusUnauthorized)
