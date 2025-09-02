@@ -5,12 +5,13 @@ import (
 	"errors"
 	"log/slog"
 
+	"sgf-meetup-api/pkg/infra/customconstructs"
+	"sgf-meetup-api/pkg/shared/resource"
+
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"sgf-meetup-api/pkg/infra/customconstructs"
-	"sgf-meetup-api/pkg/shared/resource"
 )
 
 func SyncTables(

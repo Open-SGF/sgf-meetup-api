@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"golang.org/x/crypto/bcrypt"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/models"
 	"sgf-meetup-api/pkg/shared/resource"
 	"sgf-meetup-api/pkg/upsertuser/upsertuserconfig"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {

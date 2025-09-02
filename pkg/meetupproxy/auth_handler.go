@@ -12,9 +12,10 @@ import (
 	"sync"
 	"time"
 
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/wire"
-	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
 )
 
 type AuthHandler interface {

@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 
+	"sgf-meetup-api/pkg/api/apiconfig"
+	"sgf-meetup-api/pkg/shared/db"
+	"sgf-meetup-api/pkg/shared/models"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/google/wire"
-	"sgf-meetup-api/pkg/api/apiconfig"
-	"sgf-meetup-api/pkg/shared/db"
-	"sgf-meetup-api/pkg/shared/models"
 )
 
 type APIUserRepository interface {

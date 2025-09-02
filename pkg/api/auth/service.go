@@ -5,10 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/shared/clock"
 	"sgf-meetup-api/pkg/shared/models"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ServiceConfig struct {

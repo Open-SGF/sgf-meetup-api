@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"sgf-meetup-api/pkg/shared/logging"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sgf-meetup-api/pkg/shared/logging"
 )
 
 func TestNew_WithMinimumValidConfig(t *testing.T) {

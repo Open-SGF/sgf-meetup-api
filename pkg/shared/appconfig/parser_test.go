@@ -10,12 +10,13 @@ import (
 	"path/filepath"
 	"testing"
 
+	"sgf-meetup-api/pkg/shared/logging"
+
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sgf-meetup-api/pkg/shared/logging"
 )
 
 func TestParser_DefineKeys(t *testing.T) {

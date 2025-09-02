@@ -3,9 +3,10 @@ package appconfig
 import (
 	"context"
 
-	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
+
+	"github.com/google/wire"
 )
 
 const (

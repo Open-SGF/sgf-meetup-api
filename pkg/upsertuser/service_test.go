@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"sgf-meetup-api/pkg/infra"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/upsertuser/upsertuserconfig"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestService_UpsertUser(t *testing.T) {

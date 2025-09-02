@@ -3,10 +3,11 @@ package auth
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/wire"
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/shared/clock"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/wire"
 )
 
 type TokenManagerConfig struct {

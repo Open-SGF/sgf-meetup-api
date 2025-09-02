@@ -4,9 +4,10 @@ import (
 	"errors"
 	"net/http"
 
+	"sgf-meetup-api/pkg/api/apierrors"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
-	"sgf-meetup-api/pkg/api/apierrors"
 )
 
 type Controller struct {

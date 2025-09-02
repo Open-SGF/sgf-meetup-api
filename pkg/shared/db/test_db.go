@@ -8,14 +8,15 @@ import (
 	"reflect"
 	"slices"
 
+	"sgf-meetup-api/pkg/infra"
+	"sgf-meetup-api/pkg/shared/logging"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/testcontainers/testcontainers-go"
 	tcdynamodb "github.com/testcontainers/testcontainers-go/modules/dynamodb"
-	"sgf-meetup-api/pkg/infra"
-	"sgf-meetup-api/pkg/shared/logging"
 )
 
 type TestDB struct {

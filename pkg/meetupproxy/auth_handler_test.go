@@ -15,11 +15,12 @@ import (
 	"testing"
 	"time"
 
+	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
+	"sgf-meetup-api/pkg/shared/logging"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sgf-meetup-api/pkg/meetupproxy/meetupproxyconfig"
-	"sgf-meetup-api/pkg/shared/logging"
 )
 
 func TestNewMeetupAuthHandlerConfig(t *testing.T) {

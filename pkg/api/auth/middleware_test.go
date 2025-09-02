@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"sgf-meetup-api/pkg/shared/clock"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sgf-meetup-api/pkg/shared/clock"
 )
 
 func TestMiddleware_Handler(t *testing.T) {

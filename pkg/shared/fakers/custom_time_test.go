@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"sgf-meetup-api/pkg/shared/models"
+
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sgf-meetup-api/pkg/shared/models"
 )
 
 func TestFutureCustomTime(t *testing.T) {

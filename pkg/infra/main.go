@@ -3,6 +3,9 @@ package infra
 import (
 	"fmt"
 
+	"sgf-meetup-api/pkg/infra/customconstructs"
+	"sgf-meetup-api/pkg/shared/resource"
+
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager"
@@ -12,8 +15,6 @@ import (
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsssm"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
-	"sgf-meetup-api/pkg/infra/customconstructs"
-	"sgf-meetup-api/pkg/shared/resource"
 )
 
 type AppStackProps struct {

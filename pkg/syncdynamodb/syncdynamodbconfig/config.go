@@ -3,8 +3,9 @@ package syncdynamodbconfig
 import (
 	"context"
 
-	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/appconfig"
+
+	"github.com/google/wire"
 )
 
 type Config struct {

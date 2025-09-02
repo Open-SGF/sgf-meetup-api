@@ -6,10 +6,11 @@ package upsertuser
 import (
 	"context"
 
-	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/db"
 	"sgf-meetup-api/pkg/shared/logging"
 	"sgf-meetup-api/pkg/upsertuser/upsertuserconfig"
+
+	"github.com/google/wire"
 )
 
 func InitService(ctx context.Context) (*Service, error) {

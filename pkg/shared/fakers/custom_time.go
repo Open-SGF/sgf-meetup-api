@@ -1,8 +1,9 @@
 package fakers
 
 import (
-	"github.com/brianvoe/gofakeit/v7"
 	"sgf-meetup-api/pkg/shared/models"
+
+	"github.com/brianvoe/gofakeit/v7"
 )
 
 func init() {

@@ -6,8 +6,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/google/wire"
 	"sgf-meetup-api/pkg/shared/models"
+
+	"github.com/google/wire"
 )
 
 type MeetupRepository interface {

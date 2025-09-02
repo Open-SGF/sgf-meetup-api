@@ -1,10 +1,11 @@
 package infra
 
 import (
+	"sgf-meetup-api/pkg/infra/customconstructs"
+
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
 	"github.com/aws/jsii-runtime-go"
-	"sgf-meetup-api/pkg/infra/customconstructs"
 )
 
 var GroupIdDateTimeIndex = awsdynamodb.GlobalSecondaryIndexProps{

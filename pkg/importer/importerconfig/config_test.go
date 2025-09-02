@@ -7,9 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"sgf-meetup-api/pkg/shared/appconfig"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sgf-meetup-api/pkg/shared/appconfig"
 )
 
 func TestNewConfig(t *testing.T) {

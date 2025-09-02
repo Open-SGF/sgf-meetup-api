@@ -6,10 +6,11 @@ import (
 	"log/slog"
 	"strings"
 
+	"sgf-meetup-api/pkg/shared/logging"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/spf13/viper"
-	"sgf-meetup-api/pkg/shared/logging"
 )
 
 type configProcessor func(ctx context.Context, v *viper.Viper) error

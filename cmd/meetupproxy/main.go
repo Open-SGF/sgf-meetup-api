@@ -5,8 +5,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-lambda-go/lambda"
 	"sgf-meetup-api/pkg/meetupproxy"
+
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 var service *meetupproxy.Service

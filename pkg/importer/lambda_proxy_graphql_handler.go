@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"log/slog"
 
+	"sgf-meetup-api/pkg/importer/importerconfig"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/google/wire"
-	"sgf-meetup-api/pkg/importer/importerconfig"
 )
 
 type LambdaProxyGraphQLHandlerConfig struct {

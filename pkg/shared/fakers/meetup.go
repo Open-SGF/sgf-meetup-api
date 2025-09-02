@@ -3,8 +3,9 @@ package fakers
 import (
 	"time"
 
-	"github.com/brianvoe/gofakeit/v7"
 	"sgf-meetup-api/pkg/shared/models"
+
+	"github.com/brianvoe/gofakeit/v7"
 )
 
 type MeetupFaker struct {

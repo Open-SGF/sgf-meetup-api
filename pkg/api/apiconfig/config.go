@@ -7,9 +7,10 @@ import (
 	"net/url"
 	"strings"
 
+	"sgf-meetup-api/pkg/shared/appconfig"
+
 	"github.com/google/wire"
 	"github.com/spf13/viper"
-	"sgf-meetup-api/pkg/shared/appconfig"
 )
 
 const (

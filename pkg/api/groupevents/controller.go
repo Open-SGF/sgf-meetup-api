@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/wire"
 	"sgf-meetup-api/pkg/api/apiconfig"
 	"sgf-meetup-api/pkg/api/apierrors"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/wire"
 )
 
 type ControllerConfig struct {

@@ -3,8 +3,9 @@ package auth
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"sgf-meetup-api/pkg/api/apiconfig"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewDynamoDBAPIUserRepositoryConfig(t *testing.T) {

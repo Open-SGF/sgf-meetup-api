@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"sgf-meetup-api/pkg/api/apierrors"
+
+	"github.com/gin-gonic/gin"
 )
 
 const ClientIDKey = "clientId"
