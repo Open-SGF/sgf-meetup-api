@@ -31,11 +31,13 @@ func main() {
 	subcommand := args[0]
 	samArgs := args[1:]
 
+	stackName := resource.NewNamer(config.AppEnv, "SgfMeetupApi")
+
 	switch subcommand {
 	case "api":
-		cmds = append(cmds, startAPI(config.AppEnv, samArgs...))
+		cmds = append(cmds, startAPI(stackName.FullName(), samArgs...))
 	case "importer":
-		cmds = append(cmds, invokeImporter(config.AppEnv, samArgs...))
+		cmds = append(cmds, invokeImporter(stackName.FullName(), samArgs...))
 	default:
 		log.Fatal("Unknown command. Use 'api' or 'importer'")
 	}
@@ -49,12 +51,10 @@ func main() {
 	}
 }
 
-func startAPI(appEnv string, samArgs ...string) *exec.Cmd {
-	templateNamer := resource.NewNamer(appEnv, "SgfMeetupApi.template.json")
-
+func startAPI(stackName string, samArgs ...string) *exec.Cmd {
 	templatePath := filepath.Join(
 		"./cdk.out",
-		templateNamer.FullName(),
+		stackName+".template.json",
 	)
 
 	args := []string{
@@ -69,15 +69,13 @@ func startAPI(appEnv string, samArgs ...string) *exec.Cmd {
 	return exec.Command("sam", args...)
 }
 
-func invokeImporter(appEnv string, samArgs ...string) *exec.Cmd {
-	templateNamer := resource.NewNamer(appEnv, "SgfMeetupApi.template.json")
-
+func invokeImporter(stackName string, samArgs ...string) *exec.Cmd {
 	templatePath := filepath.Join(
 		"./cdk.out",
-		templateNamer.FullName(),
+		stackName+".template.json",
 	)
 
-	functionNamer := resource.NewNamer(appEnv, "Importer")
+	functionNamer := resource.NewNamer(stackName, "Importer")
 
 	args := []string{
 		"local", "invoke",
