@@ -3,21 +3,21 @@ module sgf-meetup-api
 go 1.25
 
 require (
-	github.com/aws/aws-cdk-go/awscdk/v2 v2.232.1
-	github.com/aws/aws-lambda-go v1.51.0
+	github.com/aws/aws-cdk-go/awscdk/v2 v2.233.0
+	github.com/aws/aws-lambda-go v1.51.1
 	github.com/aws/aws-sdk-go-v2 v1.41.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.5
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.5
+	github.com/aws/aws-sdk-go-v2/config v1.32.6
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.6
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.20.29
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.8.29
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.5
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.86.2
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.87.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.7
-	github.com/aws/constructs-go/constructs/v10 v10.4.3
-	github.com/aws/jsii-runtime-go v1.120.0
+	github.com/aws/constructs-go/constructs/v10 v10.4.4
+	github.com/aws/jsii-runtime-go v1.121.0
 	github.com/aws/smithy-go v1.24.0
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.2
-	github.com/brianvoe/gofakeit/v7 v7.12.1
+	github.com/brianvoe/gofakeit/v7 v7.14.0
 	github.com/getsentry/sentry-go v0.40.0
 	github.com/getsentry/sentry-go/slog v0.40.0
 	github.com/gin-gonic/gin v1.11.0
@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.11.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.30.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.30.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.5 // indirect
 	github.com/bytedance/sonic v1.14.0 // indirect
