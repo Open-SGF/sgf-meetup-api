@@ -6,7 +6,7 @@
 		"DYNAMODB_AWS_SECRET_ACCESS_KEY": "test",
 
 		"MEETUP_GROUP_NAMES": "open-sgf,sgfdevs",
-		"MEETUP_PROXY_FUNCTION_NAME": "Staging-MeetupProxy",
+		"MEETUP_PROXY_FUNCTION_NAME": "Staging-SgfMeetupApi-MeetupProxy",
 		"EVENTS_TABLE_NAME": "MeetupEvents",
 		"GROUP_ID_DATE_TIME_INDEX_NAME": "GroupIdDateTimeIndex",
 		"ARCHIVED_EVENTS_TABLE_NAME": "MeetupArchivedEvents",
