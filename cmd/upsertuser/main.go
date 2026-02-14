@@ -39,7 +39,12 @@ func main() {
 	upsertCtx, upsertCancel := context.WithTimeout(context.Background(), upsertTimeout)
 	defer upsertCancel()
 
-	if err := service.UpsertUser(upsertCtx, *infra.ApiUsersTableProps.TableName, clientID, clientSecret); err != nil {
+	if err := service.UpsertUser(
+		upsertCtx,
+		*infra.ApiUsersTableProps.TableName,
+		clientID,
+		clientSecret,
+	); err != nil {
 		log.Fatalf("user upsert operation failed: %v", err)
 	}
 
