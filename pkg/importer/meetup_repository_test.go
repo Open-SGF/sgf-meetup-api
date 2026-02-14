@@ -136,9 +136,9 @@ func generateMeetupResponse(
 	cursor string,
 ) *MeetupFutureEventsResponse {
 	response := &MeetupFutureEventsResponse{}
-	response.Data.Events.UnifiedEvents.Count = len(events)
-	response.Data.Events.UnifiedEvents.PageInfo.EndCursor = cursor
-	response.Data.Events.UnifiedEvents.PageInfo.HasNextPage = cursor != ""
+	response.Data.GroupByUrlname.Events.TotalCount = len(events)
+	response.Data.GroupByUrlname.Events.PageInfo.EndCursor = cursor
+	response.Data.GroupByUrlname.Events.PageInfo.HasNextPage = cursor != ""
 
 	edges := make([]MeetupEdge, 0, len(events))
 
@@ -146,6 +146,6 @@ func generateMeetupResponse(
 		edges = append(edges, MeetupEdge{Node: event})
 	}
 
-	response.Data.Events.UnifiedEvents.Edges = edges
+	response.Data.GroupByUrlname.Events.Edges = edges
 	return response
 }
