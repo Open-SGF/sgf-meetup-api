@@ -32,7 +32,7 @@ func TestNewConfig(t *testing.T) {
 		assert.Equal(t, "user123", cfg.MeetupUserID)
 		assert.Equal(t, []byte("private_key"), cfg.MeetupPrivateKey)
 		assert.Equal(t, "https://secure.meetup.com/oauth2/access", cfg.MeetupAuthURL)
-		assert.Equal(t, "https://api.meetup.com/gql", cfg.MeetupAPIURL)
+		assert.Equal(t, "https://api.meetup.com/gql-ext", cfg.MeetupAPIURL)
 	})
 
 	t.Run("successful load from .env file", func(t *testing.T) {
