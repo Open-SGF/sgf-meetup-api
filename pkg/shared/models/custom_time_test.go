@@ -36,6 +36,11 @@ func TestCustomTime_UnmarshalJSON(t *testing.T) {
 			expectedStr: "2025-04-24T22:19-04:00",
 		},
 		{
+			name:        "valid time with seconds and offset",
+			input:       `"2026-04-14T17:30:00-05:00"`,
+			expectedStr: "2026-04-14T17:30-05:00",
+		},
+		{
 			name:      "invalid format missing T",
 			input:     `"2025-04-25 02:19+00:00"`,
 			expectErr: true,
