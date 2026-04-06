@@ -70,7 +70,7 @@ func NewConfig(ctx context.Context, awsConfigFactory appconfig.AwsConfigManager)
 
 func setDefaults(_ context.Context, v *viper.Viper) error {
 	v.SetDefault(strings.ToLower(meetupAuthUrlKey), "https://secure.meetup.com/oauth2/access")
-	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql")
+	v.SetDefault(strings.ToLower(meetupApiUrlKey), "https://api.meetup.com/gql-ext")
 
 	meetupPrivateKeyBase64 := v.Get(strings.ToLower(meetupPrivateKeyBase64Key)).(string)
 	meetupPrivateKey, err := base64.StdEncoding.DecodeString(meetupPrivateKeyBase64)

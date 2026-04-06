@@ -41,6 +41,13 @@ func (e *MeetupEvent) UnmarshalJSON(data []byte) error {
 			Name    string `json:"name"`
 			URLName string `json:"urlname"`
 		} `json:"group"`
+		EventHosts []struct {
+			Name string `json:"name"`
+		} `json:"eventHosts"`
+		FeaturedPhoto *struct {
+			ID      string `json:"id"`
+			BaseUrl string `json:"baseUrl"`
+		} `json:"featuredEventPhoto"`
 		*Alias
 	}{
 		Alias: (*Alias)(e),
@@ -52,5 +59,19 @@ func (e *MeetupEvent) UnmarshalJSON(data []byte) error {
 
 	e.GroupName = aux.Group.Name
 	e.GroupID = aux.Group.URLName
+
+	// Extract first event host name for backward compatibility
+	if len(aux.EventHosts) > 0 && aux.EventHosts[0].Name != "" {
+		e.Host = &MeetupHost{Name: aux.EventHosts[0].Name}
+	}
+
+	// Map featuredEventPhoto to Images for backward compatibility
+	if aux.FeaturedPhoto != nil && aux.FeaturedPhoto.ID != "" {
+		imageURL := aux.FeaturedPhoto.BaseUrl + aux.FeaturedPhoto.ID + "/676x380.jpg"
+		e.Images = []MeetupImage{
+			{BaseUrl: imageURL, Preview: imageURL},
+		}
+	}
+
 	return nil
 }

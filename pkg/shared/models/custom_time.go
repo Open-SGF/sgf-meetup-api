@@ -9,6 +9,8 @@ import (
 
 var customTimeFormat = "2006-01-02T15:04-07:00"
 
+var customTimeParseFormats = []string{time.RFC3339, customTimeFormat}
+
 type CustomTime struct {
 	time.Time
 }
@@ -21,12 +23,18 @@ func (ct *CustomTime) String() string {
 //goland:noinspection GoMixedReceiverTypes
 func (ct *CustomTime) UnmarshalJSON(data []byte) error {
 	str := strings.Trim(string(data), `"`) // Remove JSON quotes
-	parsed, err := time.Parse(customTimeFormat, str)
-	if err != nil {
-		return err
+	var parsed time.Time
+	var err error
+
+	for _, layout := range customTimeParseFormats {
+		parsed, err = time.Parse(layout, str)
+		if err == nil {
+			ct.Time = parsed
+			return nil
+		}
 	}
-	ct.Time = parsed
-	return nil
+
+	return err
 }
 
 //goland:noinspection GoMixedReceiverTypes

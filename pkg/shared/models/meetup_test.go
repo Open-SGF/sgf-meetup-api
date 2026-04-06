@@ -28,15 +28,15 @@ func TestMeetupEvent_UnmarshalJSON(t *testing.T) {
     "name": "Open SGF",
     "urlname": "open-sgf"
   },
-  "host": {
-    "name": "Levi Zitting"
-  },
-  "images": [
+  "eventHosts": [
     {
-      "baseUrl": "https://secure-content.meetupstatic.com/images/classic-events/",
-      "preview": null
+      "name": "Levi Zitting"
     }
-  ]
+  ],
+  "featuredEventPhoto": {
+    "id": "501234567",
+    "baseUrl": "https://secure-content.meetupstatic.com/images/classic-events/"
+  }
 }`
 
 	var event MeetupEvent
@@ -60,7 +60,7 @@ func TestMeetupEvent_UnmarshalJSON(t *testing.T) {
 	assert.Len(t, event.Images, 1)
 	assert.Equal(
 		t,
-		"https://secure-content.meetupstatic.com/images/classic-events/",
+		"https://secure-content.meetupstatic.com/images/classic-events/501234567/676x380.jpg",
 		event.Images[0].BaseUrl,
 	)
 }

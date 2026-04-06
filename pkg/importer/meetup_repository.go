@@ -40,9 +40,9 @@ func NewGraphQLMeetupRepository(
 
 const getFutureEventsQuery = `
   query ($urlname: String!, $itemsNum: Int!, $cursor: String) {
-	events: groupByUrlname(urlname: $urlname) {
-	  unifiedEvents(input: { first: $itemsNum, after: $cursor }) {
-		count
+	groupByUrlname(urlname: $urlname) {
+	  events(first: $itemsNum, after: $cursor, filter: { status: [ACTIVE] }) {
+		totalCount
 		pageInfo {
 		  endCursor
 		  hasNextPage
@@ -66,12 +66,12 @@ const getFutureEventsQuery = `
 			  name
 			  urlname
 			}
-			host {
+			eventHosts {
 			  name
 			}
-			images {
+			featuredEventPhoto {
+			  id
 			  baseUrl
-			  preview
 			}
 		  }
 		}
@@ -82,16 +82,16 @@ const getFutureEventsQuery = `
 
 type MeetupFutureEventsResponse struct {
 	Data struct {
-		Events struct {
-			UnifiedEvents struct {
-				Count    int `json:"count"`
-				PageInfo struct {
+		GroupByUrlname struct {
+			Events struct {
+				TotalCount int `json:"totalCount"`
+				PageInfo   struct {
 					EndCursor   string `json:"endCursor"`
 					HasNextPage bool   `json:"hasNextPage"`
 				} `json:"pageInfo"`
 				Edges []MeetupEdge `json:"edges"`
-			} `json:"unifiedEvents"`
-		} `json:"events"`
+			} `json:"events"`
+		} `json:"groupByUrlname"`
 	} `json:"data"`
 }
 
@@ -128,7 +128,7 @@ func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(
 			return nil, err
 		}
 
-		for _, edge := range response.Data.Events.UnifiedEvents.Edges {
+		for _, edge := range response.Data.GroupByUrlname.Events.Edges {
 			event := edge.Node
 			events = append(events, event)
 
@@ -141,7 +141,7 @@ func (r *GraphQLMeetupRepository) GetEventsUntilDateForGroup(
 			break
 		}
 
-		pageInfo := response.Data.Events.UnifiedEvents.PageInfo
+		pageInfo := response.Data.GroupByUrlname.Events.PageInfo
 
 		if !pageInfo.HasNextPage {
 			break
