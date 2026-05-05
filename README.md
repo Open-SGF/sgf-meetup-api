@@ -45,7 +45,7 @@ See [docs/architecture.md](./docs/architecture.md)
 ### First Time Setup
 
 #### Required Tools
-- [Go 1.24](https://go.dev/dl/)
+- [Go 1.26.2](https://go.dev/dl/)
 - [Node 22.x](https://nodejs.org) (Ideally using [nvm](https://github.com/nvm-sh/nvm))
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
