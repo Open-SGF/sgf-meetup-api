@@ -1,4 +1,4 @@
-FROM golang:1.26.2
+FROM golang:1.26.4
 
 RUN mkdir -p /cache/go-cache /cache/go-modcache && \
     chmod -R 777 /cache
