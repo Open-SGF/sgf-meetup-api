@@ -15,8 +15,8 @@ github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tN
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
-github.com/aws/aws-cdk-go/awscdk/v2 v2.252.0 h1:g+j6RR1wFLYyAnLOx//y38LrOaL2X8LMFFEcr2u+0is=
-github.com/aws/aws-cdk-go/awscdk/v2 v2.252.0/go.mod h1:i003Qrc8Pn3U4tpUVmKdOGKAdS+lAyDKcO3YyjLTSfA=
+github.com/aws/aws-cdk-go/awscdk/v2 v2.253.0 h1:EV3NqnLfx7ICHVdK3D+vYv0an1ELo+kUVdGbDOmm6Ws=
+github.com/aws/aws-cdk-go/awscdk/v2 v2.253.0/go.mod h1:i003Qrc8Pn3U4tpUVmKdOGKAdS+lAyDKcO3YyjLTSfA=
 github.com/aws/aws-lambda-go v1.54.0 h1:EGYpdyRGF88xszqlGcBewz811mJeRS+maNlLZXFheII=
 github.com/aws/aws-lambda-go v1.54.0/go.mod h1:dpMpZgvWx5vuQJfBt0zqBha60q7Dd7RfgJv23DymV8A=
 github.com/aws/aws-sdk-go-v2 v1.41.7 h1:DWpAJt66FmnnaRIOT/8ASTucrvuDPZASqhhLey6tLY8=

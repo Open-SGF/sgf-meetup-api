@@ -3,7 +3,7 @@ module sgf-meetup-api
 go 1.26.2
 
 require (
-	github.com/aws/aws-cdk-go/awscdk/v2 v2.252.0
+	github.com/aws/aws-cdk-go/awscdk/v2 v2.253.0
 	github.com/aws/aws-lambda-go v1.54.0
 	github.com/aws/aws-sdk-go-v2 v1.41.7
 	github.com/aws/aws-sdk-go-v2/config v1.32.17
