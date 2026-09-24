@@ -48,8 +48,7 @@ func (p *Parser) WithEnvFile(path, filename string) *Parser {
 		v.AddConfigPath(path)
 
 		if err := v.ReadInConfig(); err != nil {
-			var configFileNotFoundError viper.ConfigFileNotFoundError
-			if !errors.As(err, &configFileNotFoundError) {
+			if _, ok := errors.AsType[viper.ConfigFileNotFoundError](err); !ok {
 				return err
 			}
 		}

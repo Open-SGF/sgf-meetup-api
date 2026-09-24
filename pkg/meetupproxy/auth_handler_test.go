@@ -165,12 +165,10 @@ func TestAuthHandler_GetAccessToken_ConcurrentRequests(t *testing.T) {
 	}, &http.Client{}, logging.NewMockLogger())
 
 	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 10 {
+		wg.Go(func() {
 			_, _ = ah.GetAccessToken(context.Background())
-		}()
+		})
 	}
 	wg.Wait()
 
@@ -193,7 +191,7 @@ func TestAuthHandler_createSignedJWT_ValidClaims(t *testing.T) {
 
 	require.NoError(t, err)
 
-	token, _ := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+	token, _ := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		return &privateKey.PublicKey, nil
 	})
 

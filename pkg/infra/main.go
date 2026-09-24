@@ -2,6 +2,7 @@ package infra
 
 import (
 	"fmt"
+	stdmaps "maps"
 
 	"sgf-meetup-api/pkg/infra/customconstructs"
 	"sgf-meetup-api/pkg/shared/resource"
@@ -264,9 +265,7 @@ func NewStack(scope constructs.Construct, id string, props *AppStackProps) awscd
 func mergeMaps[M ~map[K]V, K comparable, V any](maps ...M) *M {
 	merged := make(M)
 	for _, m := range maps {
-		for k, v := range m {
-			merged[k] = v
-		}
+		stdmaps.Copy(merged, m)
 	}
 	return &merged
 }

@@ -42,7 +42,7 @@ func TestService_HandleRequest_Success(t *testing.T) {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
 
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{"data": "success"})
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": "success"})
 	}))
 
 	defer ts.Close()

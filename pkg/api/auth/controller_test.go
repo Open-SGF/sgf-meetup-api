@@ -251,7 +251,7 @@ func parseJWTToken(tokenString string, secret []byte) (*jwt.Token, *jwt.Register
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		&jwt.RegisteredClaims{},
-		func(token *jwt.Token) (interface{}, error) {
+		func(token *jwt.Token) (any, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
