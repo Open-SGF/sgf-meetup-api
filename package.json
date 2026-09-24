@@ -12,6 +12,6 @@
   "description": "",
   "devDependencies": {
     "aws-cdk": "^2.1143.0",
-    "rimraf": "^6.1.2"
+    "rimraf": "^6.1.3"
   }
 }
