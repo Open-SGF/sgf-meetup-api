@@ -21,45 +21,39 @@ var GroupIdDateTimeIndex = awsdynamodb.GlobalSecondaryIndexProps{
 }
 
 var EventsTableProps = &customconstructs.DynamoTableProps{
-	TableProps: awsdynamodb.TableProps{
-		TableName: jsii.String("MeetupEvents"),
-		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("id"),
-			Type: awsdynamodb.AttributeType_STRING,
-		},
-		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
-		BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
+	TableName: jsii.String("MeetupEvents"),
+	PartitionKey: &awsdynamodb.Attribute{
+		Name: jsii.String("id"),
+		Type: awsdynamodb.AttributeType_STRING,
 	},
+	RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
+	BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
 	GlobalSecondaryIndexes: []awsdynamodb.GlobalSecondaryIndexProps{
 		GroupIdDateTimeIndex,
 	},
 }
 
 var ArchivedEventsTableProps = &customconstructs.DynamoTableProps{
-	TableProps: awsdynamodb.TableProps{
-		TableName: jsii.String("MeetupArchivedEvents"),
-		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("id"),
-			Type: awsdynamodb.AttributeType_STRING,
-		},
-		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
-		BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
+	TableName: jsii.String("MeetupArchivedEvents"),
+	PartitionKey: &awsdynamodb.Attribute{
+		Name: jsii.String("id"),
+		Type: awsdynamodb.AttributeType_STRING,
 	},
+	RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
+	BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
 	GlobalSecondaryIndexes: []awsdynamodb.GlobalSecondaryIndexProps{
 		GroupIdDateTimeIndex,
 	},
 }
 
 var ApiUsersTableProps = &customconstructs.DynamoTableProps{
-	TableProps: awsdynamodb.TableProps{
-		TableName: jsii.String("MeetupApiUsers"),
-		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("clientId"),
-			Type: awsdynamodb.AttributeType_STRING,
-		},
-		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
-		BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
+	TableName: jsii.String("MeetupApiUsers"),
+	PartitionKey: &awsdynamodb.Attribute{
+		Name: jsii.String("clientId"),
+		Type: awsdynamodb.AttributeType_STRING,
 	},
+	RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
+	BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
 }
 
 var Tables = []customconstructs.DynamoTableProps{

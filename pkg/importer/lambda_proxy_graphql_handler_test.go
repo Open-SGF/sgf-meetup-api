@@ -45,7 +45,7 @@ func setupMockLambdaServer(t *testing.T, handler http.HandlerFunc) *httptest.Ser
 func TestExecuteQuery_Success(t *testing.T) {
 	testServer := setupMockLambdaServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{"data": "test"})
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": "test"})
 	})
 	defer testServer.Close()
 
@@ -58,7 +58,7 @@ func TestExecuteQuery_Success(t *testing.T) {
 
 	require.NoError(t, err)
 
-	var response map[string]interface{}
+	var response map[string]any
 	err = json.Unmarshal(result, &response)
 
 	require.NoError(t, err)
@@ -68,7 +68,7 @@ func TestExecuteQuery_LambdaExecutionError(t *testing.T) {
 	testServer := setupMockLambdaServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Amz-Function-Error", "Unhandled")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "lambda failure"})
+		_ = json.NewEncoder(w).Encode(map[string]any{"error": "lambda failure"})
 	})
 	defer testServer.Close()
 

@@ -55,8 +55,7 @@ func tableExists(
 		TableName: aws.String(tableName),
 	})
 	if err != nil {
-		var notFoundErr *types.ResourceNotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*types.ResourceNotFoundException](err); ok {
 			return false, nil
 		}
 		return false, err

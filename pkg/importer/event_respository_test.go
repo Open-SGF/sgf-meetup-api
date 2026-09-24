@@ -90,7 +90,7 @@ func TestDynamoDBEventRepository_GetUpcomingEventsForGroup(t *testing.T) {
 		defer func() { _ = testDB.Reset(ctx) }()
 
 		var testEvents []models.MeetupEvent
-		for i := 0; i < 15; i++ {
+		for i := range 15 {
 			testEvents = append(testEvents, meetupFaker.CreateEvent(
 				"test-group",
 				mockNow.Add(time.Duration(i+1)*time.Hour),
@@ -202,7 +202,7 @@ func TestDynamoDBEventRepository_ArchiveEvents(t *testing.T) {
 
 		var eventIDs []string
 		var events []models.MeetupEvent
-		for i := 0; i < db.MaxBatchSize+5; i++ {
+		for i := range db.MaxBatchSize + 5 {
 			event := meetupFaker.CreateEvent("test-group", mockNow.Add(time.Duration(i)*time.Hour))
 			events = append(events, event)
 			eventIDs = append(eventIDs, event.ID)
@@ -285,7 +285,7 @@ func TestDynamoDBEventRepository_UpsertEvents(t *testing.T) {
 		defer func() { _ = testDB.Reset(ctx) }()
 
 		var testEvents []models.MeetupEvent
-		for i := 0; i < db.MaxBatchSize+5; i++ {
+		for range db.MaxBatchSize + 5 {
 			testEvents = append(testEvents, meetupFaker.CreateEvent("group1", time.Now()))
 		}
 
